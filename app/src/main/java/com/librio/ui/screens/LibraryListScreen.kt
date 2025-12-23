@@ -5311,16 +5311,40 @@ private fun MusicGridItem(
             .padding(8.dp)
     ) {
         // Cover art
-        CoverArt(
-            bitmap = music.coverArt,
-            contentDescription = music.title,
-            modifier = Modifier.fillMaxWidth(),
-            cornerRadiusSize = 6.dp,
-            elevation = 0.dp,
-            showPlaceholderAlways = showPlaceholderIcons && music.coverArt == null,
-            fileExtension = music.fileType,
-            contentType = CoverArtContentType.MUSIC
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+        ) {
+            CoverArt(
+                bitmap = music.coverArt,
+                contentDescription = music.title,
+                modifier = Modifier.fillMaxWidth(),
+                cornerRadiusSize = 6.dp,
+                elevation = 0.dp,
+                showPlaceholderAlways = showPlaceholderIcons && music.coverArt == null,
+                fileExtension = music.fileType,
+                contentType = CoverArtContentType.MUSIC
+            )
+
+            // Progress indicator
+            if (music.progress > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                ) {
+                    LinearProgressIndicator(
+                        progress = music.progress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp),
+                        color = palette.primary,
+                        trackColor = palette.primary.copy(alpha = 0.2f)
+                    )
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 

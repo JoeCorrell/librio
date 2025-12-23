@@ -23,6 +23,8 @@ import com.librio.model.LibraryMovie
 import com.librio.model.SortOption
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -618,22 +620,29 @@ class LibraryViewModel : ViewModel() {
                     // Then load cover art in background (non-blocking) for all content types
                     // Use synchronized updates to prevent race conditions
                     launch(Dispatchers.IO) {
-                        // Process all content types and update atomically
-                        val audiobooksWithCovers = mergedAudiobooks.map { audiobook ->
-                            reloadCoverArt(context, audiobook)
+                        // Process all content types in parallel for faster loading
+                        val audiobooksDeferred = mergedAudiobooks.map { audiobook ->
+                            async { reloadCoverArt(context, audiobook) }
                         }
-                        val booksWithCovers = mergedBooks.map { book ->
-                            reloadBookCoverArt(context, book)
+                        val booksDeferred = mergedBooks.map { book ->
+                            async { reloadBookCoverArt(context, book) }
                         }
-                        val musicWithCovers = mergedMusic.map { music ->
-                            reloadMusicCoverArt(context, music)
+                        val musicDeferred = mergedMusic.map { music ->
+                            async { reloadMusicCoverArt(context, music) }
                         }
-                        val comicsWithCovers = mergedComics.map { comic ->
-                            reloadComicCoverArt(context, comic)
+                        val comicsDeferred = mergedComics.map { comic ->
+                            async { reloadComicCoverArt(context, comic) }
                         }
-                        val moviesWithCovers = mergedMovies.map { movie ->
-                            reloadMovieCoverArt(context, movie)
+                        val moviesDeferred = mergedMovies.map { movie ->
+                            async { reloadMovieCoverArt(context, movie) }
                         }
+
+                        // Wait for all parallel operations to complete
+                        val audiobooksWithCovers = audiobooksDeferred.awaitAll()
+                        val booksWithCovers = booksDeferred.awaitAll()
+                        val musicWithCovers = musicDeferred.awaitAll()
+                        val comicsWithCovers = comicsDeferred.awaitAll()
+                        val moviesWithCovers = moviesDeferred.awaitAll()
 
                         // Update all at once to avoid race conditions
                         withContext(Dispatchers.Main) {

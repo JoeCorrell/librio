@@ -372,9 +372,6 @@ class SettingsRepository(private val context: Context) {
     private val _equalizerPreset = MutableStateFlow(loadEqualizerPreset())
     val equalizerPreset: StateFlow<String> = _equalizerPreset.asStateFlow()
 
-    private val _crossfadeDuration = MutableStateFlow(loadCrossfadeDuration())
-    val crossfadeDuration: StateFlow<Int> = _crossfadeDuration.asStateFlow()
-
     // Playback Control settings
     private val _autoRewindSeconds = MutableStateFlow(loadAutoRewindSeconds())
     val autoRewindSeconds: StateFlow<Int> = _autoRewindSeconds.asStateFlow()
@@ -950,7 +947,6 @@ class SettingsRepository(private val context: Context) {
         _normalizeAudio.value = settings.normalizeAudio
         _bassBoostLevel.value = settings.bassBoostLevel.toInt()
         _equalizerPreset.value = normalizeEqualizerPreset(settings.equalizerPreset)
-        _crossfadeDuration.value = settings.crossfadeDuration
         _headsetControls.value = settings.headsetControls
         _pauseOnDisconnect.value = settings.pauseOnDisconnect
         _showPlaybackNotification.value = settings.showPlaybackNotification
@@ -1012,7 +1008,6 @@ class SettingsRepository(private val context: Context) {
             putBoolean(KEY_NORMALIZE_AUDIO, settings.normalizeAudio)
             putInt(KEY_BASS_BOOST_LEVEL, settings.bassBoostLevel.toInt())
             putString(KEY_EQUALIZER_PRESET, normalizeEqualizerPreset(settings.equalizerPreset))
-            putInt(KEY_CROSSFADE_DURATION, settings.crossfadeDuration)
             putBoolean(getProfileKey(KEY_HEADSET_CONTROLS), settings.headsetControls)
             putBoolean(getProfileKey(KEY_PAUSE_ON_DISCONNECT), settings.pauseOnDisconnect)
             putBoolean(getProfileKey(KEY_SHOW_PLAYBACK_NOTIFICATION), settings.showPlaybackNotification)
@@ -1222,7 +1217,6 @@ class SettingsRepository(private val context: Context) {
                 normalizeAudio = _normalizeAudio.value,
                 bassBoostLevel = _bassBoostLevel.value.toFloat(),
                 equalizerPreset = _equalizerPreset.value,
-                crossfadeDuration = _crossfadeDuration.value,
                 headsetControls = _headsetControls.value,
                 pauseOnDisconnect = _pauseOnDisconnect.value,
                 showPlaybackNotification = _showPlaybackNotification.value,
@@ -1731,6 +1725,7 @@ class SettingsRepository(private val context: Context) {
     fun setDefaultLibraryView(view: String) {
         _defaultLibraryView.value = view
         prefs.edit().putString(getProfileKey(KEY_DEFAULT_LIBRARY_VIEW), view).apply()
+        saveProfileSettingsToFile()
     }
 
     fun setDefaultSortOrder(order: String) {
@@ -2335,7 +2330,6 @@ class SettingsRepository(private val context: Context) {
     private fun loadNormalizeAudio(): Boolean = prefs.getBoolean(KEY_NORMALIZE_AUDIO, false)
     private fun loadBassBoostLevel(): Int = prefs.getInt(KEY_BASS_BOOST_LEVEL, 0)
     private fun loadEqualizerPreset(): String = normalizeEqualizerPreset(prefs.getString(KEY_EQUALIZER_PRESET, "DEFAULT"))
-    private fun loadCrossfadeDuration(): Int = prefs.getInt(KEY_CROSSFADE_DURATION, 0)
 
     // Playback Control loaders
     private fun loadAutoRewindSeconds(): Int = prefs.getInt(getProfileKey(KEY_AUTO_REWIND_SECONDS), 0)
@@ -2381,12 +2375,6 @@ class SettingsRepository(private val context: Context) {
         val normalized = normalizeEqualizerPreset(preset)
         _equalizerPreset.value = normalized
         prefs.edit().putString(KEY_EQUALIZER_PRESET, normalized).apply()
-        saveAudioSettingsToFile()
-    }
-
-    fun setCrossfadeDuration(seconds: Int) {
-        _crossfadeDuration.value = seconds
-        prefs.edit().putInt(KEY_CROSSFADE_DURATION, seconds).apply()
         saveAudioSettingsToFile()
     }
 
@@ -2556,7 +2544,6 @@ class SettingsRepository(private val context: Context) {
         private const val KEY_NORMALIZE_AUDIO = "normalize_audio"
         private const val KEY_BASS_BOOST_LEVEL = "bass_boost_level"
         private const val KEY_EQUALIZER_PRESET = "equalizer_preset"
-        private const val KEY_CROSSFADE_DURATION = "crossfade_duration"
 
         // Playback Control keys
         private const val KEY_AUTO_REWIND_SECONDS = "auto_rewind_seconds"

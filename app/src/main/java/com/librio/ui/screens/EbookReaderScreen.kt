@@ -251,7 +251,7 @@ fun EbookReaderScreen(
 
     // Debounce text settings changes - prevents rapid reloads while adjusting sliders
     LaunchedEffect(fontSize, lineSpacing, marginSize, fontFamily, textAlign, paragraphSpacing, boldText, wordSpacing) {
-        kotlinx.coroutines.delay(500) // Wait 500ms after last change for responsiveness
+        kotlinx.coroutines.delay(1500) // Wait 1.5s after last change to prevent lag during slider adjustments
         debouncedTextSettings = TextRenderSettings(
             fontSize = fontSize,
             lineSpacing = lineSpacing,

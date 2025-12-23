@@ -64,7 +64,6 @@ data class AudioSettings(
     val normalizeAudio: Boolean = false,
     val bassBoostLevel: Float = 0f,
     val equalizerPreset: String = "DEFAULT",
-    val crossfadeDuration: Int = 0,
     val headsetControls: Boolean = true,
     val pauseOnDisconnect: Boolean = true,
     val showPlaybackNotification: Boolean = true,

@@ -922,7 +922,7 @@ private fun applyAudioEffects(
         runCatching {
             val gainMb = when {
                 volumeBoostEnabled -> ((volumeBoostLevel - 1f) * 1500).toInt().coerceAtLeast(0)
-                normalizeAudio -> 0
+                normalizeAudio -> 600  // Normalize audio with moderate gain boost
                 else -> 0
             }
             enhancer.setTargetGain(gainMb)

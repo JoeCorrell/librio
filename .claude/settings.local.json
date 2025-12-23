@@ -64,7 +64,8 @@
       "Bash(find:*)",
       "Bash(JAVA_HOME=\"/c/Program Files/Microsoft/jdk-17.0.17.10-hotspot\" ANDROID_HOME=\"/c/Users/Administrator/Android/Sdk\" PATH=\"$JAVA_HOME/bin:$PATH\" ./gradlew.bat assembleDebug:*)",
       "Bash(grep:*)",
-      "Bash(JAVA_HOME=\"/c/Program Files/Microsoft/jdk-17.0.17.10-hotspot\" PATH=\"$JAVA_HOME/bin:$PATH\" ./gradlew.bat compileDebugKotlin:*)"
+      "Bash(JAVA_HOME=\"/c/Program Files/Microsoft/jdk-17.0.17.10-hotspot\" PATH=\"$JAVA_HOME/bin:$PATH\" ./gradlew.bat compileDebugKotlin:*)",
+      "Bash(JAVA_HOME=\"/c:/Program Files/Microsoft/jdk-17.0.17.10-hotspot\" PATH=\"$JAVA_HOME/bin:$PATH\" ./gradlew.bat:*)"
     ]
   }
 }

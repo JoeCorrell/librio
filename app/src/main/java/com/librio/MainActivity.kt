@@ -150,7 +150,6 @@ class MainActivity : ComponentActivity() {
             val normalizeAudio by settingsViewModel.normalizeAudio?.collectAsState() ?: remember { mutableStateOf(false) }
             val bassBoostLevel by settingsViewModel.bassBoostLevel?.collectAsState() ?: remember { mutableStateOf(0) }
             val equalizerPreset by settingsViewModel.equalizerPreset?.collectAsState() ?: remember { mutableStateOf("DEFAULT") }
-            val crossfadeDuration by settingsViewModel.crossfadeDuration?.collectAsState() ?: remember { mutableStateOf(0) }
             val autoRewindSeconds by settingsViewModel.autoRewindSeconds?.collectAsState() ?: remember { mutableStateOf(0) }
             val headsetControls by settingsViewModel.headsetControls?.collectAsState() ?: remember { mutableStateOf(true) }
             val pauseOnDisconnect by settingsViewModel.pauseOnDisconnect?.collectAsState() ?: remember { mutableStateOf(true) }
@@ -269,7 +268,7 @@ class MainActivity : ComponentActivity() {
                     runCatching {
                         val baseGain = when {
                             profileVolumeBoost -> ((profileVolumeBoostLevel - 1f) * 1500).toInt().coerceAtLeast(0)
-                            profileNormalizeAudio -> 0
+                            profileNormalizeAudio -> 600  // Normalize audio with moderate gain boost
                             else -> 0
                         }
                         val gainMb = baseGain.coerceIn(0, 2000)
@@ -655,8 +654,10 @@ class MainActivity : ComponentActivity() {
 
             // Helper to build music NowPlaying
             fun buildMusicNowPlaying(music: com.librio.model.LibraryMusic): NowPlaying.Music {
-                val currentIndex = filteredMusic.indexOfFirst { it.id == music.id }
-                // If not found in filtered list (-1), disable next/previous navigation
+                // Use current playlist if available, otherwise fall back to filtered music
+                val playlist = if (currentMusicPlaylist.isNotEmpty()) currentMusicPlaylist else filteredMusic
+                val currentIndex = playlist.indexOfFirst { it.id == music.id }
+                // If not found in playlist (-1), disable next/previous navigation
                 val validIndex = currentIndex >= 0
                 return NowPlaying.Music(
                     id = music.id,
@@ -666,7 +667,7 @@ class MainActivity : ComponentActivity() {
                     duration = if (musicExoPlayer.duration > 0) musicExoPlayer.duration else music.duration,
                     currentPosition = musicCurrentPosition,
                     isPlaying = isMusicPlaying,
-                    hasNext = validIndex && currentIndex < filteredMusic.size - 1,
+                    hasNext = validIndex && currentIndex < playlist.size - 1,
                     hasPrevious = validIndex && currentIndex > 0
                 )
             }
@@ -1147,8 +1148,6 @@ class MainActivity : ComponentActivity() {
                                 onBassBoostLevelChange = { settingsViewModel.setBassBoostLevel(it) },
                                 equalizerPreset = equalizerPreset,
                                 onEqualizerPresetChange = { settingsViewModel.setEqualizerPreset(it) },
-                                crossfadeDuration = crossfadeDuration,
-                                onCrossfadeDurationChange = { settingsViewModel.setCrossfadeDuration(it) },
                                 showFileSize = showFileSize,
                                 onShowFileSizeChange = { settingsViewModel.setShowFileSize(it) },
                                 showDuration = showDuration,
@@ -1388,7 +1387,6 @@ class MainActivity : ComponentActivity() {
                                 volumeBoostLevel = profileVolumeBoostLevel,
                                 normalizeAudio = profileNormalizeAudio,
                                 bassBoostLevel = profileBassBoost,
-                                crossfadeDuration = crossfadeDuration,
                                 autoRewind = autoRewindSeconds,
                                 autoPlayNext = autoPlayNext,
                                 resumePlayback = resumePlayback,
@@ -1398,7 +1396,6 @@ class MainActivity : ComponentActivity() {
                                 onAutoPlayNextChange = { settingsViewModel.setAutoPlayNext(it) },
                                 onResumePlaybackChange = { settingsViewModel.setResumePlayback(it) },
                                 onSleepTimerChange = { settingsViewModel.setProfileSleepTimer(it) },
-                                onCrossfadeDurationChange = { settingsViewModel.setCrossfadeDuration(it) },
                                 onVolumeBoostEnabledChange = { settingsViewModel.setProfileVolumeBoostEnabled(it) },
                                 onVolumeBoostLevelChange = { settingsViewModel.setProfileVolumeBoostLevel(it) },
                                 onNormalizeAudioChange = { settingsViewModel.setProfileNormalizeAudio(it) },
@@ -1535,7 +1532,6 @@ class MainActivity : ComponentActivity() {
                                     volumeBoostLevel = profileVolumeBoostLevel,
                                     normalizeAudio = profileNormalizeAudio,
                                     bassBoostLevel = profileBassBoost,
-                                    crossfadeDuration = crossfadeDuration,
                                     autoRewind = autoRewindSeconds,
                                     autoPlayNext = autoPlayNext,
                                     resumePlayback = resumePlayback,
@@ -1550,7 +1546,6 @@ class MainActivity : ComponentActivity() {
                                     onAutoPlayNextChange = { settingsViewModel.setAutoPlayNext(it) },
                                     onResumePlaybackChange = { settingsViewModel.setResumePlayback(it) },
                                     onSleepTimerChange = { settingsViewModel.setProfileSleepTimer(it) },
-                                    onCrossfadeDurationChange = { settingsViewModel.setCrossfadeDuration(it) },
                                     onVolumeBoostEnabledChange = { settingsViewModel.setProfileVolumeBoostEnabled(it) },
                                     onVolumeBoostLevelChange = { settingsViewModel.setProfileVolumeBoostLevel(it) },
                                     onNormalizeAudioChange = { settingsViewModel.setProfileNormalizeAudio(it) },

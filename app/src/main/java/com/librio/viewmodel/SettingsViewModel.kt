@@ -166,9 +166,6 @@ class SettingsViewModel : ViewModel() {
     val equalizerPreset: StateFlow<String>?
         get() = repository?.equalizerPreset
 
-    val crossfadeDuration: StateFlow<Int>?
-        get() = repository?.crossfadeDuration
-
     // Playback Control settings
     val autoRewindSeconds: StateFlow<Int>?
         get() = repository?.autoRewindSeconds
@@ -575,10 +572,6 @@ class SettingsViewModel : ViewModel() {
 
     fun setEqualizerPreset(preset: String) {
         repository?.setEqualizerPreset(preset)
-    }
-
-    fun setCrossfadeDuration(seconds: Int) {
-        repository?.setCrossfadeDuration(seconds)
     }
 
     // Playback Control setters

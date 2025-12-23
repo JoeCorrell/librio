@@ -134,7 +134,7 @@ class AudiobookPlayer(private val context: Context) {
             runCatching {
                 val baseGain = when {
                     volumeBoostEnabled -> ((volumeBoostLevel - 1f) * 1500).toInt().coerceAtLeast(0)
-                    normalizeAudio -> 0
+                    normalizeAudio -> 600  // Normalize audio with moderate gain boost
                     else -> 0
                 }
                 // Only add compensation if using volume boost or normalize - bass effects don't need it

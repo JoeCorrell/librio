@@ -599,7 +599,8 @@ class MainActivity : ComponentActivity() {
                             nextIndex?.let { idx ->
                                 val nextTrack = playlist[idx]
                                 lastPlayedMusic = nextTrack
-                                settingsViewModel.setLastActiveType("MUSIC")
+                                val activeType = if (nextTrack.contentType == ContentType.CREEPYPASTA) "CREEPYPASTA" else "MUSIC"
+                                settingsViewModel.setLastActiveType(activeType)
                                 libraryViewModel.selectMusic(nextTrack)
                                 libraryViewModel.incrementMusicPlayCount(nextTrack.id)
                                 musicCurrentPosition = 0L
@@ -891,7 +892,8 @@ class MainActivity : ComponentActivity() {
                                         player.pause()
                                     }
                                     lastPlayedMusic = musicItem
-                                    settingsViewModel.setLastActiveType("MUSIC")
+                                    val activeType = if (musicItem.contentType == ContentType.CREEPYPASTA) "CREEPYPASTA" else "MUSIC"
+                                    settingsViewModel.setLastActiveType(activeType)
                                     val playlistForSelection = if (musicItem.seriesId != null) {
                                         filteredMusic.filter { it.seriesId == musicItem.seriesId }
                                     } else {
@@ -1235,7 +1237,8 @@ class MainActivity : ComponentActivity() {
                                             if (nextIdx >= 0 && nextIdx < musicList.size) {
                                                 val nextMusic = musicList[nextIdx]
                                                 lastPlayedMusic = nextMusic
-                                                settingsViewModel.setLastActiveType("MUSIC")
+                                                val activeType = if (nextMusic.contentType == ContentType.CREEPYPASTA) "CREEPYPASTA" else "MUSIC"
+                                                settingsViewModel.setLastActiveType(activeType)
                                                 libraryViewModel.selectMusic(nextMusic)
                                                 libraryViewModel.incrementMusicPlayCount(nextMusic.id)
                                                 // Play on shared player without navigating

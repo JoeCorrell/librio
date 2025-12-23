@@ -228,7 +228,6 @@ class MigrationManager(
             normalizeAudio = profile.normalizeAudio,
             bassBoostLevel = profile.bassBoostLevel,
             equalizerPreset = profile.equalizerPreset,
-            crossfadeDuration = legacyPrefs.getInt("crossfade_duration", 0),
             headsetControls = legacyPrefs.getBoolean(getProfileKey("headset_controls"), true),
             pauseOnDisconnect = legacyPrefs.getBoolean(getProfileKey("pause_on_disconnect"), true),
             showPlaybackNotification = legacyPrefs.getBoolean(getProfileKey("show_playback_notification"), true),

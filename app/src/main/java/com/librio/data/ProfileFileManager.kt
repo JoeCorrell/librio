@@ -272,7 +272,6 @@ class ProfileFileManager {
                 normalizeAudio = json.optBoolean("normalizeAudio", false),
                 bassBoostLevel = json.optDouble("bassBoostLevel", 0.0).toFloat(),
                 equalizerPreset = json.optString("equalizerPreset", "DEFAULT"),
-                crossfadeDuration = json.optInt("crossfadeDuration", 0),
                 headsetControls = json.optBoolean("headsetControls", true),
                 pauseOnDisconnect = json.optBoolean("pauseOnDisconnect", true),
                 showPlaybackNotification = json.optBoolean("showPlaybackNotification", true),
@@ -283,6 +282,8 @@ class ProfileFileManager {
                 lastAudiobookPosition = json.optLong("lastAudiobookPosition", 0L),
                 lastAudiobookPlaying = json.optBoolean("lastAudiobookPlaying", false),
                 lastActiveType = json.optString("lastActiveType").takeIf { it.isNotEmpty() },
+                musicShuffleEnabled = json.optBoolean("musicShuffleEnabled", false),
+                musicRepeatMode = json.optInt("musicRepeatMode", 0),
                 lastModified = json.optLong("lastModified", System.currentTimeMillis())
             )
         } catch (e: Exception) {
@@ -317,7 +318,6 @@ class ProfileFileManager {
                 put("normalizeAudio", settings.normalizeAudio)
                 put("bassBoostLevel", settings.bassBoostLevel.toDouble())
                 put("equalizerPreset", settings.equalizerPreset)
-                put("crossfadeDuration", settings.crossfadeDuration)
                 put("headsetControls", settings.headsetControls)
                 put("pauseOnDisconnect", settings.pauseOnDisconnect)
                 put("showPlaybackNotification", settings.showPlaybackNotification)
@@ -328,6 +328,8 @@ class ProfileFileManager {
                 put("lastAudiobookPosition", settings.lastAudiobookPosition)
                 put("lastAudiobookPlaying", settings.lastAudiobookPlaying)
                 put("lastActiveType", settings.lastActiveType ?: "")
+                put("musicShuffleEnabled", settings.musicShuffleEnabled)
+                put("musicRepeatMode", settings.musicRepeatMode)
                 put("lastModified", System.currentTimeMillis())
             }
             file.writeText(json.toString(2))

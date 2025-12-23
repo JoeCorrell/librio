@@ -1259,7 +1259,8 @@ class MainActivity : ComponentActivity() {
                                         if (currentIdx > 0) {
                                             val prevMusic = musicList[currentIdx - 1]
                                             lastPlayedMusic = prevMusic
-                                            settingsViewModel.setLastActiveType("MUSIC")
+                                            val activeType = if (prevMusic.contentType == ContentType.CREEPYPASTA) "CREEPYPASTA" else "MUSIC"
+                                            settingsViewModel.setLastActiveType(activeType)
                                             libraryViewModel.selectMusic(prevMusic)
                                             libraryViewModel.incrementMusicPlayCount(prevMusic.id)
                                             // Play on shared player without navigating

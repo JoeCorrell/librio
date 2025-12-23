@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.librio.model.LibraryMusic
 import com.librio.model.LibrarySeries
 import com.librio.ui.theme.AppIcons
+import com.librio.ui.theme.cornerRadius
 import com.librio.ui.theme.currentPalette
 
 /**
@@ -63,6 +64,7 @@ fun PlaylistDetailScreen(
     onBack: () -> Unit = {}
 ) {
     val palette = currentPalette()
+    val shape16 = cornerRadius(16.dp)
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val context = LocalContext.current
@@ -136,8 +138,8 @@ fun PlaylistDetailScreen(
                         Box(
                             modifier = Modifier
                                 .size(coverArtSize)
-                                .shadow(12.dp, RoundedCornerShape(16.dp))
-                                .clip(RoundedCornerShape(16.dp))
+                                .shadow(12.dp, shape16)
+                                .clip(shape16)
                                 .background(palette.surfaceCard),
                             contentAlignment = Alignment.Center
                         ) {
@@ -342,12 +344,14 @@ private fun PlaylistTrackItem(
     onClick: () -> Unit
 ) {
     val palette = currentPalette()
+    val shape8 = cornerRadius(8.dp)
+    val shape12 = cornerRadius(12.dp)
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
+        shape = shape12,
         colors = CardDefaults.cardColors(containerColor = palette.surfaceCard),
         border = BorderStroke(
             1.dp,
@@ -387,8 +391,8 @@ private fun PlaylistTrackItem(
         Box(
             modifier = Modifier
                 .size(56.dp)
-                .shadow(4.dp, RoundedCornerShape(8.dp))
-                .clip(RoundedCornerShape(8.dp))
+                .shadow(4.dp, shape8)
+                .clip(shape8)
                 .background(palette.surfaceCard),
             contentAlignment = Alignment.Center
         ) {

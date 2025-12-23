@@ -191,6 +191,8 @@ fun MainScreen(
     onShowBackButtonChange: (Boolean) -> Unit = {},
     showSearchBar: Boolean = true,
     onShowSearchBarChange: (Boolean) -> Unit = {},
+    useSquareCorners: Boolean = false,
+    onUseSquareCornersChange: (Boolean) -> Unit = {},
     customPrimaryColor: Int = 0x00897B,
     onCustomPrimaryColorChange: (Int) -> Unit = {},
     customAccentColor: Int = 0x26A69A,
@@ -469,6 +471,7 @@ fun MainScreen(
                             onEditMovie = onEditMovie,
                             onDeleteMovie = onDeleteMovie,
                             showPlaceholderIcons = showPlaceholderIcons,
+                            defaultLibraryView = defaultLibraryView,
                             searchQuery = searchQuery,
                             onSearchQueryChange = onSearchQueryChange,
                             isSearchVisible = isSearchVisible,
@@ -566,6 +569,10 @@ fun MainScreen(
                             onShowBackButtonChange = onShowBackButtonChange,
                             showSearchBar = showSearchBar,
                             onShowSearchBarChange = onShowSearchBarChange,
+                            useSquareCorners = useSquareCorners,
+                            onUseSquareCornersChange = onUseSquareCornersChange,
+                            defaultLibraryView = defaultLibraryView,
+                            onDefaultLibraryViewChange = onDefaultLibraryViewChange,
                             // General
                             autoBookmark = autoBookmark,
                             onAutoBookmarkChange = onAutoBookmarkChange,
@@ -598,6 +605,8 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    // Remember shapes for performance
+    val shape20 = cornerRadius(20.dp)
 
     // Data for sections - memoized to avoid recalculation on every recomposition
     val recentlyPlayed = remember(audiobooks) {
@@ -646,7 +655,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .clip(RoundedCornerShape(20.dp))
+                    .clip(shape20)
                     .background(palette.accentGradient())
                     .padding(20.dp)
             ) {
@@ -882,6 +891,9 @@ private fun AudiobookCard(
     palette: ThemePalette,
     showPlaceholderIcons: Boolean
 ) {
+    // Remember shape for performance
+    val shape12 = cornerRadius(12.dp)
+
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -902,7 +914,7 @@ private fun AudiobookCard(
                 indication = null,
                 onClick = onClick
             ),
-        shape = RoundedCornerShape(12.dp),
+        shape = shape12,
         colors = CardDefaults.cardColors(containerColor = palette.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -990,6 +1002,9 @@ private fun BookCard(
     palette: ThemePalette,
     showPlaceholderIcons: Boolean
 ) {
+    // Remember shape for performance
+    val shape12 = cornerRadius(12.dp)
+
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -1010,7 +1025,7 @@ private fun BookCard(
                 indication = null,
                 onClick = onClick
             ),
-        shape = RoundedCornerShape(12.dp),
+        shape = shape12,
         colors = CardDefaults.cardColors(containerColor = palette.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -1100,6 +1115,10 @@ private fun RecentlyAddedItem(
     onClick: () -> Unit,
     palette: ThemePalette
 ) {
+    // Remember shapes for performance
+    val shape10 = cornerRadius(10.dp)
+    val shape12 = cornerRadius(12.dp)
+
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -1115,7 +1134,7 @@ private fun RecentlyAddedItem(
         modifier = Modifier
             .fillMaxWidth()
             .scale(scale)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(shape12)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -1128,7 +1147,7 @@ private fun RecentlyAddedItem(
         Box(
             modifier = Modifier
                 .size(44.dp)
-                .clip(RoundedCornerShape(10.dp))
+                .clip(shape10)
                 .background(palette.primary.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {

@@ -622,19 +622,27 @@ class LibraryViewModel : ViewModel() {
                         val audiobooksWithCovers = mergedAudiobooks.map { audiobook ->
                             reloadCoverArt(context, audiobook)
                         }
+                        val booksWithCovers = mergedBooks.map { book ->
+                            reloadBookCoverArt(context, book)
+                        }
                         val musicWithCovers = mergedMusic.map { music ->
                             reloadMusicCoverArt(context, music)
                         }
                         val comicsWithCovers = mergedComics.map { comic ->
                             reloadComicCoverArt(context, comic)
                         }
+                        val moviesWithCovers = mergedMovies.map { movie ->
+                            reloadMovieCoverArt(context, movie)
+                        }
 
                         // Update all at once to avoid race conditions
                         withContext(Dispatchers.Main) {
                             _libraryState.value = _libraryState.value.copy(
                                 audiobooks = audiobooksWithCovers,
+                                books = booksWithCovers,
                                 music = musicWithCovers,
-                                comics = comicsWithCovers
+                                comics = comicsWithCovers,
+                                movies = moviesWithCovers
                             )
                         }
                     }
@@ -813,17 +821,22 @@ class LibraryViewModel : ViewModel() {
      * Uses robust extraction with fallback handling for device compatibility
      */
     private fun reloadCoverArt(context: Context, audiobook: LibraryAudiobook): LibraryAudiobook {
-        // Try to get file from URI for better compatibility and fallback options
-        // For file:// URIs, we can extract the path; for content:// URIs, pass null
-        val file = try {
-            if (audiobook.uri.scheme == "file") {
-                audiobook.uri.path?.let { File(it) }?.takeIf { it.exists() }
-            } else {
-                null
-            }
-        } catch (_: Exception) { null }
+        // First check if there's a custom cover art URI
+        val coverArt = if (audiobook.coverArtUri != null) {
+            loadCustomCoverArt(audiobook.coverArtUri.toString(), 512)
+        } else {
+            // Otherwise, try to get file from URI for better compatibility and fallback options
+            // For file:// URIs, we can extract the path; for content:// URIs, pass null
+            val file = try {
+                if (audiobook.uri.scheme == "file") {
+                    audiobook.uri.path?.let { File(it) }?.takeIf { it.exists() }
+                } else {
+                    null
+                }
+            } catch (_: Exception) { null }
 
-        val coverArt = extractCoverArtRobust(context, audiobook.uri, file, 512)
+            extractCoverArtRobust(context, audiobook.uri, file, 512)
+        }
         return audiobook.copy(coverArt = coverArt)
     }
 
@@ -832,16 +845,21 @@ class LibraryViewModel : ViewModel() {
      * Uses robust extraction with fallback handling for device compatibility
      */
     private fun reloadMusicCoverArt(context: Context, music: LibraryMusic): LibraryMusic {
-        // Try to get file from URI for better compatibility and fallback options
-        val file = try {
-            if (music.uri.scheme == "file") {
-                music.uri.path?.let { File(it) }?.takeIf { it.exists() }
-            } else {
-                null
-            }
-        } catch (_: Exception) { null }
+        // First check if there's a custom cover art URI
+        val coverArt = if (music.coverArtUri != null) {
+            loadCustomCoverArt(music.coverArtUri, 512)
+        } else {
+            // Otherwise, try to get file from URI for better compatibility and fallback options
+            val file = try {
+                if (music.uri.scheme == "file") {
+                    music.uri.path?.let { File(it) }?.takeIf { it.exists() }
+                } else {
+                    null
+                }
+            } catch (_: Exception) { null }
 
-        val coverArt = extractCoverArtRobust(context, music.uri, file, 512)
+            extractCoverArtRobust(context, music.uri, file, 512)
+        }
         return music.copy(coverArt = coverArt)
     }
 
@@ -850,8 +868,51 @@ class LibraryViewModel : ViewModel() {
      * Extracts the first image from the comic archive (CBZ/CBR/etc)
      */
     private fun reloadComicCoverArt(context: Context, comic: LibraryComic): LibraryComic {
-        val coverArt = extractComicCoverArt(context, comic.uri, 512)
+        // First check if there's a custom cover art URI
+        val coverArt = if (comic.coverArtUri != null) {
+            loadCustomCoverArt(comic.coverArtUri, 512)
+        } else {
+            extractComicCoverArt(context, comic.uri, 512)
+        }
         return comic.copy(coverArt = coverArt)
+    }
+
+    /**
+     * Reload cover art for a book
+     * Uses custom cover art if available, otherwise returns null (books don't have embedded art)
+     */
+    private fun reloadBookCoverArt(context: Context, book: LibraryBook): LibraryBook {
+        // Books typically don't have embedded cover art, so check for custom URI
+        val coverArt = if (book.coverArtUri != null) {
+            loadCustomCoverArt(book.coverArtUri, 512)
+        } else {
+            null
+        }
+        return book.copy(coverArt = coverArt)
+    }
+
+    /**
+     * Reload cover art for a movie
+     * Uses custom cover art if available, otherwise extracts a frame from the video
+     */
+    private fun reloadMovieCoverArt(context: Context, movie: LibraryMovie): LibraryMovie {
+        // First check if there's a custom cover art URI
+        val coverArt = if (movie.coverArtUri != null) {
+            loadCustomCoverArt(movie.coverArtUri, 512)
+        } else {
+            // Try to extract a frame from the video file
+            try {
+                val file = if (movie.uri.scheme == "file") {
+                    movie.uri.path?.let { File(it) }?.takeIf { it.exists() }
+                } else {
+                    null
+                }
+                extractCoverArtRobust(context, movie.uri, file, 512)
+            } catch (_: Exception) {
+                null
+            }
+        }
+        return movie.copy(coverArt = coverArt)
     }
 
     /**
@@ -1892,7 +1953,7 @@ class LibraryViewModel : ViewModel() {
                     if (uri.toString() !in existingUris && filename !in existingFilenames) {
                         try {
                             // Detect playlist folder and assign series
-                            val playlistName = getPlaylistFolderName(file, "Ebooks")
+                            val playlistName = getPlaylistFolderName(file, "Books")
                             val seriesId = if (playlistName != null) {
                                 findOrCreateSeriesForPlaylist(playlistName, ContentType.EBOOK)
                             } else null
@@ -1956,7 +2017,7 @@ class LibraryViewModel : ViewModel() {
                     if (uri.toString() !in existingUris && filename !in existingFilenames) {
                         try {
                             // Detect playlist folder and assign series
-                            val playlistName = getPlaylistFolderName(file, "Ebooks")
+                            val playlistName = getPlaylistFolderName(file, "Books")
                             val seriesId = if (playlistName != null) {
                                 findOrCreateSeriesForPlaylist(playlistName, ContentType.EBOOK)
                             } else null
@@ -3285,7 +3346,7 @@ class LibraryViewModel : ViewModel() {
                 }
 
                 if (file != null && file.exists()) {
-                    val playlistName = getPlaylistFolderName(file, "Ebooks")
+                    val playlistName = getPlaylistFolderName(file, "Books")
                     val newSeriesId = if (playlistName != null) {
                         findOrCreateSeriesForPlaylist(playlistName, ContentType.EBOOK)
                     } else null

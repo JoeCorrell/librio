@@ -68,6 +68,7 @@ class LibraryRepository(private val context: Context) {
                 put("title", audiobook.title)
                 put("author", audiobook.author)
                 put("narrator", audiobook.narrator ?: "")
+                put("coverArtUri", audiobook.coverArtUri?.toString() ?: "")
                 put("duration", audiobook.duration)
                 put("lastPosition", audiobook.lastPosition)
                 put("lastPlayed", audiobook.lastPlayed)
@@ -101,6 +102,7 @@ class LibraryRepository(private val context: Context) {
                     title = jsonObject.getString("title"),
                     author = jsonObject.getString("author"),
                     narrator = jsonObject.getString("narrator").takeIf { it.isNotEmpty() },
+                    coverArtUri = jsonObject.optString("coverArtUri").takeIf { it.isNotEmpty() }?.let { Uri.parse(it) },
                     duration = jsonObject.getLong("duration"),
                     lastPosition = jsonObject.getLong("lastPosition"),
                     lastPlayed = jsonObject.getLong("lastPlayed"),

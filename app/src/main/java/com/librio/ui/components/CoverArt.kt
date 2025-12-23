@@ -49,14 +49,14 @@ fun CoverArt(
     bitmap: Bitmap?,
     contentDescription: String,
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 16.dp,
+    cornerRadiusSize: Dp = 16.dp,
     elevation: Dp = 12.dp,
     showPlaceholderAlways: Boolean = false,
     fileExtension: String = "",
     contentType: CoverArtContentType = CoverArtContentType.AUDIOBOOK
 ) {
     val palette = currentPalette()
-    val shape = RoundedCornerShape(cornerRadius)
+    val shape = remember(cornerRadiusSize) { RoundedCornerShape(cornerRadiusSize) }
 
     Box(
         modifier = modifier
@@ -84,6 +84,8 @@ fun CoverArt(
                             CoverArtContentType.AUDIOBOOK -> AppIcons.Audiobook
                             CoverArtContentType.MUSIC -> AppIcons.Music
                             CoverArtContentType.MOVIE -> AppIcons.Movie
+                            CoverArtContentType.EBOOK -> AppIcons.Book
+                            CoverArtContentType.COMICS -> AppIcons.Comic
                         },
                         contentDescription = null,
                         modifier = Modifier
@@ -121,7 +123,9 @@ fun CoverArt(
 enum class CoverArtContentType {
     AUDIOBOOK,
     MUSIC,
-    MOVIE
+    MOVIE,
+    EBOOK,
+    COMICS
 }
 
 /**
@@ -141,7 +145,7 @@ fun CoverArtThumbnail(
         bitmap = bitmap,
         contentDescription = contentDescription,
         modifier = modifier.size(size),
-        cornerRadius = 8.dp,
+        cornerRadiusSize = 8.dp,
         elevation = 4.dp,
         showPlaceholderAlways = showPlaceholderAlways,
         fileExtension = fileExtension,

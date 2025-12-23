@@ -100,6 +100,13 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
+    val shape3 = cornerRadius(3.dp)
+    val shape6 = cornerRadius(6.dp)
+    val shape8 = cornerRadius(8.dp)
+    val shape10 = cornerRadius(10.dp)
+    val shape12 = cornerRadius(12.dp)
+    val shape14 = cornerRadius(14.dp)
+    val shape16 = cornerRadius(16.dp)
 
     // Cache themes list to avoid repeated allocation
     val cachedThemes = remember { AppTheme.entries.toList() }
@@ -517,7 +524,7 @@ fun ProfileScreen(
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
             containerColor = palette.surface,
-            shape = RoundedCornerShape(16.dp),
+            shape = shape16,
             modifier = Modifier.widthIn(max = 340.dp), // Constrain dialog width on larger screens
             title = {
                 Row(
@@ -571,7 +578,7 @@ fun ProfileScreen(
                                     Box(
                                         modifier = Modifier
                                             .size(squareSize)
-                                            .clip(RoundedCornerShape(10.dp))
+                                            .clip(shape10)
                                             .background(
                                                 Brush.linearGradient(
                                                     colors = listOf(
@@ -585,7 +592,7 @@ fun ProfileScreen(
                                                 if (isSelected) Modifier.border(
                                                     3.dp,
                                                     Color.White,
-                                                    RoundedCornerShape(10.dp)
+                                                    shape10
                                                 ) else Modifier
                                             )
                                             .clickable {
@@ -650,7 +657,7 @@ fun ProfileScreen(
         AlertDialog(
             onDismissRequest = { showCustomThemeDialog = false },
             containerColor = palette.surface,
-            shape = RoundedCornerShape(16.dp),
+            shape = shape16,
             modifier = Modifier.widthIn(max = 380.dp), // Constrain dialog width on larger screens
             title = {
                 Row(
@@ -690,7 +697,7 @@ fun ProfileScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp)
-                            .clip(RoundedCornerShape(12.dp)),
+                            .clip(shape12),
                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         previewShades.forEachIndexed { index, shadeColor ->
@@ -723,7 +730,7 @@ fun ProfileScreen(
                     // Mini Preview with generated palette
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = shape12,
                         colors = CardDefaults.cardColors(containerColor = previewShades[6]) // Ultra light bg
                     ) {
                         Column(modifier = Modifier.fillMaxWidth()) {
@@ -755,7 +762,7 @@ fun ProfileScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(45.dp, 60.dp)
-                                        .clip(RoundedCornerShape(6.dp))
+                                        .clip(shape6)
                                         .background(
                                             Brush.linearGradient(
                                                 colors = listOf(previewShades[0], previewShades[2], previewShades[4])
@@ -774,7 +781,7 @@ fun ProfileScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(45.dp, 60.dp)
-                                        .clip(RoundedCornerShape(6.dp))
+                                        .clip(shape6)
                                         .background(
                                             Brush.horizontalGradient(
                                                 colors = listOf(previewShades[1], previewShades[2], previewShades[3])
@@ -805,14 +812,14 @@ fun ProfileScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(6.dp)
-                                            .clip(RoundedCornerShape(3.dp))
+                                            .clip(shape3)
                                             .background(previewShades[5])
                                     ) {
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxWidth(0.65f)
                                                 .height(6.dp)
-                                                .clip(RoundedCornerShape(3.dp))
+                                                .clip(shape3)
                                                 .background(
                                                     Brush.horizontalGradient(
                                                         colors = listOf(previewShades[0], previewShades[2], previewShades[4])
@@ -840,7 +847,7 @@ fun ProfileScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(40.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(shape8)
                             .background(baseColor)
                     )
 
@@ -1000,7 +1007,7 @@ fun ProfileScreen(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(shape16)
                         .background(palette.surfaceMedium)
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
@@ -1068,7 +1075,7 @@ fun ProfileScreen(
                     val themePalette = cachedPalettes[currentTheme] ?: getThemePalette(currentTheme)
                     Card(
                         colors = CardDefaults.cardColors(containerColor = palette.surfaceMedium),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = shape16,
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -1083,8 +1090,8 @@ fun ProfileScreen(
                             Box(
                                 modifier = Modifier
                                     .size(56.dp)
-                                    .shadow(4.dp, RoundedCornerShape(14.dp))
-                                    .clip(RoundedCornerShape(14.dp))
+                                    .shadow(4.dp, shape14)
+                                    .clip(shape14)
                                     .background(
                                         Brush.linearGradient(
                                             colors = listOf(
@@ -1132,7 +1139,7 @@ fun ProfileScreen(
                     // App Scale Card
                     Card(
                         colors = CardDefaults.cardColors(containerColor = palette.surfaceMedium),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = shape16,
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -1148,7 +1155,7 @@ fun ProfileScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(48.dp)
-                                        .clip(RoundedCornerShape(12.dp))
+                                        .clip(shape12)
                                         .background(palette.accent.copy(alpha = 0.15f)),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -1195,7 +1202,7 @@ fun ProfileScreen(
                     // Typography Card
                     Card(
                         colors = CardDefaults.cardColors(containerColor = palette.surfaceMedium),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = shape16,
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -1211,7 +1218,7 @@ fun ProfileScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(48.dp)
-                                        .clip(RoundedCornerShape(12.dp))
+                                        .clip(shape12)
                                         .background(palette.accent.copy(alpha = 0.15f)),
                                     contentAlignment = Alignment.Center
                                 ) {

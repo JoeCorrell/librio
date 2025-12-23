@@ -105,6 +105,12 @@ fun LibraryScreen(
     }
 
     val palette = currentPalette()
+    // Remember shapes for performance
+    val shape12 = cornerRadius(12.dp)
+    val shape16 = cornerRadius(16.dp)
+    val shape28 = cornerRadius(28.dp)
+    val shape35 = cornerRadius(35.dp)
+
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp
     val isCompact = screenWidth < 400
@@ -282,7 +288,7 @@ fun LibraryScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = dimens.horizontalPadding, vertical = 12.dp)
-                        .background(palette.surfaceCard, RoundedCornerShape(12.dp))
+                        .background(palette.surfaceCard, shape12)
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -503,6 +509,10 @@ private fun AudiobookCard(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    // Remember shapes for performance
+    val shape12 = cornerRadius(12.dp)
+    val shape16 = cornerRadius(16.dp)
+
     var isPressed by remember { mutableStateOf(false) }
     val cardScale by animateFloatAsState(
         targetValue = if (isPressed) 0.97f else 1f,
@@ -520,7 +530,7 @@ private fun AudiobookCard(
                 onClick = onClick,
                 onClickLabel = "Play ${audiobook.title}"
             ),
-        shape = RoundedCornerShape(16.dp),
+        shape = shape16,
         colors = CardDefaults.cardColors(containerColor = palette.surfaceCard)
     ) {
         Column(modifier = Modifier.padding(10.dp)) {
@@ -528,7 +538,7 @@ private fun AudiobookCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(shape12)
                     .background(palette.coverArtGradient()),
                 contentAlignment = Alignment.Center
             ) {
@@ -610,6 +620,9 @@ private fun AudiobookGridItem(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    // Remember shape for performance
+    val shape12 = cornerRadius(12.dp)
+
     var isPressed by remember { mutableStateOf(false) }
     val cardScale by animateFloatAsState(
         targetValue = if (isPressed) 0.97f else 1f,
@@ -630,8 +643,8 @@ private fun AudiobookGridItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .shadow(8.dp, RoundedCornerShape(12.dp))
-                .clip(RoundedCornerShape(12.dp))
+                .shadow(8.dp, shape12)
+                .clip(shape12)
                 .background(palette.coverArtGradient()),
             contentAlignment = Alignment.Center
         ) {
@@ -719,6 +732,10 @@ private fun EmptyLibraryState(
 ) {
     val palette = currentPalette()
     val dimens = rememberResponsiveDimens()
+    // Remember shapes for performance
+    val shape28 = cornerRadius(28.dp)
+    val shape35 = cornerRadius(35.dp)
+
     var isVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { isVisible = true }
@@ -758,7 +775,7 @@ private fun EmptyLibraryState(
                 .offset(y = -floatOffset.dp)
                 .background(
                     color = palette.primary.copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(35.dp)
+                    shape = shape35
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -807,7 +824,7 @@ private fun EmptyLibraryState(
         Button(
             onClick = onAddClick,
             colors = ButtonDefaults.buttonColors(containerColor = palette.accent, contentColor = palette.surfaceDark),
-            shape = RoundedCornerShape(28.dp),
+            shape = shape28,
             modifier = Modifier
                 .height(dimens.buttonHeight)
                 .graphicsLayer(alpha = contentAlpha)

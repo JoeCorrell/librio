@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.librio.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     // Playback Controls
@@ -47,6 +48,10 @@ fun SettingsScreen(
     onShowBackButtonChange: (Boolean) -> Unit = {},
     showSearchBar: Boolean = true,
     onShowSearchBarChange: (Boolean) -> Unit = {},
+    useSquareCorners: Boolean = false,
+    onUseSquareCornersChange: (Boolean) -> Unit = {},
+    defaultLibraryView: String = "LIST",
+    onDefaultLibraryViewChange: (String) -> Unit = {},
     // General
     autoBookmark: Boolean = true,
     onAutoBookmarkChange: (Boolean) -> Unit = {},
@@ -258,6 +263,56 @@ fun SettingsScreen(
                             checked = showSearchBar,
                             onCheckedChange = onShowSearchBarChange
                         )
+                        Divider(
+                            color = palette.divider,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                        SettingsSwitchRow(
+                            title = "Square corners",
+                            subtitle = "Use square corners instead of rounded",
+                            checked = useSquareCorners,
+                            onCheckedChange = onUseSquareCornersChange
+                        )
+
+                        // Library View Mode selector
+                        Text(
+                            text = "Library View",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = palette.textPrimary,
+                            modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            FilterChip(
+                                selected = defaultLibraryView == "LIST",
+                                onClick = { onDefaultLibraryViewChange("LIST") },
+                                label = { Text("List") },
+                                leadingIcon = if (defaultLibraryView == "LIST") {
+                                    { Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                                } else null,
+                                modifier = Modifier.weight(1f),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = palette.accent.copy(alpha = 0.2f),
+                                    selectedLabelColor = palette.accent
+                                )
+                            )
+                            FilterChip(
+                                selected = defaultLibraryView == "GRID_2",
+                                onClick = { onDefaultLibraryViewChange("GRID_2") },
+                                label = { Text("Grid (2 columns)") },
+                                leadingIcon = if (defaultLibraryView == "GRID_2") {
+                                    { Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                                } else null,
+                                modifier = Modifier.weight(1f),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = palette.accent.copy(alpha = 0.2f),
+                                    selectedLabelColor = palette.accent
+                                )
+                            )
+                        }
                     }
                 }
             }
@@ -375,9 +430,11 @@ private fun SettingsSection(
 @Composable
 private fun SettingsCard(content: @Composable () -> Unit) {
     val palette = currentPalette()
+    val shape16 = cornerRadius(16.dp)
+
     Card(
         colors = CardDefaults.cardColors(containerColor = palette.surfaceMedium),
-        shape = RoundedCornerShape(16.dp),
+        shape = shape16,
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -426,10 +483,12 @@ private fun SettingsActionRow(
     onClick: () -> Unit
 ) {
     val palette = currentPalette()
+    val shape12 = cornerRadius(12.dp)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(shape12)
             .background(palette.surfaceMedium)
             .clickable(onClick = onClick)
             .padding(16.dp),
@@ -438,7 +497,7 @@ private fun SettingsActionRow(
         Box(
             modifier = Modifier
                 .size(44.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(shape12)
                 .background(palette.primary.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {

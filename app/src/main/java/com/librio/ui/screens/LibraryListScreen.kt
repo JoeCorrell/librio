@@ -18,12 +18,17 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import com.librio.ui.theme.AppIcons
+import com.librio.ui.components.CoverArt
+import com.librio.ui.components.CoverArtContentType
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.derivedStateOf
@@ -37,6 +42,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -104,6 +110,7 @@ fun LibraryListScreen(
     onEditMovie: (LibraryMovie, String) -> Unit = { _, _ -> },
     onDeleteMovie: (LibraryMovie) -> Unit = {},
     showPlaceholderIcons: Boolean = true,
+    defaultLibraryView: String = "LIST",
     // Series management
     seriesList: List<LibrarySeries> = emptyList(),
     onAddSeries: (String) -> Unit = {},
@@ -127,6 +134,13 @@ fun LibraryListScreen(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    val shape3 = cornerRadius(3.dp)
+    val shape4 = cornerRadius(4.dp)
+    val shape6 = cornerRadius(6.dp)
+    val shape8 = cornerRadius(8.dp)
+    val shape10 = cornerRadius(10.dp)
+    val shape12 = cornerRadius(12.dp)
+    val shape50 = cornerRadius(50.dp)
     var showEditDialog by remember { mutableStateOf<LibraryAudiobook?>(null) }
     var showDeleteDialog by remember { mutableStateOf<LibraryAudiobook?>(null) }
     var showEditBookDialog by remember { mutableStateOf<LibraryBook?>(null) }
@@ -136,6 +150,13 @@ fun LibraryListScreen(
     var showEditMovieDialog by remember { mutableStateOf<LibraryMovie?>(null) }
     var showRenameSeriesDialog by remember { mutableStateOf<LibrarySeries?>(null) }
     var showCoverArtPickerForSeries by remember { mutableStateOf<LibrarySeries?>(null) }
+    var selectedPlaylistFilter by remember { mutableStateOf<String?>(null) } // null = "All"
+
+    // Reset playlist filter when content type changes
+    LaunchedEffect(selectedContentType) {
+        selectedPlaylistFilter = null
+    }
+
     // State for individual item cover art pickers
     var showCoverArtPickerForAudiobook by remember { mutableStateOf<LibraryAudiobook?>(null) }
     var showCoverArtPickerForBook by remember { mutableStateOf<LibraryBook?>(null) }
@@ -490,10 +511,14 @@ fun LibraryListScreen(
 
     // Sort menu dialog (shown on long press)
     if (showSortMenu) {
+        val currentPlaylists = seriesList.filter { it.contentType == selectedContentType }
         SortMenuDialog(
             currentSort = sortOption,
             onSortSelected = onSortOptionChange,
-            onDismiss = { showSortMenu = false }
+            onDismiss = { showSortMenu = false },
+            playlists = currentPlaylists,
+            selectedPlaylist = selectedPlaylistFilter,
+            onPlaylistSelected = { selectedPlaylistFilter = it }
         )
     }
 
@@ -527,7 +552,7 @@ fun LibraryListScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .background(palette.surfaceMedium, RoundedCornerShape(12.dp))
+                    .background(palette.surfaceMedium, shape12)
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -602,41 +627,51 @@ fun LibraryListScreen(
             }
         }
 
-        // Sort indicator bar (tap to change sort) - centered
+        // Sort/Filter indicator button - full width with border
+        val displayText = if (selectedPlaylistFilter != null) {
+            val playlist = seriesList.find { it.id == selectedPlaylistFilter }
+            playlist?.name ?: sortOption.displayName
+        } else {
+            sortOption.displayName
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(vertical = 8.dp)
+                .border(
+                    width = 1.dp,
+                    color = palette.accent.copy(alpha = 0.3f),
+                    shape = RectangleShape
+                )
                 .clickable { showSortMenu = true }
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
-                    AppIcons.Sort,
-                    contentDescription = "Sort",
+                    if (selectedPlaylistFilter != null) AppIcons.Playlist else AppIcons.Sort,
+                    contentDescription = if (selectedPlaylistFilter != null) "Filter" else "Sort",
                     tint = palette.accent,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = sortOption.displayName,
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = displayText,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = palette.accent,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
                 Icon(
                     AppIcons.KeyboardArrowDown,
                     contentDescription = "Change sort",
                     tint = palette.accent.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             }
         }
-
-        // Divider
-        Divider(color = palette.accent.copy(alpha = 0.3f), thickness = 1.dp)
 
         // Content based on selected type
         AnimatedContent(
@@ -679,86 +714,78 @@ fun LibraryListScreen(
                             }
                         }
                     } else {
-                        // Group audiobooks by series
-                        val audiobooksBySeries = remember(audiobooks, seriesList) {
-                            val grouped = audiobooks.groupBy { it.seriesId }
-                            val result = mutableListOf<Pair<LibrarySeries?, List<LibraryAudiobook>>>()
-
-                            // Add items with series (sorted by series order)
-                            seriesList.filter { it.contentType == ContentType.AUDIOBOOK }
-                                .sortedBy { it.order }
-                                .forEach { series ->
-                                    val items = grouped[series.id]?.sortedBy { it.seriesOrder } ?: emptyList()
-                                    if (items.isNotEmpty()) {
-                                        result.add(series to items)
-                                    }
-                                }
-
-                            // Add items without series
-                            val noSeriesItems = grouped[null] ?: emptyList()
-                            if (noSeriesItems.isNotEmpty()) {
-                                result.add(null to noSeriesItems)
+                        // Filter and sort audiobooks by playlist
+                        val filteredAudiobooks = remember(audiobooks, selectedPlaylistFilter, sortOption) {
+                            val filtered = if (selectedPlaylistFilter != null) {
+                                audiobooks.filter { it.seriesId == selectedPlaylistFilter }
+                            } else {
+                                audiobooks
                             }
 
-                            result
+                            // Sort filtered audiobooks
+                            when (sortOption) {
+                                SortOption.TITLE_AZ -> filtered.sortedBy { it.title.lowercase() }
+                                SortOption.TITLE_ZA -> filtered.sortedByDescending { it.title.lowercase() }
+                                SortOption.AUTHOR_AZ -> filtered.sortedBy { it.author.lowercase() }
+                                SortOption.RECENTLY_ADDED -> filtered.sortedByDescending { it.dateAdded }
+                                SortOption.RECENTLY_PLAYED -> filtered.sortedByDescending { it.lastPlayed }
+                                SortOption.PROGRESS -> filtered.sortedByDescending { it.progress }
+                                SortOption.BOOK_NUMBER -> filtered.sortedBy { it.seriesOrder }
+                            }
                         }
 
-                        // Audiobook list with series dividers
-                        LazyColumn(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                        ) {
-                            audiobooksBySeries.forEach { (series, items) ->
-                                // Series divider (if series exists)
-                                if (series != null) {
-                                    item(key = "series_${series.id}") {
-                                        SeriesDivider(
-                                            seriesName = series.name,
-                                            itemCount = items.size,
-                                            isCollapsed = series.id in collapsedSeries,
-                                            onToggle = {
-                                                val updated = if (series.id in collapsedSeries) {
-                                                    collapsedSeries - series.id
-                                                } else {
-                                                    collapsedSeries + series.id
-                                                }
-                                                onCollapsedSeriesChange(updated)
-                                            },
-                                            series = series,
-                                            onEditSeries = { showRenameSeriesDialog = series },
-                                            onDeleteSeries = { onDeleteSeries(series.id) },
-                                            onSeriesClick = { onPlaylistClick(series) },
-                                            onSetCoverArt = { showCoverArtPickerForSeries = series },
-                                            coverArtBitmap = coverArtCache[series.id]
-                                        )
-                                    }
+                        // Flat audiobook list without series dividers
+                        if (defaultLibraryView == "GRID_2") {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth(),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                itemsIndexed(filteredAudiobooks, key = { _, item -> item.id }) { index, audiobook ->
+                                    AudiobookGridItem(
+                                        audiobook = audiobook,
+                                        onClick = { onSelectAudiobook(audiobook) },
+                                        onLongClick = { showEditDialog = audiobook },
+                                        showPlayingIndicator = audiobook.lastPlayed > 0 && !audiobook.isCompleted,
+                                        showPlaceholderIcons = showPlaceholderIcons
+                                    )
                                 }
 
-                                // Show items if not collapsed (or if no series)
-                                if (series == null || series.id !in collapsedSeries) {
-                                    itemsIndexed(items, key = { _, item -> item.id }) { index, audiobook ->
-                                        AnimatedAudiobookListItem(
-                                            audiobook = audiobook,
-                                            index = index,
-                                            onClick = { onSelectAudiobook(audiobook) },
-                                            onLongClick = { showEditDialog = audiobook },
-                                            showPlayingIndicator = audiobook.lastPlayed > 0 && !audiobook.isCompleted,
-                                            showPlaceholderIcons = showPlaceholderIcons
-                                        )
-                                        Divider(
-                                            color = palette.primaryLight.copy(alpha = 0.35f),
-                                            thickness = 1.dp,
-                                            modifier = Modifier
-                                                .padding(horizontal = 16.dp)
-                                                .clip(RoundedCornerShape(50))
-                                        )
-                                    }
+                                item {
+                                    Spacer(modifier = Modifier.height(100.dp))
                                 }
                             }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                            ) {
+                                itemsIndexed(filteredAudiobooks, key = { _, item -> item.id }) { index, audiobook ->
+                                    AnimatedAudiobookListItem(
+                                        audiobook = audiobook,
+                                        index = index,
+                                        onClick = { onSelectAudiobook(audiobook) },
+                                        onLongClick = { showEditDialog = audiobook },
+                                        showPlayingIndicator = audiobook.lastPlayed > 0 && !audiobook.isCompleted,
+                                        showPlaceholderIcons = showPlaceholderIcons
+                                    )
+                                    Divider(
+                                        color = palette.primaryLight.copy(alpha = 0.35f),
+                                        thickness = 1.dp,
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .clip(shape50)
+                                    )
+                                }
 
-                            item {
-                                Spacer(modifier = Modifier.height(100.dp))
+                                item {
+                                    Spacer(modifier = Modifier.height(100.dp))
+                                }
                             }
                         }
                     }
@@ -795,80 +822,76 @@ fun LibraryListScreen(
                             }
                         }
                     } else {
-                        // Group books by series
-                        val booksBySeries = remember(books, seriesList) {
-                            val grouped = books.groupBy { it.seriesId }
-                            val result = mutableListOf<Pair<LibrarySeries?, List<LibraryBook>>>()
-
-                            seriesList.filter { it.contentType == ContentType.EBOOK }
-                                .sortedBy { it.order }
-                                .forEach { series ->
-                                    val items = grouped[series.id]?.sortedBy { it.seriesOrder } ?: emptyList()
-                                    if (items.isNotEmpty()) {
-                                        result.add(series to items)
-                                    }
-                                }
-
-                            val noSeriesItems = grouped[null] ?: emptyList()
-                            if (noSeriesItems.isNotEmpty()) {
-                                result.add(null to noSeriesItems)
+                        // Filter and sort books by playlist
+                        val filteredBooks = remember(books, selectedPlaylistFilter, sortOption) {
+                            val filtered = if (selectedPlaylistFilter != null) {
+                                books.filter { it.seriesId == selectedPlaylistFilter }
+                            } else {
+                                books
                             }
-                            result
+
+                            // Sort filtered books
+                            when (sortOption) {
+                                SortOption.TITLE_AZ -> filtered.sortedBy { it.title.lowercase() }
+                                SortOption.TITLE_ZA -> filtered.sortedByDescending { it.title.lowercase() }
+                                SortOption.AUTHOR_AZ -> filtered.sortedBy { it.author.lowercase() }
+                                SortOption.RECENTLY_ADDED -> filtered.sortedByDescending { it.dateAdded }
+                                SortOption.RECENTLY_PLAYED -> filtered.sortedByDescending { it.dateAdded }
+                                SortOption.PROGRESS -> filtered.sortedByDescending { it.progress }
+                                SortOption.BOOK_NUMBER -> filtered.sortedBy { it.seriesOrder }
+                            }
                         }
 
-                        // Books list with series dividers
-                        LazyColumn(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                        ) {
-                            booksBySeries.forEach { (series, items) ->
-                                if (series != null) {
-                                    item(key = "series_${series.id}") {
-                                        SeriesDivider(
-                                            seriesName = series.name,
-                                            itemCount = items.size,
-                                            isCollapsed = series.id in collapsedSeries,
-                                            onToggle = {
-                                                val updated = if (series.id in collapsedSeries) {
-                                                    collapsedSeries - series.id
-                                                } else {
-                                                    collapsedSeries + series.id
-                                                }
-                                                onCollapsedSeriesChange(updated)
-                                            },
-                                            series = series,
-                                            onEditSeries = { showRenameSeriesDialog = series },
-                                            onDeleteSeries = { onDeleteSeries(series.id) },
-                                            onSeriesClick = { onPlaylistClick(series) },
-                                            onSetCoverArt = { showCoverArtPickerForSeries = series },
-                                            coverArtBitmap = coverArtCache[series.id]
-                                        )
-                                    }
+                        // Flat books list without series dividers
+                        if (defaultLibraryView == "GRID_2") {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth(),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                itemsIndexed(filteredBooks, key = { _, item -> item.id }) { index, book ->
+                                    BookGridItem(
+                                        book = book,
+                                        onClick = { onSelectBook(book) },
+                                        onLongClick = { showEditBookDialog = book },
+                                        showPlaceholderIcons = showPlaceholderIcons
+                                    )
                                 }
 
-                                if (series == null || series.id !in collapsedSeries) {
-                                    itemsIndexed(items, key = { _, item -> item.id }) { index, book ->
-                                        AnimatedBookListItem(
-                                            book = book,
-                                            index = index,
-                                            onClick = { onSelectBook(book) },
-                                            onLongClick = { showEditBookDialog = book },
-                                            showPlaceholderIcons = showPlaceholderIcons
-                                        )
-                                        Divider(
-                                            color = palette.primaryLight.copy(alpha = 0.35f),
-                                            thickness = 1.dp,
-                                            modifier = Modifier
-                                                .padding(horizontal = 16.dp)
-                                                .clip(RoundedCornerShape(50))
-                                        )
-                                    }
+                                item {
+                                    Spacer(modifier = Modifier.height(100.dp))
                                 }
                             }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                            ) {
+                                itemsIndexed(filteredBooks, key = { _, item -> item.id }) { index, book ->
+                                    AnimatedBookListItem(
+                                        book = book,
+                                        index = index,
+                                        onClick = { onSelectBook(book) },
+                                        onLongClick = { showEditBookDialog = book },
+                                        showPlaceholderIcons = showPlaceholderIcons
+                                    )
+                                    Divider(
+                                        color = palette.primaryLight.copy(alpha = 0.35f),
+                                        thickness = 1.dp,
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .clip(shape50)
+                                    )
+                                }
 
-                            item {
-                                Spacer(modifier = Modifier.height(100.dp))
+                                item {
+                                    Spacer(modifier = Modifier.height(100.dp))
+                                }
                             }
                         }
                     }
@@ -906,82 +929,77 @@ fun LibraryListScreen(
                             }
                         }
                     } else {
-                        // Group music by playlist/series
-                        val musicBySeries = remember(musicItems, seriesList) {
-                            val grouped = musicItems.groupBy { it.seriesId }
-                            val result = mutableListOf<Pair<LibrarySeries?, List<LibraryMusic>>>()
-
-                            seriesList.filter { it.contentType == ContentType.MUSIC }
-                                .sortedBy { it.order }
-                                .forEach { series ->
-                                    val items = grouped[series.id]?.sortedBy { it.seriesOrder } ?: emptyList()
-                                    if (items.isNotEmpty()) {
-                                        result.add(series to items)
-                                    }
-                                }
-
-                            val noSeriesItems = grouped[null] ?: emptyList()
-                            if (noSeriesItems.isNotEmpty()) {
-                                result.add(null to noSeriesItems)
+                        // Filter and sort music by playlist
+                        val filteredMusic = remember(musicItems, selectedPlaylistFilter, sortOption) {
+                            val filtered = if (selectedPlaylistFilter != null) {
+                                musicItems.filter { it.seriesId == selectedPlaylistFilter }
+                            } else {
+                                musicItems
                             }
-                            result
+
+                            // Sort filtered music
+                            when (sortOption) {
+                                SortOption.TITLE_AZ -> filtered.sortedBy { it.title.lowercase() }
+                                SortOption.TITLE_ZA -> filtered.sortedByDescending { it.title.lowercase() }
+                                SortOption.AUTHOR_AZ -> filtered.sortedBy { it.artist.lowercase() }
+                                SortOption.RECENTLY_ADDED -> filtered.sortedByDescending { it.dateAdded }
+                                SortOption.RECENTLY_PLAYED -> filtered.sortedByDescending { it.lastPlayed }
+                                SortOption.PROGRESS -> filtered.sortedByDescending { it.progress }
+                                SortOption.BOOK_NUMBER -> filtered.sortedBy { it.seriesOrder }
+                            }
                         }
 
-                        // Music list with playlist dividers
-                        LazyColumn(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                        ) {
-                            musicBySeries.forEach { (series, items) ->
-                                if (series != null) {
-                                    item(key = "series_${series.id}") {
-                                        SeriesDivider(
-                                            seriesName = series.name,
-                                            itemCount = items.size,
-                                            isCollapsed = series.id in collapsedSeries,
-                                            onToggle = {
-                                                val updated = if (series.id in collapsedSeries) {
-                                                    collapsedSeries - series.id
-                                                } else {
-                                                    collapsedSeries + series.id
-                                                }
-                                                onCollapsedSeriesChange(updated)
-                                            },
-                                            isPlaylist = true,
-                                            series = series,
-                                            onEditSeries = { showRenameSeriesDialog = series },
-                                            onDeleteSeries = { onDeleteSeries(series.id) },
-                                            onSeriesClick = { onPlaylistClick(series) },
-                                            onSetCoverArt = { showCoverArtPickerForSeries = series },
-                                            coverArtBitmap = coverArtCache[series.id]
-                                        )
-                                    }
+                        // Flat music list without playlist dividers
+                        if (defaultLibraryView == "GRID_2") {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth(),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                itemsIndexed(filteredMusic, key = { _, item -> item.id }) { _, musicItem ->
+                                    MusicGridItem(
+                                        music = musicItem,
+                                        onClick = { onSelectMusic(musicItem) },
+                                        onLongClick = { showEditMusicDialog = musicItem },
+                                        showPlaceholderIcons = showPlaceholderIcons
+                                    )
                                 }
 
-                                if (series == null || series.id !in collapsedSeries) {
-                                    itemsIndexed(items, key = { _, item -> item.id }) { _, musicItem ->
-                                        MusicListItem(
-                                            music = musicItem,
-                                            onClick = { onSelectMusic(musicItem) },
-                                            onLongClick = { showEditMusicDialog = musicItem },
-                                            showPlaceholderIcons = showPlaceholderIcons,
-                                            modifier = Modifier
-                                                .animateItemPlacement()
-                                        )
-                                        Divider(
-                                            color = palette.primaryLight.copy(alpha = 0.35f),
-                                            thickness = 1.dp,
-                                            modifier = Modifier
-                                                .padding(horizontal = 16.dp)
-                                                .clip(RoundedCornerShape(50))
-                                        )
-                                    }
+                                item {
+                                    Spacer(modifier = Modifier.height(100.dp))
                                 }
                             }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                            ) {
+                                itemsIndexed(filteredMusic, key = { _, item -> item.id }) { _, musicItem ->
+                                    MusicListItem(
+                                        music = musicItem,
+                                        onClick = { onSelectMusic(musicItem) },
+                                        onLongClick = { showEditMusicDialog = musicItem },
+                                        showPlaceholderIcons = showPlaceholderIcons,
+                                        modifier = Modifier
+                                            .animateItemPlacement()
+                                    )
+                                    Divider(
+                                        color = palette.primaryLight.copy(alpha = 0.35f),
+                                        thickness = 1.dp,
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .clip(shape50)
+                                    )
+                                }
 
-                            item {
-                                Spacer(modifier = Modifier.height(100.dp))
+                                item {
+                                    Spacer(modifier = Modifier.height(100.dp))
+                                }
                             }
                         }
                     }
@@ -1018,80 +1036,77 @@ fun LibraryListScreen(
                             }
                         }
                     } else {
-                        val musicBySeries = remember(creepItems, seriesList) {
-                            val grouped = creepItems.groupBy { it.seriesId }
-                            val result = mutableListOf<Pair<LibrarySeries?, List<LibraryMusic>>>()
-
-                            seriesList.filter { it.contentType == ContentType.CREEPYPASTA }
-                                .sortedBy { it.order }
-                                .forEach { series ->
-                                    val items = grouped[series.id]?.sortedBy { it.seriesOrder } ?: emptyList()
-                                    if (items.isNotEmpty()) {
-                                        result.add(series to items)
-                                    }
-                                }
-
-                            val noSeriesItems = grouped[null] ?: emptyList()
-                            if (noSeriesItems.isNotEmpty()) {
-                                result.add(null to noSeriesItems)
+                        // Filter and sort creepypasta by playlist
+                        val filteredCreep = remember(creepItems, selectedPlaylistFilter, sortOption) {
+                            val filtered = if (selectedPlaylistFilter != null) {
+                                creepItems.filter { it.seriesId == selectedPlaylistFilter }
+                            } else {
+                                creepItems
                             }
-                            result
+
+                            // Sort filtered creepypasta
+                            when (sortOption) {
+                                SortOption.TITLE_AZ -> filtered.sortedBy { it.title.lowercase() }
+                                SortOption.TITLE_ZA -> filtered.sortedByDescending { it.title.lowercase() }
+                                SortOption.AUTHOR_AZ -> filtered.sortedBy { it.artist.lowercase() }
+                                SortOption.RECENTLY_ADDED -> filtered.sortedByDescending { it.dateAdded }
+                                SortOption.RECENTLY_PLAYED -> filtered.sortedByDescending { it.lastPlayed }
+                                SortOption.PROGRESS -> filtered.sortedByDescending { it.progress }
+                                SortOption.BOOK_NUMBER -> filtered.sortedBy { it.seriesOrder }
+                            }
                         }
 
-                        LazyColumn(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                        ) {
-                            musicBySeries.forEach { (series, items) ->
-                                if (series != null) {
-                                    item(key = "series_${series.id}") {
-                                        SeriesDivider(
-                                            seriesName = series.name,
-                                            itemCount = items.size,
-                                            isCollapsed = series.id in collapsedSeries,
-                                            onToggle = {
-                                                val updated = if (series.id in collapsedSeries) {
-                                                    collapsedSeries - series.id
-                                                } else {
-                                                    collapsedSeries + series.id
-                                                }
-                                                onCollapsedSeriesChange(updated)
-                                            },
-                                            isPlaylist = true,
-                                            series = series,
-                                            onEditSeries = { showRenameSeriesDialog = series },
-                                            onDeleteSeries = { onDeleteSeries(series.id) },
-                                            onSeriesClick = { onPlaylistClick(series) },
-                                            onSetCoverArt = { showCoverArtPickerForSeries = series },
-                                            coverArtBitmap = coverArtCache[series.id]
-                                        )
-                                    }
+                        // Flat creepypasta list without playlist dividers
+                        if (defaultLibraryView == "GRID_2") {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth(),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                itemsIndexed(filteredCreep, key = { _, item -> item.id }) { _, musicItem ->
+                                    MusicGridItem(
+                                        music = musicItem,
+                                        onClick = { onSelectMusic(musicItem) },
+                                        onLongClick = { showEditMusicDialog = musicItem },
+                                        showPlaceholderIcons = showPlaceholderIcons
+                                    )
                                 }
 
-                                if (series == null || series.id !in collapsedSeries) {
-                                    itemsIndexed(items, key = { _, item -> item.id }) { _, musicItem ->
-                                        MusicListItem(
-                                            music = musicItem,
-                                            onClick = { onSelectMusic(musicItem) },
-                                            onLongClick = { showEditMusicDialog = musicItem },
-                                            showPlaceholderIcons = showPlaceholderIcons,
-                                            modifier = Modifier
-                                                .animateItemPlacement()
-                                        )
-                                        Divider(
-                                            color = palette.primaryLight.copy(alpha = 0.35f),
-                                            thickness = 1.dp,
-                                            modifier = Modifier
-                                                .padding(horizontal = 16.dp)
-                                                .clip(RoundedCornerShape(50))
-                                        )
-                                    }
+                                item {
+                                    Spacer(modifier = Modifier.height(100.dp))
                                 }
                             }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                            ) {
+                                itemsIndexed(filteredCreep, key = { _, item -> item.id }) { _, musicItem ->
+                                    MusicListItem(
+                                        music = musicItem,
+                                        onClick = { onSelectMusic(musicItem) },
+                                        onLongClick = { showEditMusicDialog = musicItem },
+                                        showPlaceholderIcons = showPlaceholderIcons,
+                                        modifier = Modifier
+                                            .animateItemPlacement()
+                                    )
+                                    Divider(
+                                        color = palette.primaryLight.copy(alpha = 0.35f),
+                                        thickness = 1.dp,
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .clip(shape50)
+                                    )
+                                }
 
-                            item {
-                                Spacer(modifier = Modifier.height(100.dp))
+                                item {
+                                    Spacer(modifier = Modifier.height(100.dp))
+                                }
                             }
                         }
                     }
@@ -1128,79 +1143,74 @@ fun LibraryListScreen(
                             }
                         }
                     } else {
-                        // Group comics by series
-                        val comicsBySeries = remember(comics, seriesList) {
-                            val grouped = comics.groupBy { it.seriesId }
-                            val result = mutableListOf<Pair<LibrarySeries?, List<LibraryComic>>>()
-
-                            seriesList.filter { it.contentType == ContentType.COMICS }
-                                .sortedBy { it.order }
-                                .forEach { series ->
-                                    val items = grouped[series.id]?.sortedBy { it.seriesOrder } ?: emptyList()
-                                    if (items.isNotEmpty()) {
-                                        result.add(series to items)
-                                    }
-                                }
-
-                            val noSeriesItems = grouped[null] ?: emptyList()
-                            if (noSeriesItems.isNotEmpty()) {
-                                result.add(null to noSeriesItems)
+                        // Filter and sort comics by playlist
+                        val filteredComics = remember(comics, selectedPlaylistFilter, sortOption) {
+                            val filtered = if (selectedPlaylistFilter != null) {
+                                comics.filter { it.seriesId == selectedPlaylistFilter }
+                            } else {
+                                comics
                             }
-                            result
+
+                            // Sort filtered comics
+                            when (sortOption) {
+                                SortOption.TITLE_AZ -> filtered.sortedBy { it.title.lowercase() }
+                                SortOption.TITLE_ZA -> filtered.sortedByDescending { it.title.lowercase() }
+                                SortOption.AUTHOR_AZ -> filtered.sortedBy { it.author.lowercase() }
+                                SortOption.RECENTLY_ADDED -> filtered.sortedByDescending { it.dateAdded }
+                                SortOption.RECENTLY_PLAYED -> filtered.sortedByDescending { it.dateAdded }
+                                SortOption.PROGRESS -> filtered.sortedByDescending { it.progress }
+                                SortOption.BOOK_NUMBER -> filtered.sortedBy { it.seriesOrder }
+                            }
                         }
 
-                        // Comics list with series dividers
-                        LazyColumn(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                        ) {
-                            comicsBySeries.forEach { (series, items) ->
-                                if (series != null) {
-                                    item(key = "series_${series.id}") {
-                                        SeriesDivider(
-                                            seriesName = series.name,
-                                            itemCount = items.size,
-                                            isCollapsed = series.id in collapsedSeries,
-                                            onToggle = {
-                                                val updated = if (series.id in collapsedSeries) {
-                                                    collapsedSeries - series.id
-                                                } else {
-                                                    collapsedSeries + series.id
-                                                }
-                                                onCollapsedSeriesChange(updated)
-                                            },
-                                            series = series,
-                                            onEditSeries = { showRenameSeriesDialog = series },
-                                            onDeleteSeries = { onDeleteSeries(series.id) },
-                                            onSeriesClick = { onPlaylistClick(series) },
-                                            onSetCoverArt = { showCoverArtPickerForSeries = series },
-                                            coverArtBitmap = coverArtCache[series.id]
-                                        )
-                                    }
+                        // Flat comics list without series dividers
+                        if (defaultLibraryView == "GRID_2") {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth(),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                itemsIndexed(filteredComics, key = { _, item -> item.id }) { index, comicItem ->
+                                    ComicGridItem(
+                                        comic = comicItem,
+                                        onClick = { onSelectComic(comicItem) },
+                                        onLongClick = { showEditComicDialog = comicItem },
+                                        showPlaceholderIcons = showPlaceholderIcons
+                                    )
                                 }
-
-                                if (series == null || series.id !in collapsedSeries) {
-                                    itemsIndexed(items, key = { _, item -> item.id }) { index, comicItem ->
-                                        ComicListItem(
-                                            comic = comicItem,
-                                            onClick = { onSelectComic(comicItem) },
-                                            onLongClick = { showEditComicDialog = comicItem },
-                                            showPlaceholderIcons = showPlaceholderIcons,
-                                            modifier = Modifier.animateItemPlacement()
-                                        )
-                                        Divider(
-                                            color = palette.primaryLight.copy(alpha = 0.35f),
-                                            thickness = 1.dp,
-                                            modifier = Modifier
-                                                .padding(horizontal = 16.dp)
-                                                .clip(RoundedCornerShape(50))
-                                        )
-                                    }
+                                item {
+                                    Spacer(modifier = Modifier.height(100.dp))
                                 }
                             }
-                            item {
-                                Spacer(modifier = Modifier.height(100.dp))
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                            ) {
+                                itemsIndexed(filteredComics, key = { _, item -> item.id }) { index, comicItem ->
+                                    ComicListItem(
+                                        comic = comicItem,
+                                        onClick = { onSelectComic(comicItem) },
+                                        onLongClick = { showEditComicDialog = comicItem },
+                                        showPlaceholderIcons = showPlaceholderIcons,
+                                        modifier = Modifier.animateItemPlacement()
+                                    )
+                                    Divider(
+                                        color = palette.primaryLight.copy(alpha = 0.35f),
+                                        thickness = 1.dp,
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .clip(shape50)
+                                    )
+                                }
+                                item {
+                                    Spacer(modifier = Modifier.height(100.dp))
+                                }
                             }
                         }
                     }
@@ -1237,79 +1247,74 @@ fun LibraryListScreen(
                             }
                         }
                     } else {
-                        // Group movies by series
-                        val moviesBySeries = remember(movies, seriesList) {
-                            val grouped = movies.groupBy { it.seriesId }
-                            val result = mutableListOf<Pair<LibrarySeries?, List<LibraryMovie>>>()
-
-                            seriesList.filter { it.contentType == ContentType.MOVIE }
-                                .sortedBy { it.order }
-                                .forEach { series ->
-                                    val items = grouped[series.id]?.sortedBy { it.seriesOrder } ?: emptyList()
-                                    if (items.isNotEmpty()) {
-                                        result.add(series to items)
-                                    }
-                                }
-
-                            val noSeriesItems = grouped[null] ?: emptyList()
-                            if (noSeriesItems.isNotEmpty()) {
-                                result.add(null to noSeriesItems)
+                        // Filter and sort movies by playlist
+                        val filteredMovies = remember(movies, selectedPlaylistFilter, sortOption) {
+                            val filtered = if (selectedPlaylistFilter != null) {
+                                movies.filter { it.seriesId == selectedPlaylistFilter }
+                            } else {
+                                movies
                             }
-                            result
+
+                            // Sort filtered movies
+                            when (sortOption) {
+                                SortOption.TITLE_AZ -> filtered.sortedBy { it.title.lowercase() }
+                                SortOption.TITLE_ZA -> filtered.sortedByDescending { it.title.lowercase() }
+                                SortOption.AUTHOR_AZ -> filtered.sortedBy { it.title.lowercase() }
+                                SortOption.RECENTLY_ADDED -> filtered.sortedByDescending { it.dateAdded }
+                                SortOption.RECENTLY_PLAYED -> filtered.sortedByDescending { it.lastPlayed }
+                                SortOption.PROGRESS -> filtered.sortedByDescending { it.progress }
+                                SortOption.BOOK_NUMBER -> filtered.sortedBy { it.seriesOrder }
+                            }
                         }
 
-                        // Movies list with series dividers
-                        LazyColumn(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                        ) {
-                            moviesBySeries.forEach { (series, items) ->
-                                if (series != null) {
-                                    item(key = "series_${series.id}") {
-                                        SeriesDivider(
-                                            seriesName = series.name,
-                                            itemCount = items.size,
-                                            isCollapsed = series.id in collapsedSeries,
-                                            onToggle = {
-                                                val updated = if (series.id in collapsedSeries) {
-                                                    collapsedSeries - series.id
-                                                } else {
-                                                    collapsedSeries + series.id
-                                                }
-                                                onCollapsedSeriesChange(updated)
-                                            },
-                                            series = series,
-                                            onEditSeries = { showRenameSeriesDialog = series },
-                                            onDeleteSeries = { onDeleteSeries(series.id) },
-                                            onSeriesClick = { onPlaylistClick(series) },
-                                            onSetCoverArt = { showCoverArtPickerForSeries = series },
-                                            coverArtBitmap = coverArtCache[series.id]
-                                        )
-                                    }
+                        // Flat movies list without series dividers
+                        if (defaultLibraryView == "GRID_2") {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth(),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                itemsIndexed(filteredMovies, key = { _, item -> item.id }) { index, movieItem ->
+                                    MovieGridItem(
+                                        movie = movieItem,
+                                        onClick = { onSelectMovie(movieItem) },
+                                        onLongClick = { showEditMovieDialog = movieItem },
+                                        showPlaceholderIcons = showPlaceholderIcons
+                                    )
                                 }
-
-                                if (series == null || series.id !in collapsedSeries) {
-                                    itemsIndexed(items, key = { _, item -> item.id }) { index, movieItem ->
-                                        MovieListItem(
-                                            movie = movieItem,
-                                            onClick = { onSelectMovie(movieItem) },
-                                            onLongClick = { showEditMovieDialog = movieItem },
-                                            showPlaceholderIcons = showPlaceholderIcons,
-                                            modifier = Modifier.animateItemPlacement()
-                                        )
-                                        Divider(
-                                            color = palette.primaryLight.copy(alpha = 0.35f),
-                                            thickness = 1.dp,
-                                            modifier = Modifier
-                                                .padding(horizontal = 16.dp)
-                                                .clip(RoundedCornerShape(50))
-                                        )
-                                    }
+                                item {
+                                    Spacer(modifier = Modifier.height(100.dp))
                                 }
                             }
-                            item {
-                                Spacer(modifier = Modifier.height(100.dp))
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                            ) {
+                                itemsIndexed(filteredMovies, key = { _, item -> item.id }) { index, movieItem ->
+                                    MovieListItem(
+                                        movie = movieItem,
+                                        onClick = { onSelectMovie(movieItem) },
+                                        onLongClick = { showEditMovieDialog = movieItem },
+                                        showPlaceholderIcons = showPlaceholderIcons,
+                                        modifier = Modifier.animateItemPlacement()
+                                    )
+                                    Divider(
+                                        color = palette.primaryLight.copy(alpha = 0.35f),
+                                        thickness = 1.dp,
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .clip(shape50)
+                                    )
+                                }
+                                item {
+                                    Spacer(modifier = Modifier.height(100.dp))
+                                }
                             }
                         }
                     }
@@ -1338,6 +1343,8 @@ private fun SeriesDivider(
     coverArtBitmap: android.graphics.Bitmap? = null
 ) {
     val palette = currentPalette()
+    val shape8 = cornerRadius(8.dp)
+    val shape12 = cornerRadius(12.dp)
     val haptic = LocalHapticFeedback.current
     var showMenu by remember { mutableStateOf(false) }
     val rotationAngle by animateFloatAsState(
@@ -1351,7 +1358,7 @@ private fun SeriesDivider(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(shape12)
             .background(palette.accentGradient())
             .combinedClickable(
                 onClick = {
@@ -1380,7 +1387,7 @@ private fun SeriesDivider(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(shape8)
                     .background(palette.shade7.copy(alpha = 0.3f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -1420,7 +1427,7 @@ private fun SeriesDivider(
             Box(
                 modifier = Modifier
                     .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(shape8)
                     .clickable(
                         onClick = {
                             // Arrow always toggles expand/collapse
@@ -1527,6 +1534,7 @@ private fun ContentTypeTabs(
     movieCount: Int = 0
 ) {
     val palette = currentPalette()
+    val shape12 = cornerRadius(12.dp)
     val haptic = LocalHapticFeedback.current
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -1644,7 +1652,7 @@ private fun ContentTypeTabs(
                             .width(itemWidth)
                             .height(tabHeight)
                             .scale(scale)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(shape12)
                             .background(
                                 if (isSelected) palette.accentGradient()
                                 else Brush.horizontalGradient(
@@ -1682,21 +1690,8 @@ private fun ContentTypeTabs(
                                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                                 color = if (isSelected) palette.shade9 else palette.shade2,
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f, fill = false)
+                                overflow = TextOverflow.Ellipsis
                             )
-                            if (count > 0) {
-                                Spacer(modifier = Modifier.width(3.dp))
-                                Text(
-                                    text = "$count",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontSize = fontSize * 0.75f
-                                    ),
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) palette.shade9.copy(alpha = 0.7f)
-                                            else palette.shade2.copy(alpha = 0.7f)
-                                )
-                            }
                         }
                     }
                 }
@@ -1794,6 +1789,10 @@ fun AudiobookListItem(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    val shape3 = cornerRadius(3.dp)
+    val shape4 = cornerRadius(4.dp)
+    val shape8 = cornerRadius(8.dp)
+    val shape12 = cornerRadius(12.dp)
     val haptic = LocalHapticFeedback.current
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -1827,7 +1826,7 @@ fun AudiobookListItem(
             .defaultMinSize(minHeight = 100.dp)
             .scale(scale)
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(shape12)
             .background(palette.surfaceDark.copy(alpha = 0.08f))
             .combinedClickable(
                 onClick = {
@@ -1846,8 +1845,8 @@ fun AudiobookListItem(
         Box(
             modifier = Modifier
                 .size(thumbnailSize)
-                .shadow(4.dp, RoundedCornerShape(8.dp))
-                .clip(RoundedCornerShape(8.dp))
+                .shadow(4.dp, shape8)
+                .clip(shape8)
                 .background(palette.coverArtGradient()),
             contentAlignment = Alignment.Center
         ) {
@@ -1889,7 +1888,7 @@ fun AudiobookListItem(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(4.dp)
-                    .background(palette.accentGradient(), RoundedCornerShape(4.dp))
+                    .background(palette.accentGradient(), shape4)
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             ) {
                 Text(
@@ -1946,7 +1945,7 @@ fun AudiobookListItem(
                         modifier = Modifier
                             .weight(1f)
                             .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
+                            .clip(shape3),
                         color = palette.accent,
                         trackColor = palette.accent.copy(alpha = 0.2f)
                     )
@@ -1996,6 +1995,8 @@ private fun EditMetadataDialog(
     var showDeleteSeriesConfirm by remember { mutableStateOf<LibrarySeries?>(null) }
     var newSeriesName by remember { mutableStateOf("") }
     val palette = currentPalette()
+    val shape3 = cornerRadius(3.dp)
+    val shape4 = cornerRadius(4.dp)
 
     val selectedSeriesName = seriesList.find { it.id == selectedSeriesId }?.name ?: "None"
 
@@ -2366,6 +2367,10 @@ fun BookListItem(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    val shape3 = cornerRadius(3.dp)
+    val shape4 = cornerRadius(4.dp)
+    val shape8 = cornerRadius(8.dp)
+    val shape12 = cornerRadius(12.dp)
     val haptic = LocalHapticFeedback.current
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -2399,7 +2404,7 @@ fun BookListItem(
             .defaultMinSize(minHeight = 100.dp)
             .scale(scale)
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(shape12)
             .background(palette.surfaceDark.copy(alpha = 0.08f))
             .combinedClickable(
                 onClick = {
@@ -2418,8 +2423,8 @@ fun BookListItem(
         Box(
             modifier = Modifier
                 .size(thumbnailSize)
-                .shadow(4.dp, RoundedCornerShape(8.dp))
-                .clip(RoundedCornerShape(8.dp))
+                .shadow(4.dp, shape8)
+                .clip(shape8)
                 .background(palette.coverArtGradient()),
             contentAlignment = Alignment.Center
         ) {
@@ -2461,7 +2466,7 @@ fun BookListItem(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(4.dp)
-                    .background(palette.accentGradient(), RoundedCornerShape(4.dp))
+                    .background(palette.accentGradient(), shape4)
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             ) {
                 Text(
@@ -2508,7 +2513,7 @@ fun BookListItem(
                         modifier = Modifier
                             .weight(1f)
                             .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
+                            .clip(shape3),
                         color = palette.primary,
                         trackColor = palette.primary.copy(alpha = 0.2f)
                     )
@@ -2543,6 +2548,10 @@ fun MusicListItem(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    val shape3 = cornerRadius(3.dp)
+    val shape4 = cornerRadius(4.dp)
+    val shape8 = cornerRadius(8.dp)
+    val shape12 = cornerRadius(12.dp)
     val haptic = LocalHapticFeedback.current
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -2564,7 +2573,7 @@ fun MusicListItem(
             .fillMaxWidth()
             .defaultMinSize(minHeight = 100.dp)
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(shape12)
             .background(palette.surfaceDark.copy(alpha = 0.08f))
             .combinedClickable(
                 onClick = onClick,
@@ -2580,8 +2589,8 @@ fun MusicListItem(
         Box(
             modifier = Modifier
                 .size(thumbnailSize)
-                .shadow(4.dp, RoundedCornerShape(8.dp))
-                .clip(RoundedCornerShape(8.dp))
+                .shadow(4.dp, shape8)
+                .clip(shape8)
                 .background(palette.coverArtGradient()),
             contentAlignment = Alignment.Center
         ) {
@@ -2623,7 +2632,7 @@ fun MusicListItem(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(4.dp)
-                    .background(palette.accentGradient(), RoundedCornerShape(4.dp))
+                    .background(palette.accentGradient(), shape4)
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             ) {
                 Text(
@@ -2720,6 +2729,8 @@ private fun EditBookMetadataDialog(
     var showDeleteSeriesConfirm by remember { mutableStateOf<LibrarySeries?>(null) }
     var newSeriesName by remember { mutableStateOf("") }
     val palette = currentPalette()
+    val shape3 = cornerRadius(3.dp)
+    val shape4 = cornerRadius(4.dp)
     val selectedSeriesName = seriesList.find { it.id == selectedSeriesId }?.name ?: "None"
 
     // Delete Series Confirmation Dialog
@@ -3030,6 +3041,10 @@ fun ComicListItem(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    val shape3 = cornerRadius(3.dp)
+    val shape4 = cornerRadius(4.dp)
+    val shape8 = cornerRadius(8.dp)
+    val shape12 = cornerRadius(12.dp)
     val haptic = LocalHapticFeedback.current
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -3051,7 +3066,7 @@ fun ComicListItem(
             .fillMaxWidth()
             .defaultMinSize(minHeight = 100.dp)
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(shape12)
             .background(palette.surfaceDark.copy(alpha = 0.08f))
             .combinedClickable(
                 onClick = onClick,
@@ -3067,8 +3082,8 @@ fun ComicListItem(
         Box(
             modifier = Modifier
                 .size(thumbnailSize)
-                .shadow(4.dp, RoundedCornerShape(8.dp))
-                .clip(RoundedCornerShape(8.dp))
+                .shadow(4.dp, shape8)
+                .clip(shape8)
                 .background(palette.coverArtGradient()),
             contentAlignment = Alignment.Center
         ) {
@@ -3109,7 +3124,7 @@ fun ComicListItem(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(4.dp)
-                    .background(palette.accentGradient(), RoundedCornerShape(4.dp))
+                    .background(palette.accentGradient(), shape4)
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             ) {
                 Text(
@@ -3167,7 +3182,7 @@ fun ComicListItem(
                         modifier = Modifier
                             .weight(1f)
                             .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
+                            .clip(shape3),
                         color = palette.accent,
                         trackColor = palette.accent.copy(alpha = 0.2f)
                     )
@@ -3202,6 +3217,10 @@ fun MovieListItem(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    val shape3 = cornerRadius(3.dp)
+    val shape4 = cornerRadius(4.dp)
+    val shape8 = cornerRadius(8.dp)
+    val shape12 = cornerRadius(12.dp)
     val haptic = LocalHapticFeedback.current
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -3223,7 +3242,7 @@ fun MovieListItem(
             .fillMaxWidth()
             .defaultMinSize(minHeight = 100.dp)
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(shape12)
             .background(palette.surfaceDark.copy(alpha = 0.08f))
             .combinedClickable(
                 onClick = onClick,
@@ -3239,8 +3258,8 @@ fun MovieListItem(
         Box(
             modifier = Modifier
                 .size(thumbnailSize)
-                .shadow(4.dp, RoundedCornerShape(8.dp))
-                .clip(RoundedCornerShape(8.dp))
+                .shadow(4.dp, shape8)
+                .clip(shape8)
                 .background(palette.coverArtGradient()),
             contentAlignment = Alignment.Center
         ) {
@@ -3271,7 +3290,7 @@ fun MovieListItem(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(4.dp)
-                    .background(palette.accentGradient(), RoundedCornerShape(4.dp))
+                    .background(palette.accentGradient(), shape4)
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             ) {
                 Text(
@@ -3318,7 +3337,7 @@ fun MovieListItem(
                         modifier = Modifier
                             .weight(1f)
                             .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
+                            .clip(shape3),
                         color = palette.accent,
                         trackColor = palette.accent.copy(alpha = 0.2f)
                     )
@@ -3350,58 +3369,232 @@ fun MovieListItem(
 fun SortMenuDialog(
     currentSort: SortOption,
     onSortSelected: (SortOption) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    playlists: List<LibrarySeries> = emptyList(),
+    selectedPlaylist: String? = null,
+    onPlaylistSelected: (String?) -> Unit = {}
 ) {
     val palette = currentPalette()
+    val shape6 = cornerRadius(6.dp)
+    val shape8 = cornerRadius(8.dp)
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = palette.surface,
-        shape = RoundedCornerShape(8.dp), // Square-ish shape
+        shape = shape8,
         title = {
             Text(
-                text = "Sort By",
+                text = "Sort & Filter",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = palette.accent
             )
         },
         text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(400.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                SortOption.entries.forEach { option ->
-                    val isSelected = option == currentSort
-                    Row(
+                // Left Column - Sort Options
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                ) {
+                    Text(
+                        text = "Sort By",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = palette.accent,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(
-                                if (isSelected) palette.accent.copy(alpha = 0.15f)
-                                else Color.Transparent
-                            )
-                            .clickable {
-                                onSortSelected(option)
-                                onDismiss()
-                            }
-                            .padding(horizontal = 12.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(
-                            text = option.displayName,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (isSelected) palette.accent else palette.textPrimary
-                        )
-                        if (isSelected) {
-                            Icon(
-                                AppIcons.Check,
-                                contentDescription = "Selected",
-                                tint = palette.accent,
-                                modifier = Modifier.size(20.dp)
-                            )
+                        SortOption.entries.forEach { option ->
+                            val isSelected = option == currentSort
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(shape6)
+                                    .background(
+                                        if (isSelected) palette.accent.copy(alpha = 0.2f)
+                                        else palette.surfaceMedium
+                                    )
+                                    .clickable {
+                                        onSortSelected(option)
+                                        onDismiss()
+                                    }
+                                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = option.displayName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (isSelected) palette.accent else palette.textPrimary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                if (isSelected) {
+                                    Icon(
+                                        AppIcons.Check,
+                                        contentDescription = "Selected",
+                                        tint = palette.accent,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Vertical Divider
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .fillMaxHeight()
+                        .background(palette.primary.copy(alpha = 0.2f))
+                )
+
+                // Right Column - Filter Options
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                ) {
+                    Text(
+                        text = "Filter",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = palette.accent,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        // All option
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(shape6)
+                                .background(
+                                    if (selectedPlaylist == null) palette.accent.copy(alpha = 0.2f)
+                                    else palette.surfaceMedium
+                                )
+                                .clickable {
+                                    onPlaylistSelected(null)
+                                    onDismiss()
+                                }
+                                .padding(horizontal = 10.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    AppIcons.GridView,
+                                    contentDescription = null,
+                                    tint = if (selectedPlaylist == null) palette.accent else palette.primary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = "All",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (selectedPlaylist == null) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (selectedPlaylist == null) palette.accent else palette.textPrimary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            if (selectedPlaylist == null) {
+                                Icon(
+                                    AppIcons.Check,
+                                    contentDescription = "Selected",
+                                    tint = palette.accent,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
+                        // Playlist options
+                        playlists.forEach { playlist ->
+                            val isSelected = selectedPlaylist == playlist.id
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(shape6)
+                                    .background(
+                                        if (isSelected) palette.accent.copy(alpha = 0.2f)
+                                        else palette.surfaceMedium
+                                    )
+                                    .clickable {
+                                        onPlaylistSelected(playlist.id)
+                                        onDismiss()
+                                    }
+                                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        AppIcons.Playlist,
+                                        contentDescription = null,
+                                        tint = if (isSelected) palette.accent else palette.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Text(
+                                        text = playlist.name,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                        color = if (isSelected) palette.accent else palette.textPrimary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                if (isSelected) {
+                                    Icon(
+                                        AppIcons.Check,
+                                        contentDescription = "Selected",
+                                        tint = palette.accent,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Empty state if no playlists
+                        if (playlists.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No playlists",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = palette.textMuted
+                                )
+                            }
                         }
                     }
                 }
@@ -3441,6 +3634,7 @@ private fun EditMusicMetadataDialog(
     var showDeleteSeriesConfirm by remember { mutableStateOf<LibrarySeries?>(null) }
     var newSeriesName by remember { mutableStateOf("") }
     val palette = currentPalette()
+    val shape6 = cornerRadius(6.dp)
     val selectedSeriesName = seriesList.find { it.id == selectedSeriesId }?.name ?: "None"
 
     // Delete Playlist Confirmation Dialog
@@ -3766,6 +3960,7 @@ private fun EditComicMetadataDialog(
     var showDeleteSeriesConfirm by remember { mutableStateOf<LibrarySeries?>(null) }
     var newSeriesName by remember { mutableStateOf("") }
     val palette = currentPalette()
+    val shape6 = cornerRadius(6.dp)
     val selectedSeriesName = seriesList.find { it.id == selectedSeriesId }?.name ?: "None"
 
     // Delete Collection Confirmation Dialog
@@ -4090,6 +4285,7 @@ private fun EditMovieMetadataDialog(
     var showDeleteSeriesConfirm by remember { mutableStateOf<LibrarySeries?>(null) }
     var newSeriesName by remember { mutableStateOf("") }
     val palette = currentPalette()
+    val shape6 = cornerRadius(6.dp)
     val selectedSeriesName = seriesList.find { it.id == selectedSeriesId }?.name ?: "None"
 
     // Delete Playlist Confirmation Dialog
@@ -4393,6 +4589,7 @@ fun SeriesDivider(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    val shape10 = cornerRadius(10.dp)
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val haptic = LocalHapticFeedback.current
@@ -4423,7 +4620,7 @@ fun SeriesDivider(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(10.dp))
+            .clip(shape10)
             .background(palette.accentGradient())
             .combinedClickable(
                 onClick = { onToggleExpand() },
@@ -4615,11 +4812,12 @@ fun AddSeriesDialog(
 ) {
     var seriesName by remember { mutableStateOf("") }
     val palette = currentPalette()
+    val shape12 = cornerRadius(12.dp)
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = palette.surface,
-        shape = RoundedCornerShape(12.dp),
+        shape = shape12,
         title = {
             Text(
                 text = "Add Series",
@@ -4675,11 +4873,12 @@ fun RenameSeriesDialog(
 ) {
     var seriesName by remember { mutableStateOf(series.name) }
     val palette = currentPalette()
+    val shape12 = cornerRadius(12.dp)
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = palette.surface,
-        shape = RoundedCornerShape(12.dp),
+        shape = shape12,
         title = {
             Text(
                 text = "Rename Series",
@@ -4734,11 +4933,12 @@ fun DeleteSeriesDialog(
     onConfirm: () -> Unit
 ) {
     val palette = currentPalette()
+    val shape12 = cornerRadius(12.dp)
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = palette.surface,
-        shape = RoundedCornerShape(12.dp),
+        shape = shape12,
         title = {
             Text(
                 text = "Delete Series",
@@ -4778,11 +4978,13 @@ fun AssignSeriesDialog(
     onAddNewSeries: () -> Unit
 ) {
     val palette = currentPalette()
+    val shape4 = cornerRadius(4.dp)
+    val shape12 = cornerRadius(12.dp)
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = palette.surface,
-        shape = RoundedCornerShape(12.dp),
+        shape = shape12,
         title = {
             Text(
                 text = "Assign to Series",
@@ -4800,7 +5002,7 @@ fun AssignSeriesDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(shape4)
                         .background(
                             if (currentSeriesId == null) palette.accent.copy(alpha = 0.15f)
                             else Color.Transparent
@@ -4832,7 +5034,7 @@ fun AssignSeriesDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(shape4)
                             .background(
                                 if (isSelected) palette.accent.copy(alpha = 0.15f)
                                 else Color.Transparent
@@ -4863,7 +5065,7 @@ fun AssignSeriesDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(shape4)
                         .clickable { onAddNewSeries() }
                         .padding(horizontal = 12.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -4891,4 +5093,443 @@ fun AssignSeriesDialog(
             }
         }
     )
+}
+
+/**
+ * Grid item for audiobooks - shows cover art on top, title, author, progress below
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun AudiobookGridItem(
+    audiobook: LibraryAudiobook,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    showPlayingIndicator: Boolean,
+    showPlaceholderIcons: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val palette = currentPalette()
+    val shape6 = cornerRadius(6.dp)
+    val shape8 = cornerRadius(8.dp)
+    val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape8)
+            .background(palette.surfaceDark.copy(alpha = 0.08f))
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongClick()
+                }
+            )
+            .padding(8.dp)
+    ) {
+        // Cover art
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+        ) {
+            CoverArt(
+                bitmap = audiobook.coverArt,
+                contentDescription = audiobook.title,
+                modifier = Modifier.fillMaxWidth(),
+                cornerRadiusSize = 6.dp,
+                elevation = 0.dp,
+                showPlaceholderAlways = showPlaceholderIcons && audiobook.coverArt == null,
+                fileExtension = audiobook.fileType,
+                contentType = CoverArtContentType.AUDIOBOOK
+            )
+
+            // Progress indicator
+            if (audiobook.progress > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                ) {
+                    LinearProgressIndicator(
+                        progress = audiobook.progress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp),
+                        color = palette.primary,
+                        trackColor = palette.primary.copy(alpha = 0.2f)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Title
+        Text(
+            text = audiobook.title,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.SemiBold
+            ),
+            color = palette.textPrimary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        // Author
+        Text(
+            text = audiobook.author,
+            style = MaterialTheme.typography.bodySmall,
+            color = palette.textSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * Grid item for books
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun BookGridItem(
+    book: LibraryBook,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    showPlaceholderIcons: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val palette = currentPalette()
+    val shape6 = cornerRadius(6.dp)
+    val shape8 = cornerRadius(8.dp)
+    val haptic = LocalHapticFeedback.current
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape8)
+            .background(palette.surfaceDark.copy(alpha = 0.08f))
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongClick()
+                }
+            )
+            .padding(8.dp)
+    ) {
+        // Cover art
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+        ) {
+            CoverArt(
+                bitmap = book.coverArt,
+                contentDescription = book.title,
+                modifier = Modifier.fillMaxWidth(),
+                cornerRadiusSize = 6.dp,
+                elevation = 0.dp,
+                showPlaceholderAlways = showPlaceholderIcons && book.coverArt == null,
+                fileExtension = book.fileType,
+                contentType = CoverArtContentType.EBOOK
+            )
+
+            // Progress indicator
+            if (book.progress > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                ) {
+                    LinearProgressIndicator(
+                        progress = book.progress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp),
+                        color = palette.primary,
+                        trackColor = palette.primary.copy(alpha = 0.2f)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Title
+        Text(
+            text = book.title,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.SemiBold
+            ),
+            color = palette.textPrimary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        // Author
+        Text(
+            text = book.author,
+            style = MaterialTheme.typography.bodySmall,
+            color = palette.textSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * Grid item for music
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun MusicGridItem(
+    music: LibraryMusic,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    showPlaceholderIcons: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val palette = currentPalette()
+    val shape6 = cornerRadius(6.dp)
+    val shape8 = cornerRadius(8.dp)
+    val haptic = LocalHapticFeedback.current
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape8)
+            .background(palette.surfaceDark.copy(alpha = 0.08f))
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongClick()
+                }
+            )
+            .padding(8.dp)
+    ) {
+        // Cover art
+        CoverArt(
+            bitmap = music.coverArt,
+            contentDescription = music.title,
+            modifier = Modifier.fillMaxWidth(),
+            cornerRadiusSize = 6.dp,
+            elevation = 0.dp,
+            showPlaceholderAlways = showPlaceholderIcons && music.coverArt == null,
+            fileExtension = music.fileType,
+            contentType = CoverArtContentType.MUSIC
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Title
+        Text(
+            text = music.title,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.SemiBold
+            ),
+            color = palette.textPrimary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        // Artist
+        Text(
+            text = music.artist,
+            style = MaterialTheme.typography.bodySmall,
+            color = palette.textSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * Grid item for comics
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ComicGridItem(
+    comic: LibraryComic,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    showPlaceholderIcons: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val palette = currentPalette()
+    val shape6 = cornerRadius(6.dp)
+    val shape8 = cornerRadius(8.dp)
+    val haptic = LocalHapticFeedback.current
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape8)
+            .background(palette.surfaceDark.copy(alpha = 0.08f))
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongClick()
+                }
+            )
+            .padding(8.dp)
+    ) {
+        // Cover art
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+        ) {
+            CoverArt(
+                bitmap = comic.coverArt,
+                contentDescription = comic.title,
+                modifier = Modifier.fillMaxWidth(),
+                cornerRadiusSize = 6.dp,
+                elevation = 0.dp,
+                showPlaceholderAlways = showPlaceholderIcons && comic.coverArt == null,
+                fileExtension = comic.fileType,
+                contentType = CoverArtContentType.COMICS
+            )
+
+            // Progress indicator
+            if (comic.progress > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                ) {
+                    LinearProgressIndicator(
+                        progress = comic.progress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp),
+                        color = palette.primary,
+                        trackColor = palette.primary.copy(alpha = 0.2f)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Title
+        Text(
+            text = comic.title,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.SemiBold
+            ),
+            color = palette.textPrimary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        // Author
+        Text(
+            text = comic.author,
+            style = MaterialTheme.typography.bodySmall,
+            color = palette.textSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * Grid item for movies
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun MovieGridItem(
+    movie: LibraryMovie,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    showPlaceholderIcons: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val palette = currentPalette()
+    val shape6 = cornerRadius(6.dp)
+    val shape8 = cornerRadius(8.dp)
+    val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape8)
+            .background(palette.surfaceDark.copy(alpha = 0.08f))
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongClick()
+                }
+            )
+            .padding(8.dp)
+    ) {
+        // Cover art - movies use thumbnailUri
+        val bitmap = remember(movie.thumbnailUri) {
+            if (movie.thumbnailUri != null) {
+                try {
+                    context.contentResolver.openInputStream(movie.thumbnailUri)?.use { inputStream ->
+                        android.graphics.BitmapFactory.decodeStream(inputStream)
+                    }
+                } catch (e: Exception) {
+                    null
+                }
+            } else {
+                null
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+        ) {
+            CoverArt(
+                bitmap = bitmap,
+                contentDescription = movie.title,
+                modifier = Modifier.fillMaxWidth(),
+                cornerRadiusSize = 6.dp,
+                elevation = 0.dp,
+                showPlaceholderAlways = showPlaceholderIcons && bitmap == null,
+                fileExtension = movie.fileType,
+                contentType = CoverArtContentType.MOVIE
+            )
+
+            // Progress indicator
+            if (movie.progress > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                ) {
+                    LinearProgressIndicator(
+                        progress = movie.progress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp),
+                        color = palette.primary,
+                        trackColor = palette.primary.copy(alpha = 0.2f)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Title
+        Text(
+            text = movie.title,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.SemiBold
+            ),
+            color = palette.textPrimary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
 }

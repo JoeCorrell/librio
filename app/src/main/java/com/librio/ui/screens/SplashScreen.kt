@@ -26,6 +26,7 @@ fun SplashScreen(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    val shape3 = cornerRadius(3.dp)
 
     // Entry animation
     var startAnimation by remember { mutableStateOf(false) }
@@ -149,7 +150,7 @@ fun SplashScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp))
+                        .clip(shape3)
                         .background(palette.shade11.copy(alpha = 0.1f))
                 )
 
@@ -158,7 +159,7 @@ fun SplashScreen(
                     modifier = Modifier
                         .fillMaxWidth(loadingProgress)
                         .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp))
+                        .clip(shape3)
                         .background(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(

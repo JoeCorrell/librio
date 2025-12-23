@@ -2,13 +2,18 @@ package com.librio.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 
 /**
@@ -17,11 +22,34 @@ import androidx.core.view.WindowCompat
 val LocalThemePalette = compositionLocalOf { TealPalette }
 
 /**
+ * Local composition for accessing corner radius setting
+ */
+val LocalUseSquareCorners = compositionLocalOf { false }
+
+/**
  * Get the current theme palette
  */
 @Composable
 fun currentPalette(): ThemePalette {
     return LocalThemePalette.current
+}
+
+/**
+ * Get corner radius based on square corners setting
+ */
+@Composable
+fun cornerRadius(dp: Dp): Shape {
+    val useSquare = LocalUseSquareCorners.current
+    return if (useSquare) RectangleShape else RoundedCornerShape(dp)
+}
+
+/**
+ * Get dp value for corner radius (0dp if square, otherwise the provided value)
+ */
+@Composable
+fun cornerRadiusDp(dp: Dp): Dp {
+    val useSquare = LocalUseSquareCorners.current
+    return if (useSquare) 0.dp else dp
 }
 
 private fun createDarkColorScheme(palette: ThemePalette) = darkColorScheme(
@@ -72,6 +100,7 @@ fun AudiobookPlayerTheme(
     accentTheme: AppTheme = appTheme,
     darkTheme: Boolean = false,
     customPrimaryColor: Int = 0x00897B, // Used to trigger recomposition for custom theme
+    useSquareCorners: Boolean = false,
     fontFamily: androidx.compose.ui.text.font.FontFamily? = null,
     content: @Composable () -> Unit
 ) {
@@ -128,7 +157,10 @@ fun AudiobookPlayerTheme(
         }
     }
 
-    CompositionLocalProvider(LocalThemePalette provides palette) {
+    CompositionLocalProvider(
+        LocalThemePalette provides palette,
+        LocalUseSquareCorners provides useSquareCorners
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = typography,

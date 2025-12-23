@@ -160,6 +160,7 @@ class MainActivity : ComponentActivity() {
             val animationSpeed by settingsViewModel.animationSpeed?.collectAsState() ?: remember { mutableStateOf("Normal") }
             val hapticFeedback by settingsViewModel.hapticFeedback?.collectAsState() ?: remember { mutableStateOf(true) }
             val confirmBeforeDelete by settingsViewModel.confirmBeforeDelete?.collectAsState() ?: remember { mutableStateOf(true) }
+            val useSquareCorners by settingsViewModel.useSquareCorners?.collectAsState() ?: remember { mutableStateOf(false) }
             val rememberLastPosition by settingsViewModel.rememberLastPosition?.collectAsState() ?: remember { mutableStateOf(true) }
             val showBackButton by settingsViewModel.showBackButton?.collectAsState() ?: remember { mutableStateOf(true) }
             val showSearchBar by settingsViewModel.showSearchBar?.collectAsState() ?: remember { mutableStateOf(true) }
@@ -448,7 +449,7 @@ class MainActivity : ComponentActivity() {
             }
 
             // Restore last played music from persisted state (only when music was last active)
-            LaunchedEffect(filteredMusic, lastMusicId, introComplete, lastActiveType) {
+            LaunchedEffect(libraryState.music, lastMusicId, introComplete, lastActiveType) {
                 if (!introComplete) return@LaunchedEffect
                 // Use lastActiveType for priority if available, otherwise fall back to playing state
                 val shouldRestoreMusic = lastMusicId != null && (
@@ -457,14 +458,18 @@ class MainActivity : ComponentActivity() {
                 )
                 if (!shouldRestoreMusic) return@LaunchedEffect
                 if (lastPlayedMusic == null && lastMusicId != null) {
-                    val music = filteredMusic.find { it.id == lastMusicId }
+                    val music = libraryState.music.find { it.id == lastMusicId }
                     music?.let {
                         lastPlayedMusic = it
                         lastPlayedAudiobook = null
-                        currentMusicPlaylist = filteredMusic
+                        // Filter playlist to only include items of the same content type (MUSIC or CREEPYPASTA)
+                        currentMusicPlaylist = libraryState.music.filter { musicItem ->
+                            musicItem.contentType == it.contentType
+                        }
                         musicCurrentPosition = lastMusicPosition
                         isMusicPlaying = lastMusicPlaying
-                        settingsViewModel.setLastActiveType("MUSIC")
+                        val activeType = if (it.contentType == ContentType.CREEPYPASTA) "CREEPYPASTA" else "MUSIC"
+                        settingsViewModel.setLastActiveType(activeType)
                         musicExoPlayer.setMediaItem(buildMusicMediaItem(it))
                         musicExoPlayer.prepare()
                         musicExoPlayer.seekTo(lastMusicPosition)
@@ -758,6 +763,7 @@ class MainActivity : ComponentActivity() {
                     accentTheme = accentTheme,
                     darkTheme = darkMode,
                     customPrimaryColor = customPrimaryColor,
+                    useSquareCorners = useSquareCorners,
                     fontFamily = selectedFontFamily
                 ) {
                     Surface(modifier = Modifier.fillMaxSize()) {
@@ -1151,6 +1157,8 @@ class MainActivity : ComponentActivity() {
                                 onHapticFeedbackChange = { settingsViewModel.setHapticFeedback(it) },
                                 confirmBeforeDelete = confirmBeforeDelete,
                                 onConfirmBeforeDeleteChange = { settingsViewModel.setConfirmBeforeDelete(it) },
+                                useSquareCorners = useSquareCorners,
+                                onUseSquareCornersChange = { settingsViewModel.setUseSquareCorners(it) },
                                 rememberLastPosition = rememberLastPosition,
                                 onRememberLastPositionChange = { settingsViewModel.setRememberLastPosition(it) },
                                 autoRewind = autoRewindSeconds,

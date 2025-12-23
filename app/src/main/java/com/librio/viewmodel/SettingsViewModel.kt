@@ -198,6 +198,9 @@ class SettingsViewModel : ViewModel() {
     val confirmBeforeDelete: StateFlow<Boolean>?
         get() = repository?.confirmBeforeDelete
 
+    val useSquareCorners: StateFlow<Boolean>?
+        get() = repository?.useSquareCorners
+
     val rememberLastPosition: StateFlow<Boolean>?
         get() = repository?.rememberLastPosition
 
@@ -614,6 +617,10 @@ class SettingsViewModel : ViewModel() {
 
     fun setConfirmBeforeDelete(enabled: Boolean) {
         repository?.setConfirmBeforeDelete(enabled)
+    }
+
+    fun setUseSquareCorners(enabled: Boolean) {
+        repository?.setUseSquareCorners(enabled)
     }
 
     fun setRememberLastPosition(enabled: Boolean) {

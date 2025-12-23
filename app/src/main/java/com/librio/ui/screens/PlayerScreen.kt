@@ -590,6 +590,8 @@ private fun EmptyState(
 ) {
     val palette = currentPalette()
     val dimens = com.librio.ui.components.rememberResponsiveDimens()
+    val shapeLarge = cornerRadius(dimens.cornerRadiusLarge)
+    val shapeRegular = cornerRadius(dimens.cornerRadius)
 
     // Responsive sizes using dimens
     val iconBoxSize = if (dimens.isCompactHeight) 100.dp else 140.dp
@@ -608,7 +610,7 @@ private fun EmptyState(
                 .size(iconBoxSize)
                 .background(
                     color = palette.primary.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(dimens.cornerRadiusLarge)
+                    shape = shapeLarge
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -656,7 +658,7 @@ private fun EmptyState(
                 containerColor = palette.primary,
                 contentColor = palette.onPrimary
             ),
-            shape = RoundedCornerShape(dimens.cornerRadius),
+            shape = shapeRegular,
             modifier = Modifier.height(dimens.buttonHeight)
         ) {
             Icon(

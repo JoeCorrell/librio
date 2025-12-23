@@ -20,8 +20,9 @@ data class ProfileSettings(
     val uiFontScale: Float = 1.0f,
     val uiFontFamily: String = "Default",
     val libraryOwnerName: String = "",
-    val defaultLibraryView: String = "GRID",
+    val defaultLibraryView: String = "LIST", // "LIST" or "GRID_2"
     val defaultSortOrder: String = "TITLE",
+    val useSquareCorners: Boolean = false,
     val showPlaceholderIcons: Boolean = true,
     val showFileSize: Boolean = true,
     val showDuration: Boolean = true,

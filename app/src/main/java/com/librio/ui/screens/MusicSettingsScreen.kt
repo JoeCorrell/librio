@@ -23,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import com.librio.ui.theme.cornerRadius
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
@@ -294,9 +295,11 @@ private fun SectionCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val palette = currentPalette()
+    val shape12 = cornerRadius(12.dp)
+    val shape18 = cornerRadius(18.dp)
     Card(
         colors = colors,
-        shape = RoundedCornerShape(18.dp),
+        shape = shape18,
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -305,7 +308,7 @@ private fun SectionCard(
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(shape12)
                         .background(palette.accent.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
@@ -391,6 +394,7 @@ private fun EqualizerList(
     onSelect: (String) -> Unit
 ) {
     val palette = currentPalette()
+    val shape12 = cornerRadius(12.dp)
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(title, color = palette.textPrimary, fontWeight = FontWeight.Medium)
         Spacer(modifier = Modifier.height(8.dp))
@@ -403,7 +407,7 @@ private fun EqualizerList(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(shape12)
                     .background(bg)
                     .clickable { onSelect(value) }
                     .padding(horizontal = 12.dp, vertical = 10.dp),

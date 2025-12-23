@@ -92,6 +92,7 @@ fun MiniPlayer(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    val shape8 = cornerRadius(8.dp)
     val density = LocalDensity.current
 
     // Swipe state - track horizontal offset
@@ -248,7 +249,7 @@ fun MiniPlayer(
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(shape8)
                                 .background(
                                     Brush.linearGradient(
                                         colors = listOf(

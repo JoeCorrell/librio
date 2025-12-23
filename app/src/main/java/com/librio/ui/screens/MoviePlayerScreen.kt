@@ -24,6 +24,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.librio.ui.theme.cornerRadius
 import androidx.compose.material3.*
 import com.librio.ui.theme.AppIcons
 import androidx.compose.runtime.*
@@ -98,6 +99,11 @@ fun MoviePlayerScreen(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    val shape2 = cornerRadius(2.dp)
+    val shape3 = cornerRadius(3.dp)
+    val shape4 = cornerRadius(4.dp)
+    val shape8 = cornerRadius(8.dp)
+    val shape10 = cornerRadius(10.dp)
     val headerContentHeight = 40.dp
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
@@ -407,6 +413,7 @@ fun MoviePlayerScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
+                    .padding(bottom = if (!isFullscreen) 80.dp else 0.dp) // Add padding to prevent navbar clipping
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
@@ -430,7 +437,9 @@ fun MoviePlayerScreen(
                     update = { view ->
                         view.resizeMode = currentResizeMode
                     },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxWidth(0.95f) // Scale to 95% width for better fit
+                        .aspectRatio(16f / 9f) // Maintain 16:9 aspect ratio
                 )
 
                 // Loading indicator
@@ -629,15 +638,15 @@ fun MoviePlayerScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp))
+                                .height(3.dp)
+                                .clip(shape3)
                                 .background(palette.shade6.copy(alpha = 0.4f))
                         ) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth(progress)
-                                    .height(6.dp)
-                                    .clip(RoundedCornerShape(3.dp))
+                                    .height(3.dp)
+                                    .clip(shape3)
                                     .background(
                                         Brush.horizontalGradient(
                                             colors = listOf(
@@ -683,7 +692,7 @@ fun MoviePlayerScreen(
                             // Playback speed indicator with accent background
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
+                                    .clip(shape4)
                                     .background(palette.accent.copy(alpha = 0.15f))
                                     .padding(horizontal = 8.dp, vertical = 2.dp)
                             ) {
@@ -835,7 +844,7 @@ fun MoviePlayerScreen(
                             modifier = Modifier
                                 .width(36.dp)
                                 .height(4.dp)
-                                .clip(RoundedCornerShape(2.dp))
+                                .clip(shape2)
                                 .background(palette.textMuted.copy(alpha = 0.3f))
                         )
                     }
@@ -879,7 +888,7 @@ fun MoviePlayerScreen(
                     // Playback Speed Card
                     Surface(
                         color = palette.surfaceMedium,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = shape10,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
@@ -892,7 +901,7 @@ fun MoviePlayerScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(shape8)
                                     .background(palette.surfaceLight),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
@@ -901,7 +910,7 @@ fun MoviePlayerScreen(
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(shape8)
                                             .background(
                                                 if (isSelected) palette.primary else Color.Transparent
                                             )
@@ -926,7 +935,7 @@ fun MoviePlayerScreen(
                     // Movie Scale Mode Card
                     Surface(
                         color = palette.surfaceMedium,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = shape10,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
@@ -939,7 +948,7 @@ fun MoviePlayerScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(shape8)
                                     .background(palette.surfaceLight),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
@@ -953,7 +962,7 @@ fun MoviePlayerScreen(
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(shape8)
                                             .background(
                                                 if (isSelected) palette.primary else Color.Transparent
                                             )
@@ -978,7 +987,7 @@ fun MoviePlayerScreen(
                     // Brightness Control Card
                     Surface(
                         color = palette.surfaceMedium,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = shape10,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
@@ -991,7 +1000,7 @@ fun MoviePlayerScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(shape8)
                                     .background(palette.surfaceLight)
                                     .padding(horizontal = 12.dp, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
@@ -1030,7 +1039,7 @@ fun MoviePlayerScreen(
                     // Toggle Options Card
                     Surface(
                         color = palette.surfaceMedium,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = shape10,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
@@ -1038,7 +1047,7 @@ fun MoviePlayerScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(shape8)
                                     .background(if (isFullscreen) palette.primary.copy(alpha = 0.15f) else palette.surfaceLight)
                                     .clickable {
                                         isFullscreen = !isFullscreen
@@ -1076,7 +1085,7 @@ fun MoviePlayerScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(shape8)
                                     .background(palette.surfaceLight)
                                     .clickable { onAutoFullscreenLandscapeChange(!autoFullscreenLandscape) }
                                     .padding(horizontal = 12.dp, vertical = 12.dp),
@@ -1115,7 +1124,7 @@ fun MoviePlayerScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(shape8)
                                     .background(palette.surfaceLight)
                                     .clickable { onKeepScreenOnChange(!keepScreenOn) }
                                     .padding(horizontal = 12.dp, vertical = 12.dp),

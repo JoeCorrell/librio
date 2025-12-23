@@ -194,6 +194,7 @@ data class LibraryMovie(
     val seriesId: String? = null, // Series this movie belongs to
     val seriesOrder: Int = 0, // Order within the series
     val thumbnailUri: Uri? = null,
+    val coverArt: Bitmap? = null,
     val coverArtUri: String? = null, // Custom cover art URI
     val fileType: String = "mp4" // mp4, mkv, avi, webm
 ) {

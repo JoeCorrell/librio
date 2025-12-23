@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.librio.model.*
 import com.librio.navigation.BottomNavItem
 import com.librio.ui.theme.AppIcons
+import com.librio.ui.theme.cornerRadius
 import com.librio.ui.theme.coverArtGradient
 import com.librio.ui.theme.currentPalette
 import com.librio.ui.theme.headerGradient
@@ -91,6 +92,7 @@ fun SeriesDetailScreen(
     onNavigateToSettings: () -> Unit = {}
 ) {
     val palette = currentPalette()
+    val shape16 = cornerRadius(16.dp)
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val context = LocalContext.current
@@ -387,8 +389,8 @@ fun SeriesDetailScreen(
                         Box(
                             modifier = Modifier
                                 .size(coverArtSize)
-                                .shadow(16.dp, RoundedCornerShape(16.dp))
-                                .clip(RoundedCornerShape(16.dp))
+                                .shadow(16.dp, shape16)
+                                .clip(shape16)
                                 .background(palette.coverArtGradient()),
                             contentAlignment = Alignment.Center
                         ) {
@@ -666,6 +668,9 @@ private fun SeriesTrackItem(
     onEditMetadata: () -> Unit = {}
 ) {
     val palette = currentPalette()
+    val shape2 = cornerRadius(2.dp)
+    val shape8 = cornerRadius(8.dp)
+    val shape12 = cornerRadius(12.dp)
     var showMenu by remember { mutableStateOf(false) }
 
     // Highlight animation for currently playing
@@ -679,7 +684,7 @@ private fun SeriesTrackItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(shape12)
             .background(
                 if (isCurrentlyPlaying) palette.accent.copy(alpha = highlightAlpha)
                 else palette.surfaceDark.copy(alpha = 0.08f)
@@ -692,8 +697,8 @@ private fun SeriesTrackItem(
         Box(
             modifier = Modifier
                 .size(56.dp)
-                .shadow(4.dp, RoundedCornerShape(8.dp))
-                .clip(RoundedCornerShape(8.dp))
+                .shadow(4.dp, shape8)
+                .clip(shape8)
                 .background(palette.coverArtGradient()),
             contentAlignment = Alignment.Center
         ) {
@@ -762,7 +767,7 @@ private fun SeriesTrackItem(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(3.dp)
-                        .clip(RoundedCornerShape(2.dp)),
+                        .clip(shape2),
                     color = palette.accent,
                     trackColor = palette.shade3
                 )

@@ -961,6 +961,7 @@ private fun ControlPill(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    val shape12 = cornerRadius(12.dp)
     // Both states use similar gradient design, but active uses accent colors
     val backgroundBrush = if (isActive) {
         Brush.horizontalGradient(
@@ -984,7 +985,7 @@ private fun ControlPill(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(shape12)
             .background(backgroundBrush)
             .clickable(onClick = onClick)
     ) {

@@ -404,6 +404,9 @@ class SettingsRepository(private val context: Context) {
     private val _confirmBeforeDelete = MutableStateFlow(loadConfirmBeforeDelete())
     val confirmBeforeDelete: StateFlow<Boolean> = _confirmBeforeDelete.asStateFlow()
 
+    private val _useSquareCorners = MutableStateFlow(loadUseSquareCorners())
+    val useSquareCorners: StateFlow<Boolean> = _useSquareCorners.asStateFlow()
+
     private val _rememberLastPosition = MutableStateFlow(loadRememberLastPosition())
     val rememberLastPosition: StateFlow<Boolean> = _rememberLastPosition.asStateFlow()
 
@@ -889,6 +892,7 @@ class SettingsRepository(private val context: Context) {
         _animationSpeed.value = settings.animationSpeed
         _hapticFeedback.value = settings.hapticFeedback
         _confirmBeforeDelete.value = settings.confirmBeforeDelete
+        _useSquareCorners.value = settings.useSquareCorners
         _collapsedSeries.value = settings.collapsedSeries.toSet()
         _selectedContentType.value = settings.selectedContentType
 
@@ -918,6 +922,7 @@ class SettingsRepository(private val context: Context) {
             putString(getProfileKey(KEY_ANIMATION_SPEED), settings.animationSpeed)
             putBoolean(getProfileKey(KEY_HAPTIC_FEEDBACK), settings.hapticFeedback)
             putBoolean(getProfileKey(KEY_CONFIRM_BEFORE_DELETE), settings.confirmBeforeDelete)
+            putBoolean(getProfileKey(KEY_USE_SQUARE_CORNERS), settings.useSquareCorners)
             putString(getProfileKey(KEY_SELECTED_CONTENT_TYPE), settings.selectedContentType)
             apply()
         }
@@ -1180,6 +1185,7 @@ class SettingsRepository(private val context: Context) {
                 animationSpeed = _animationSpeed.value,
                 hapticFeedback = _hapticFeedback.value,
                 confirmBeforeDelete = _confirmBeforeDelete.value,
+                useSquareCorners = _useSquareCorners.value,
                 collapsedSeries = _collapsedSeries.value.toList(),
                 collapsedPlaylists = emptyList(),
                 selectedContentType = _selectedContentType.value,
@@ -1951,6 +1957,7 @@ class SettingsRepository(private val context: Context) {
         _animationSpeed.value = loadAnimationSpeed()
         _hapticFeedback.value = loadHapticFeedback()
         _confirmBeforeDelete.value = loadConfirmBeforeDelete()
+        _useSquareCorners.value = loadUseSquareCorners()
 
         // Filter persistence
         _selectedContentType.value = loadSelectedContentType()
@@ -2342,6 +2349,7 @@ class SettingsRepository(private val context: Context) {
     private fun loadAnimationSpeed(): String = prefs.getString(getProfileKey(KEY_ANIMATION_SPEED), "Normal") ?: "Normal"
     private fun loadHapticFeedback(): Boolean = prefs.getBoolean(getProfileKey(KEY_HAPTIC_FEEDBACK), true)
     private fun loadConfirmBeforeDelete(): Boolean = prefs.getBoolean(getProfileKey(KEY_CONFIRM_BEFORE_DELETE), true)
+    private fun loadUseSquareCorners(): Boolean = prefs.getBoolean(getProfileKey(KEY_USE_SQUARE_CORNERS), false)
     private fun loadRememberLastPosition(): Boolean = prefs.getBoolean(getProfileKey(KEY_REMEMBER_LAST_POSITION), true)
 
     // Filter persistence loaders (per-profile)
@@ -2435,6 +2443,12 @@ class SettingsRepository(private val context: Context) {
     fun setConfirmBeforeDelete(enabled: Boolean) {
         _confirmBeforeDelete.value = enabled
         prefs.edit().putBoolean(getProfileKey(KEY_CONFIRM_BEFORE_DELETE), enabled).apply()
+        saveProfileSettingsToFile()
+    }
+
+    fun setUseSquareCorners(enabled: Boolean) {
+        _useSquareCorners.value = enabled
+        prefs.edit().putBoolean(getProfileKey(KEY_USE_SQUARE_CORNERS), enabled).apply()
         saveProfileSettingsToFile()
     }
 
@@ -2557,6 +2571,7 @@ class SettingsRepository(private val context: Context) {
         private const val KEY_HAPTIC_FEEDBACK = "haptic_feedback"
         private const val KEY_CONFIRM_BEFORE_DELETE = "confirm_before_delete"
         private const val KEY_REMEMBER_LAST_POSITION = "remember_last_position"
+        private const val KEY_USE_SQUARE_CORNERS = "use_square_corners"
 
         // Filter persistence keys
         private const val KEY_SELECTED_CONTENT_TYPE = "selected_content_type"

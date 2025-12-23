@@ -19,6 +19,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import com.librio.ui.theme.cornerRadius
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberUpdatedState
@@ -93,6 +94,9 @@ fun ComicReaderScreen(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
+    val shape2 = cornerRadius(2.dp)
+    val shape8 = cornerRadius(8.dp)
+    val shape10 = cornerRadius(10.dp)
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
@@ -664,7 +668,7 @@ fun ComicReaderScreen(
                             modifier = Modifier
                                 .width(36.dp)
                                 .height(4.dp)
-                                .clip(RoundedCornerShape(2.dp))
+                                .clip(shape2)
                                 .background(palette.textMuted.copy(alpha = 0.3f))
                         )
                     }
@@ -708,7 +712,7 @@ fun ComicReaderScreen(
                     // Display Settings Card
                     Surface(
                         color = palette.surfaceMedium,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = shape10,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
@@ -796,7 +800,7 @@ fun ComicReaderScreen(
                     // Layout Settings Card
                     Surface(
                         color = palette.surfaceMedium,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = shape10,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
@@ -823,7 +827,7 @@ fun ComicReaderScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(settingsButtonHeight)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(shape8)
                                     .background(palette.background),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
@@ -833,7 +837,7 @@ fun ComicReaderScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .fillMaxHeight()
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(shape8)
                                             .background(if (isSelected) palette.accent else Color.Transparent)
                                             .clickable { onPageFitModeChange(mode) },
                                         contentAlignment = Alignment.Center
@@ -855,7 +859,7 @@ fun ComicReaderScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(settingsButtonHeight)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(shape8)
                                     .background(palette.background),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
@@ -865,7 +869,7 @@ fun ComicReaderScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .fillMaxHeight()
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(shape8)
                                             .background(if (isSelected) palette.accent else Color.Transparent)
                                             .clickable { onReadingDirectionChange(dir) },
                                         contentAlignment = Alignment.Center
@@ -887,7 +891,7 @@ fun ComicReaderScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(settingsButtonHeight)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(shape8)
                                     .background(palette.background),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
@@ -904,7 +908,7 @@ fun ComicReaderScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .fillMaxHeight()
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(shape8)
                                             .background(if (isSelected) palette.accent else Color.Transparent)
                                             .clickable {
                                                 onForceSinglePageModeChange(single)
@@ -955,7 +959,7 @@ fun ComicReaderScreen(
                     // Interaction Settings Card
                     Surface(
                         color = palette.surfaceMedium,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = shape10,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
@@ -1010,7 +1014,7 @@ fun ComicReaderScreen(
                     // Current progress info
                     Surface(
                         color = palette.surfaceMedium,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = shape10,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(

@@ -3334,17 +3334,15 @@ fun SortMenuDialog(
             )
         },
         text = {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(400.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Left Column - Sort Options
+                // Sort Options Section
                 Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = "Sort By",
@@ -3355,10 +3353,7 @@ fun SortMenuDialog(
                     )
 
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .verticalScroll(rememberScrollState()),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         SortOption.entries.forEach { option ->
@@ -3375,7 +3370,7 @@ fun SortMenuDialog(
                                         onSortSelected(option)
                                         onDismiss()
                                     }
-                                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                                    .padding(horizontal = 12.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
@@ -3400,22 +3395,20 @@ fun SortMenuDialog(
                     }
                 }
 
-                // Vertical Divider
+                // Horizontal Divider
                 Box(
                     modifier = Modifier
-                        .width(1.dp)
-                        .fillMaxHeight()
+                        .fillMaxWidth()
+                        .height(1.dp)
                         .background(palette.primary.copy(alpha = 0.2f))
                 )
 
-                // Right Column - Filter Options
+                // Filter Options Section
                 Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Filter",
+                        text = "Filter by Playlist",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         color = palette.accent,
@@ -3423,10 +3416,7 @@ fun SortMenuDialog(
                     )
 
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .verticalScroll(rememberScrollState()),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         // All option
@@ -3442,19 +3432,19 @@ fun SortMenuDialog(
                                     onPlaylistSelected(null)
                                     onDismiss()
                                 }
-                                .padding(horizontal = 10.dp, vertical = 10.dp),
+                                .padding(horizontal = 12.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Icon(
                                     AppIcons.GridView,
                                     contentDescription = null,
                                     tint = if (selectedPlaylist == null) palette.accent else palette.primary,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                                 Text(
                                     text = "All",
@@ -3490,19 +3480,19 @@ fun SortMenuDialog(
                                         onPlaylistSelected(playlist.id)
                                         onDismiss()
                                     }
-                                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                                    .padding(horizontal = 12.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Icon(
                                         AppIcons.Playlist,
                                         contentDescription = null,
                                         tint = if (isSelected) palette.accent else palette.primary,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                     Text(
                                         text = playlist.name,
@@ -3529,7 +3519,7 @@ fun SortMenuDialog(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 24.dp),
+                                    .padding(vertical = 16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -5106,13 +5096,14 @@ private fun AudiobookGridItem(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        // Title
+        // Title - minLines ensures consistent card height
         Text(
             text = audiobook.title,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.SemiBold
             ),
             color = palette.textPrimary,
+            minLines = 2,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -5194,13 +5185,14 @@ private fun BookGridItem(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        // Title
+        // Title - minLines ensures consistent card height
         Text(
             text = book.title,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.SemiBold
             ),
             color = palette.textPrimary,
+            minLines = 2,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -5282,13 +5274,14 @@ private fun MusicGridItem(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        // Title
+        // Title - minLines ensures consistent card height
         Text(
             text = music.title,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.SemiBold
             ),
             color = palette.textPrimary,
+            minLines = 2,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -5370,13 +5363,14 @@ private fun ComicGridItem(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        // Title
+        // Title - minLines ensures consistent card height
         Text(
             text = comic.title,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.SemiBold
             ),
             color = palette.textPrimary,
+            minLines = 2,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -5474,13 +5468,14 @@ private fun MovieGridItem(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        // Title
+        // Title - minLines ensures consistent card height
         Text(
             text = movie.title,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.SemiBold
             ),
             color = palette.textPrimary,
+            minLines = 2,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )

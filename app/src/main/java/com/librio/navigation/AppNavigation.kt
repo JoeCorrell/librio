@@ -38,18 +38,18 @@ enum class BottomNavItem(
         route = Screen.Library.route,
         title = "Library",
         selectedIcon = AppIcons.LibraryMusic,
-        unselectedIcon = AppIcons.LibraryMusic
+        unselectedIcon = AppIcons.LibraryMusicOutlined
     ),
     PROFILE(
         route = Screen.Profile.route,
         title = "Profile",
         selectedIcon = AppIcons.Person,
-        unselectedIcon = AppIcons.Person
+        unselectedIcon = AppIcons.PersonOutlined
     ),
     SETTINGS(
         route = Screen.Settings.route,
         title = "Settings",
         selectedIcon = AppIcons.Settings,
-        unselectedIcon = AppIcons.Settings
+        unselectedIcon = AppIcons.SettingsOutlined
     )
 }

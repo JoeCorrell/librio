@@ -65,8 +65,9 @@ import com.librio.model.LibrarySeries
 import com.librio.model.LibraryMovie
 import com.librio.model.SortOption
 import com.librio.ui.theme.*
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import kotlin.math.abs
 
 @Suppress("UNUSED_PARAMETER")
@@ -170,7 +171,55 @@ fun LibraryListScreen(
     // Swipe gesture state for changing content types
     val haptic = LocalHapticFeedback.current
     var swipeOffset by remember { mutableFloatStateOf(0f) }
+    var verticalSwipeOffset by remember { mutableFloatStateOf(0f) }
     val swipeThreshold = 100f // Minimum swipe distance to trigger category change
+
+    // Track swipe direction for animation (-1 = left/next, 1 = right/previous)
+    var swipeDirection by remember { mutableIntStateOf(0) }
+    var verticalSwipeDirection by remember { mutableIntStateOf(0) } // -1 = up/next, 1 = down/previous
+
+    // Animated offset for content during swipe (follows finger with dampening)
+    val animatedSwipeOffset by animateFloatAsState(
+        targetValue = swipeOffset * 0.3f, // Dampen the movement
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "swipeOffset"
+    )
+
+    // Animated vertical offset during swipe
+    val animatedVerticalOffset by animateFloatAsState(
+        targetValue = verticalSwipeOffset * 0.25f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "verticalSwipeOffset"
+    )
+
+    // Animated scale during swipe (subtle zoom out effect)
+    val contentScale by animateFloatAsState(
+        targetValue = if (abs(swipeOffset) > 20f || abs(verticalSwipeOffset) > 20f) 0.98f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "contentScale"
+    )
+
+    // Animated alpha during swipe
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (abs(swipeOffset) > swipeThreshold * 0.5f || abs(verticalSwipeOffset) > swipeThreshold * 0.5f) 0.7f else 1f,
+        animationSpec = tween(150),
+        label = "contentAlpha"
+    )
+
+    // Build playlist options list: "All" + playlists for current content type
+    val playlistOptions = remember(seriesList, selectedContentType) {
+        val filtered = seriesList.filter { it.contentType == selectedContentType }
+        listOf<String?>(null) + filtered.map { it.id }
+    }
 
     // Context for loading cover art bitmaps
     val context = LocalContext.current
@@ -611,18 +660,73 @@ fun LibraryListScreen(
         modifier = modifier
             .fillMaxSize()
             .background(palette.background)
+            // 2-finger vertical swipe for playlist switching
+            .pointerInput(selectedPlaylistFilter, playlistOptions) {
+                awaitPointerEventScope {
+                    var twoFingerActive = false
+                    var startY = 0f
+
+                    while (true) {
+                        val event = awaitPointerEvent()
+
+                        when (event.type) {
+                            PointerEventType.Press -> {
+                                if (event.changes.size >= 2) {
+                                    twoFingerActive = true
+                                    val centerY = event.changes.map { it.position.y }.average().toFloat()
+                                    startY = centerY
+                                    verticalSwipeOffset = 0f
+                                }
+                            }
+                            PointerEventType.Move -> {
+                                if (twoFingerActive && event.changes.size >= 2) {
+                                    val centerY = event.changes.map { it.position.y }.average().toFloat()
+                                    verticalSwipeOffset = centerY - startY
+
+                                    // Consume events to prevent scrolling during 2-finger swipe
+                                    event.changes.forEach { it.consume() }
+                                }
+                            }
+                            PointerEventType.Release -> {
+                                if (twoFingerActive && abs(verticalSwipeOffset) > swipeThreshold && playlistOptions.size > 1) {
+                                    // Vertical swipe → change playlist
+                                    val currentIndex = playlistOptions.indexOf(selectedPlaylistFilter)
+                                    val validIndex = if (currentIndex == -1) 0 else currentIndex
+
+                                    val newIndex = if (verticalSwipeOffset < 0) {
+                                        verticalSwipeDirection = -1
+                                        (validIndex + 1) % playlistOptions.size
+                                    } else {
+                                        verticalSwipeDirection = 1
+                                        (validIndex - 1 + playlistOptions.size) % playlistOptions.size
+                                    }
+
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    selectedPlaylistFilter = playlistOptions[newIndex]
+                                }
+
+                                verticalSwipeOffset = 0f
+                                twoFingerActive = false
+                            }
+                            else -> {}
+                        }
+                    }
+                }
+            }
+            // 1-finger horizontal swipe for category switching
             .pointerInput(selectedContentType) {
                 detectHorizontalDragGestures(
+                    onDragStart = { swipeOffset = 0f },
                     onDragEnd = {
                         if (abs(swipeOffset) > swipeThreshold) {
                             val contentTypes = ContentType.entries
                             val currentIndex = contentTypes.indexOf(selectedContentType)
 
                             val newIndex = if (swipeOffset < 0) {
-                                // Swipe left → next category
+                                swipeDirection = -1
                                 (currentIndex + 1) % contentTypes.size
                             } else {
-                                // Swipe right → previous category
+                                swipeDirection = 1
                                 (currentIndex - 1 + contentTypes.size) % contentTypes.size
                             }
 
@@ -784,12 +888,40 @@ fun LibraryListScreen(
             }
         }
 
-        // Content based on selected type
+        // Content based on selected type with swipe animations
         AnimatedContent(
             targetState = selectedContentType,
             transitionSpec = {
-                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                val slideDistance = 100
+                val enterOffset = if (swipeDirection <= 0) slideDistance else -slideDistance
+                val exitOffset = if (swipeDirection <= 0) -slideDistance else slideDistance
+
+                (slideInHorizontally(
+                    initialOffsetX = { enterOffset },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                ) + fadeIn(
+                    animationSpec = tween(250)
+                )) togetherWith (slideOutHorizontally(
+                    targetOffsetX = { exitOffset },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                ) + fadeOut(
+                    animationSpec = tween(200)
+                ))
             },
+            modifier = Modifier
+                .graphicsLayer {
+                    translationX = animatedSwipeOffset
+                    translationY = animatedVerticalOffset
+                    scaleX = contentScale
+                    scaleY = contentScale
+                    alpha = contentAlpha
+                },
             label = "contentSwitch"
         ) { contentType ->
             when (contentType) {

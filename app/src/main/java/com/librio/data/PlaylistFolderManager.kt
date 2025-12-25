@@ -316,22 +316,51 @@ class PlaylistFolderManager {
     }
 
     /**
-     * Generate a unique filename if file already exists
+     * Generate a unique filename if file already exists.
+     * Strips existing _N suffixes to prevent _1_1 patterns.
      */
     private fun generateUniqueFileName(folder: File, originalName: String): File {
-        val baseName = originalName.substringBeforeLast(".")
+        val rawBaseName = originalName.substringBeforeLast(".")
         val extension = originalName.substringAfterLast(".", "")
-        var counter = 1
-        var newFile = File(folder, originalName)
 
-        while (newFile.exists()) {
-            val newName = if (extension.isNotEmpty()) {
-                "${baseName}_$counter.$extension"
-            } else {
-                "${baseName}_$counter"
+        // Strip existing _N suffix pattern to get clean base name
+        val suffixPattern = Regex("_\\d+$")
+        val cleanBaseName = rawBaseName.replace(suffixPattern, "")
+
+        // First try the clean name without any suffix
+        val cleanFileName = if (extension.isNotEmpty()) "$cleanBaseName.$extension" else cleanBaseName
+        var newFile = File(folder, cleanFileName)
+
+        if (!newFile.exists()) {
+            return newFile
+        }
+
+        // Find the highest existing counter for this base name
+        val existingPattern = Regex("${Regex.escape(cleanBaseName)}(?:_(\\d+))?\\.${Regex.escape(extension)}$")
+        val existingCounters = folder.listFiles()?.mapNotNull { file ->
+            existingPattern.matchEntire(file.name)?.let { match ->
+                match.groupValues[1].toIntOrNull() ?: 0
             }
-            newFile = File(folder, newName)
+        } ?: emptyList()
+
+        var counter = (existingCounters.maxOrNull() ?: 0) + 1
+
+        val newName = if (extension.isNotEmpty()) {
+            "${cleanBaseName}_$counter.$extension"
+        } else {
+            "${cleanBaseName}_$counter"
+        }
+        newFile = File(folder, newName)
+
+        // Safety fallback in case of edge cases
+        while (newFile.exists()) {
             counter++
+            val fallbackName = if (extension.isNotEmpty()) {
+                "${cleanBaseName}_$counter.$extension"
+            } else {
+                "${cleanBaseName}_$counter"
+            }
+            newFile = File(folder, fallbackName)
         }
 
         return newFile

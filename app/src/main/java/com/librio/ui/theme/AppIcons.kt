@@ -1,12 +1,14 @@
 package com.librio.ui.theme
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
  * Centralized icon definitions for consistent visual language throughout the app.
  * Uses Icons.Rounded for a flat, semi-rounded, cohesive style.
+ * Outlined variants available for unfocused/unselected states.
  */
 object AppIcons {
     // Content Type Icons
@@ -117,4 +119,9 @@ object AppIcons {
     val Fullscreen: ImageVector = Icons.Rounded.Fullscreen
     val FullscreenExit: ImageVector = Icons.Rounded.FullscreenExit
     val ScreenRotation: ImageVector = Icons.Rounded.ScreenRotation
+
+    // Outlined variants for bottom navigation (unselected states)
+    val LibraryMusicOutlined: ImageVector = Icons.Outlined.LibraryMusic
+    val PersonOutlined: ImageVector = Icons.Outlined.Person
+    val SettingsOutlined: ImageVector = Icons.Outlined.Settings
 }

@@ -487,16 +487,29 @@ private fun WelcomeStep(
     onBack: () -> Unit
 ) {
     val palette = currentPalette()
+    val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val shape16 = cornerRadius(16.dp)
     val shape24 = cornerRadius(24.dp)
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
+    // Use OpenDocument for persistable URI permissions
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
-        uri?.let { onPickImage(it.toString()) }
+        uri?.let {
+            // Take persistable permission so the image remains accessible after app restart
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    it,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (e: Exception) {
+                // Permission might fail but continue anyway
+            }
+            onPickImage(it.toString())
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -599,7 +612,10 @@ private fun WelcomeStep(
                         .clip(CircleShape)
                         .background(palette.shade10)
                         .border(3.dp, palette.accent, CircleShape)
-                        .clickable { imagePickerLauncher.launch("image/*") },
+                        .clickable {
+                            val mimeTypes = arrayOf("image/*")
+                            imagePickerLauncher.launch(mimeTypes)
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     if (profileBitmap != null) {
@@ -1348,19 +1364,31 @@ private fun SwipeGestureStep(
 ) {
     val palette = currentPalette()
     val shape16 = cornerRadius(16.dp)
+    val shape12 = cornerRadius(12.dp)
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    // Animation for swipe hint
+    // Animation for horizontal swipe hint
     val infiniteTransition = rememberInfiniteTransition(label = "swipe")
-    val swipeOffset by infiniteTransition.animateFloat(
-        initialValue = -40f,
-        targetValue = 40f,
+    val horizontalSwipeOffset by infiniteTransition.animateFloat(
+        initialValue = -30f,
+        targetValue = 30f,
         animationSpec = infiniteRepeatable(
             animation = tween(1500, easing = EaseInOutCubic),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "swipe_offset"
+        label = "horizontal_swipe_offset"
+    )
+
+    // Animation for vertical swipe hint (offset timing)
+    val verticalSwipeOffset by infiniteTransition.animateFloat(
+        initialValue = -20f,
+        targetValue = 20f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = EaseInOutCubic, delayMillis = 750),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "vertical_swipe_offset"
     )
 
     val arrowAlpha by infiniteTransition.animateFloat(
@@ -1379,100 +1407,208 @@ private fun SwipeGestureStep(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
-                .padding(top = if (isLandscape) 16.dp else 48.dp, bottom = 140.dp),
+                .padding(top = if (isLandscape) 16.dp else 32.dp, bottom = 140.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "One Last Tip!",
+                text = "Swipe Gestures",
                 style = if (isLandscape) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
 
-            Spacer(modifier = Modifier.height(if (isLandscape) 16.dp else 32.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-            // Swipe animation visualization
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(if (isLandscape) 120.dp else 200.dp),
-                contentAlignment = Alignment.Center
+            Text(
+                text = "Quick navigation with simple gestures",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.7f)
+            )
+
+            Spacer(modifier = Modifier.height(if (isLandscape) 12.dp else 16.dp))
+
+            // Horizontal swipe section
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = shape12,
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White.copy(alpha = 0.1f)
+                )
             ) {
-                // Category tabs mockup
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                Column(
+                    modifier = Modifier.padding(if (isLandscape) 12.dp else 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    listOf("Audiobooks", "E-books", "Music", "Movies").forEach { category ->
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.graphicsLayer { translationX = swipeOffset }
+                    // Horizontal arrows animation
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(if (isLandscape) 48.dp else 64.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = AppIcons.ChevronLeft,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(if (isLandscape) 32.dp else 40.dp)
+                                .alpha(arrowAlpha),
+                            tint = palette.accent
+                        )
+                        Row(
+                            modifier = Modifier.graphicsLayer { translationX = horizontalSwipeOffset },
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            val icon = when (category) {
-                                "Audiobooks" -> AppIcons.Audiobook
-                                "E-books" -> AppIcons.Book
-                                "Music" -> AppIcons.Music
-                                else -> AppIcons.Movie
+                            listOf(AppIcons.Audiobook, AppIcons.Book, AppIcons.Music, AppIcons.Movie).forEach { icon ->
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(if (isLandscape) 20.dp else 24.dp),
+                                    tint = Color.White.copy(alpha = 0.7f)
+                                )
                             }
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = null,
-                                modifier = Modifier.size(if (isLandscape) 24.dp else 32.dp),
-                                tint = Color.White.copy(alpha = 0.8f)
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                        Icon(
+                            imageVector = AppIcons.ChevronRight,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(if (isLandscape) 32.dp else 40.dp)
+                                .alpha(arrowAlpha),
+                            tint = palette.accent
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Swipe Left / Right",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = palette.accent
+                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(cornerRadius(4.dp))
+                                .background(palette.accent.copy(alpha = 0.3f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
                             Text(
-                                text = category,
+                                text = "1 Finger",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color.White.copy(alpha = 0.7f)
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }
-                }
-
-                // Swipe arrows
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = if (isLandscape) 60.dp else 100.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Icon(
-                        imageVector = AppIcons.ChevronLeft,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(if (isLandscape) 36.dp else 48.dp)
-                            .alpha(arrowAlpha),
-                        tint = palette.accent
-                    )
-                    Icon(
-                        imageVector = AppIcons.ChevronRight,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(if (isLandscape) 36.dp else 48.dp)
-                            .alpha(arrowAlpha),
-                        tint = palette.accent
+                    Text(
+                        text = "Switch between categories",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.7f)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(if (isLandscape) 12.dp else 24.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Vertical swipe section
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = shape12,
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White.copy(alpha = 0.1f)
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(if (isLandscape) 12.dp else 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Vertical arrows animation
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(if (isLandscape) 48.dp else 64.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = AppIcons.ExpandLess,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(if (isLandscape) 28.dp else 32.dp)
+                                    .alpha(arrowAlpha),
+                                tint = palette.accent
+                            )
+                            Column(
+                                modifier = Modifier.graphicsLayer { translationY = verticalSwipeOffset },
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                listOf("All", "Playlist 1", "Playlist 2").forEach { label ->
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.White.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                            Icon(
+                                imageVector = AppIcons.ExpandMore,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(if (isLandscape) 28.dp else 32.dp)
+                                    .alpha(arrowAlpha),
+                                tint = palette.accent
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Swipe Up / Down",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = palette.accent
+                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(cornerRadius(4.dp))
+                                .background(palette.accent.copy(alpha = 0.3f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "2 Fingers",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                    Text(
+                        text = "Switch between playlists",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(if (isLandscape) 12.dp else 20.dp))
 
             Text(
-                text = "Swipe left or right",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = palette.accent
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "to switch between content categories\nin your library",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.White.copy(alpha = 0.8f),
+                text = "2-finger vertical swipes won't\ninterfere with normal scrolling",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
             )
         }

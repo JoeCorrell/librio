@@ -353,35 +353,37 @@ fun MainScreen(
                             val interactionSource = remember { MutableInteractionSource() }
                             val isPressed by interactionSource.collectIsPressedAsState()
 
-                            // Animation for selection and press
+                            // Subtle press scale animation only
                             val scale by animateFloatAsState(
-                                targetValue = when {
-                                    isPressed -> 0.9f
-                                    isSelected -> 1.05f
-                                    else -> 1f
-                                },
+                                targetValue = if (isPressed) 0.92f else 1f,
                                 animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioNoBouncy,
-                                    stiffness = 10000f
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessHigh
                                 ),
                                 label = "navScale"
                             )
 
-                            // Subtle lift animation on selection change
-                            val offsetY by animateFloatAsState(
-                                targetValue = if (isSelected) -2f else 0f,
+                            // Smooth icon size transition
+                            val iconSize by animateDpAsState(
+                                targetValue = if (isSelected) 26.dp else 24.dp,
                                 animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioNoBouncy,
-                                    stiffness = Spring.StiffnessHigh
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessMedium
                                 ),
-                                label = "navOffset"
+                                label = "iconSize"
+                            )
+
+                            // Animate color alpha for smooth transition
+                            val iconAlpha by animateFloatAsState(
+                                targetValue = if (isSelected) 1f else 0.6f,
+                                animationSpec = tween(200),
+                                label = "iconAlpha"
                             )
 
                             Column(
                                 modifier = Modifier
                                     .weight(1f)
                                     .scale(scale)
-                                    .offset(y = offsetY.dp)
                                     .clickable(
                                         interactionSource = interactionSource,
                                         indication = null
@@ -390,18 +392,25 @@ fun MainScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
-                                Icon(
-                                    imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                                    contentDescription = item.title,
-                                    modifier = Modifier.size(24.dp),
-                                    tint = if (isSelected) palette.shade12 else palette.shade11.copy(alpha = 0.7f)
-                                )
+                                // Crossfade between filled and outlined icons
+                                Crossfade(
+                                    targetState = isSelected,
+                                    animationSpec = tween(200),
+                                    label = "iconCrossfade"
+                                ) { selected ->
+                                    Icon(
+                                        imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                        contentDescription = item.title,
+                                        modifier = Modifier.size(iconSize),
+                                        tint = palette.shade12.copy(alpha = iconAlpha)
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = item.title,
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                     fontSize = 11.sp,
-                                    color = if (isSelected) palette.shade12 else palette.shade11.copy(alpha = 0.7f)
+                                    color = palette.shade12.copy(alpha = iconAlpha)
                                 )
                             }
                         }
@@ -417,12 +426,27 @@ fun MainScreen(
                 .padding(paddingValues)
                 .background(palette.backgroundGradient())
         ) {
-            // Content with very fast transition animation
+            // Content with smooth transition animation
             AnimatedContent(
                 targetState = selectedTab,
                 transitionSpec = {
-                    fadeIn(animationSpec = tween(80)) togetherWith
-                    fadeOut(animationSpec = tween(50))
+                    // Determine direction based on tab order
+                    val targetIndex = targetState.ordinal
+                    val initialIndex = initialState.ordinal
+
+                    if (targetIndex > initialIndex) {
+                        // Moving right/forward
+                        (fadeIn(animationSpec = tween(150)) +
+                            slideInHorizontally(animationSpec = tween(200)) { it / 8 }) togetherWith
+                        (fadeOut(animationSpec = tween(100)) +
+                            slideOutHorizontally(animationSpec = tween(200)) { -it / 8 })
+                    } else {
+                        // Moving left/backward
+                        (fadeIn(animationSpec = tween(150)) +
+                            slideInHorizontally(animationSpec = tween(200)) { -it / 8 }) togetherWith
+                        (fadeOut(animationSpec = tween(100)) +
+                            slideOutHorizontally(animationSpec = tween(200)) { it / 8 })
+                    }
                 },
                 label = "tabContent"
             ) { tab ->

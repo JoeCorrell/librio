@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -875,12 +876,9 @@ fun MusicPlayerScreen(
                         val interactionSource = remember { MutableInteractionSource() }
                         val isPressed by interactionSource.collectIsPressedAsState()
 
+                        // Subtle press scale animation only
                         val scale by animateFloatAsState(
-                            targetValue = when {
-                                isPressed -> 0.85f
-                                isSelected -> 1.1f
-                                else -> 1f
-                            },
+                            targetValue = if (isPressed) 0.92f else 1f,
                             animationSpec = spring(
                                 dampingRatio = Spring.DampingRatioMediumBouncy,
                                 stiffness = Spring.StiffnessHigh
@@ -888,20 +886,20 @@ fun MusicPlayerScreen(
                             label = "navScale"
                         )
 
-                        val offsetY by animateFloatAsState(
-                            targetValue = if (isSelected) -4f else 0f,
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessMedium
-                            ),
-                            label = "navOffset"
+                        // Icon size based on selection
+                        val iconSize = if (isSelected) 26.dp else 24.dp
+
+                        // Animate color alpha for smooth transition
+                        val iconAlpha by animateFloatAsState(
+                            targetValue = if (isSelected) 1f else 0.6f,
+                            animationSpec = tween(200),
+                            label = "iconAlpha"
                         )
 
                         Column(
                             modifier = Modifier
                                 .weight(1f)
                                 .scale(scale)
-                                .offset(y = offsetY.dp)
                                 .clickable(
                                     interactionSource = interactionSource,
                                     indication = null
@@ -910,18 +908,25 @@ fun MusicPlayerScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                             ) {
-                                Icon(
-                                    imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                                    contentDescription = item.title,
-                                    modifier = Modifier.size(24.dp),
-                                    tint = if (isSelected) palette.shade12 else palette.shade11.copy(alpha = 0.7f)
-                                )
+                                // Crossfade between filled and outlined icons
+                                Crossfade(
+                                    targetState = isSelected,
+                                    animationSpec = tween(200),
+                                    label = "iconCrossfade"
+                                ) { selected ->
+                                    Icon(
+                                        imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                        contentDescription = item.title,
+                                        modifier = Modifier.size(iconSize),
+                                        tint = palette.shade12.copy(alpha = iconAlpha)
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = item.title,
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                     fontSize = 11.sp,
-                                    color = if (isSelected) palette.shade12 else palette.shade11.copy(alpha = 0.7f)
+                                    color = palette.shade12.copy(alpha = iconAlpha)
                                 )
                             }
                         }

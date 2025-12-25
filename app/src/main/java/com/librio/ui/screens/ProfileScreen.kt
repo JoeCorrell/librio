@@ -1327,7 +1327,7 @@ fun ProfileScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
                                     color = palette.primary,
-                                    modifier = Modifier.width(50.dp)
+                                    modifier = Modifier.width(40.dp)
                                 )
                                 Slider(
                                     value = currentScaleIndex.toFloat(),
@@ -1349,7 +1349,7 @@ fun ProfileScreen(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = palette.accent,
                                     fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.width(45.dp),
+                                    modifier = Modifier.width(65.dp),
                                     textAlign = TextAlign.End
                                 )
                             }
@@ -1369,7 +1369,7 @@ fun ProfileScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
                                     color = palette.primary,
-                                    modifier = Modifier.width(50.dp)
+                                    modifier = Modifier.width(40.dp)
                                 )
                                 Slider(
                                     value = selectedFontIndex.toFloat(),
@@ -1391,7 +1391,7 @@ fun ProfileScreen(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = palette.accent,
                                     fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.width(70.dp),
+                                    modifier = Modifier.width(65.dp),
                                     textAlign = TextAlign.End
                                 )
                             }

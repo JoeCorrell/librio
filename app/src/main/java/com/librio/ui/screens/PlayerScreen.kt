@@ -14,6 +14,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -523,12 +524,21 @@ private fun PlayerContent(
     LaunchedEffect(audiobook) { coverVisible = true }
 
     val coverScale by animateFloatAsState(
-        targetValue = if (coverVisible) 1f else 0.9f,
+        targetValue = if (coverVisible) 1f else 0.85f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "coverScale"
+    )
+
+    val coverAlpha by animateFloatAsState(
+        targetValue = if (coverVisible) 1f else 0f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioNoBouncy,
             stiffness = Spring.StiffnessMedium
         ),
-        label = "coverScale"
+        label = "coverAlpha"
     )
 
     BoxWithConstraints(
@@ -557,14 +567,18 @@ private fun PlayerContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = if (needsScroll) Arrangement.Top else Arrangement.SpaceEvenly
         ) {
-            // Cover art with responsive sizing
+            // Cover art with responsive sizing and entrance animation
             val fileExtension = audiobook.fileName.substringAfterLast('.', "").ifEmpty { "AUDIO" }
             CoverArt(
                 bitmap = audiobook.coverArt,
                 contentDescription = "Cover art for ${audiobook.title}",
                 modifier = Modifier
                     .size(coverArtSize)
-                    .scale(coverScale),
+                    .graphicsLayer {
+                        scaleX = coverScale
+                        scaleY = coverScale
+                        alpha = coverAlpha
+                    },
                 showPlaceholderAlways = showPlaceholderIcons,
                 fileExtension = fileExtension,
                 contentType = CoverArtContentType.AUDIOBOOK

@@ -285,7 +285,7 @@ fun PlayerScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(64.dp)
                         .padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically

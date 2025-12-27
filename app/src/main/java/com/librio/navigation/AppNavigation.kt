@@ -20,9 +20,6 @@ sealed class Screen(val route: String) {
     object MoviePlayer : Screen("movie_player")
     object ComicReader : Screen("comic_reader")
     object Settings : Screen("settings")
-    object PlaylistDetail : Screen("playlist_detail/{seriesId}") {
-        fun createRoute(seriesId: String): String = "playlist_detail/$seriesId"
-    }
 }
 
 /**

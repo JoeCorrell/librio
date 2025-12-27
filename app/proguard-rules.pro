@@ -23,3 +23,25 @@
 # Keep ExoPlayer classes
 -keep class androidx.media3.** { *; }
 -dontwarn androidx.media3.**
+
+# Keep JAudioTagger for audio metadata (uses reflection)
+-keep class org.jaudiotagger.** { *; }
+-dontwarn org.jaudiotagger.**
+
+# SLF4J (used by JAudioTagger)
+-dontwarn org.slf4j.**
+
+# Keep Junrar for CBR comic reading
+-keep class com.github.junrar.** { *; }
+-dontwarn com.github.junrar.**
+
+# Keep model classes (used with data persistence)
+-keep class com.librio.model.** { *; }
+
+# Keep Kotlin metadata
+-keepattributes *Annotation*
+-keep class kotlin.Metadata { *; }
+
+# Keep line numbers for better crash reports
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

@@ -54,7 +54,6 @@ object AppIcons {
     val Playlist: ImageVector = Icons.Rounded.QueueMusic
     val Library: ImageVector = Icons.Rounded.LibraryBooks
     val LibraryMusic: ImageVector = Icons.Rounded.LibraryMusic
-    val Category: ImageVector = Icons.Rounded.Category
 
     // UI & Display
     val ChevronRight: ImageVector = Icons.Rounded.ChevronRight
@@ -74,7 +73,6 @@ object AppIcons {
     val DarkMode: ImageVector = Icons.Rounded.DarkMode
     val LightMode: ImageVector = Icons.Rounded.LightMode
     val ColorLens: ImageVector = Icons.Rounded.ColorLens
-    val FormatColorFill: ImageVector = Icons.Rounded.FormatColorFill
     val ZoomIn: ImageVector = Icons.Rounded.ZoomIn
 
     // Text & Formatting
@@ -92,12 +90,9 @@ object AppIcons {
     val Vibration: ImageVector = Icons.Rounded.Vibration
     val Notifications: ImageVector = Icons.Rounded.Notifications
     val Bookmark: ImageVector = Icons.Rounded.Bookmark
-    val History: ImageVector = Icons.Rounded.History
-    val Info: ImageVector = Icons.Rounded.Info
     val Extension: ImageVector = Icons.Rounded.Extension
     val Storage: ImageVector = Icons.Rounded.Storage
     val Image: ImageVector = Icons.Rounded.Image
-    val Animation: ImageVector = Icons.Rounded.Animation
     val TouchApp: ImageVector = Icons.Rounded.TouchApp
 
     // Reader Controls
@@ -105,7 +100,6 @@ object AppIcons {
     val VisibilityOff: ImageVector = Icons.Rounded.VisibilityOff
     val BrightnessLow: ImageVector = Icons.Rounded.BrightnessLow
     val BrightnessHigh: ImageVector = Icons.Rounded.BrightnessHigh
-    val Brightness7: ImageVector = Icons.Rounded.Brightness7
     val ViewArray: ImageVector = Icons.Rounded.ViewArray
     val Tune: ImageVector = Icons.Rounded.Tune
     val AutoStories: ImageVector = Icons.Rounded.AutoStories
@@ -113,7 +107,6 @@ object AppIcons {
     // Media States
     val PlayCircle: ImageVector = Icons.Rounded.PlayCircle
     val Movie: ImageVector = Icons.Rounded.Movie
-    val HeadsetOff: ImageVector = Icons.Rounded.HeadsetOff
 
     // Fullscreen & Screen Controls
     val Fullscreen: ImageVector = Icons.Rounded.Fullscreen

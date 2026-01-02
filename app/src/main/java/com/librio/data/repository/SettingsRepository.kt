@@ -37,6 +37,11 @@ class SettingsRepository(private val context: Context) {
     // Library repository for backup/restore of library data (categories, items, etc.)
     private val libraryRepository by lazy { LibraryRepository(context) }
 
+    // Comprehensive backup manager with ZIP support and cover art
+    private val backupManager by lazy {
+        com.librio.data.BackupManager(context, this, libraryRepository)
+    }
+
     // Coroutine scope for async file operations
     private val fileScope = CoroutineScope(Dispatchers.IO)
 
@@ -539,6 +544,10 @@ class SettingsRepository(private val context: Context) {
 
     private fun importProfileBackupsAsync() {
         fileScope.launch {
+            // Use new BackupManager for auto-import (supports both ZIP and legacy JSON)
+            backupManager.autoImportPendingBackups()
+
+            // Also run legacy import for any remaining old backups
             val result = importProfileBackups(_profiles.value)
             if (result.importedCount > 0) {
                 _profiles.value = result.profiles
@@ -792,7 +801,28 @@ class SettingsRepository(private val context: Context) {
         )
     }
 
-    suspend fun exportProfileBackup(profileId: String): File? = withContext(Dispatchers.IO) {
+    /**
+     * Export a profile backup (new ZIP format with cover art).
+     * Set legacyFormat=true to export old JSON format for compatibility.
+     */
+    suspend fun exportProfileBackup(
+        profileId: String,
+        legacyFormat: Boolean = false
+    ): File? = withContext(Dispatchers.IO) {
+        if (!legacyFormat) {
+            // Use new comprehensive ZIP backup
+            return@withContext backupManager.createBackup(profileId, includeTimestamp = true)
+        }
+
+        // Legacy JSON backup (for backward compatibility)
+        exportProfileBackupLegacy(profileId)
+    }
+
+    /**
+     * Export profile backup in legacy JSON format.
+     * Kept for backward compatibility.
+     */
+    private suspend fun exportProfileBackupLegacy(profileId: String): File? = withContext(Dispatchers.IO) {
         val profile = _profiles.value.firstOrNull { it.id == profileId } ?: return@withContext null
         val profileName = profile.name
         val backupsFolder = profileFileManager.getBackupsFolder()
@@ -866,6 +896,44 @@ class SettingsRepository(private val context: Context) {
 
         profileFileManager.writeJsonFile(backupFile, backupJson)
         if (backupFile.exists()) backupFile else null
+    }
+
+    /**
+     * Import a legacy JSON backup file.
+     * Called by BackupManager for backward compatibility.
+     */
+    suspend fun importLegacyBackup(backupFile: File): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val result = importProfileBackups(_profiles.value)
+            if (result.importedCount > 0) {
+                _profiles.value = result.profiles
+                saveProfiles(result.profiles)
+                if (result.activeProfileUpdated) {
+                    loadAllSettingsFromFiles()
+                }
+                return@withContext true
+            }
+            false
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    /**
+     * Get the Librio root directory.
+     * Exposed for BackupManager access.
+     */
+    fun getLibrioRoot(): File {
+        return File(android.os.Environment.getExternalStorageDirectory(), "Librio")
+    }
+
+    /**
+     * Reload all profiles from storage.
+     * Exposed for BackupManager to trigger after import.
+     */
+    suspend fun reloadProfiles() = withContext(Dispatchers.IO) {
+        loadAllSettingsFromFiles()
     }
 
     private fun updateCustomThemeColors() {

@@ -5,6 +5,10 @@ import android.content.Context
 import android.media.audiofx.BassBoost
 import android.media.audiofx.Equalizer
 import android.media.audiofx.LoudnessEnhancer
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.view.animation.DecelerateInterpolator
 import androidx.annotation.OptIn
 import androidx.media3.common.C
@@ -32,6 +36,12 @@ import com.librio.player.normalizeEqPresetName
  */
 @OptIn(UnstableApi::class)
 class AudioSettingsManager(private val context: Context) {
+
+    companion object {
+        private const val TAG = "AudioSettingsManager"
+        private const val MAX_EFFECT_RETRY_ATTEMPTS = 3
+        private const val EFFECT_RETRY_DELAY_MS = 500L // Delay between retries
+    }
 
     // Current settings state
     var trimSilence: Boolean = false
@@ -66,6 +76,11 @@ class AudioSettingsManager(private val context: Context) {
     private var loudnessEnhancer: LoudnessEnhancer? = null
     private var bassBoost: BassBoost? = null
     private var equalizer: Equalizer? = null
+
+    // Effect retry mechanism for newer Android versions
+    private var effectRetryCount = 0
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var lastAudioSessionId: Int = C.AUDIO_SESSION_ID_UNSET
 
     /**
      * Create an ExoPlayer configured with current audio settings
@@ -140,9 +155,16 @@ class AudioSettingsManager(private val context: Context) {
 
     /**
      * Apply hardware audio effects (equalizer, bass boost, volume boost)
+     * Includes retry mechanism for newer Android versions where effects may fail initially.
      */
-    private fun applyAudioEffects(audioSessionId: Int) {
-        if (audioSessionId == C.AUDIO_SESSION_ID_UNSET || audioSessionId == 0) return
+    private fun applyAudioEffects(audioSessionId: Int, retryAttempt: Int = 0) {
+        if (audioSessionId == C.AUDIO_SESSION_ID_UNSET || audioSessionId == 0) {
+            Log.w(TAG, "Invalid audio session ID: $audioSessionId")
+            return
+        }
+
+        lastAudioSessionId = audioSessionId
+        Log.d(TAG, "Applying audio effects with session ID: $audioSessionId (Android ${Build.VERSION.SDK_INT}, attempt ${retryAttempt + 1})")
 
         try {
             // Release old effects
@@ -150,25 +172,83 @@ class AudioSettingsManager(private val context: Context) {
             bassBoost?.release()
             equalizer?.release()
 
-            // Create new effects
-            loudnessEnhancer = runCatching { LoudnessEnhancer(audioSessionId) }.getOrNull()
+            var successCount = 0
+            var failureCount = 0
 
-            // Only enable hardware BassBoost if not using equalizer bass preset (avoid stacking)
+            // Create LoudnessEnhancer
+            loudnessEnhancer = try {
+                LoudnessEnhancer(audioSessionId).also {
+                    Log.d(TAG, "✓ LoudnessEnhancer created successfully")
+                    successCount++
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "✗ Failed to create LoudnessEnhancer: ${e.message}")
+                failureCount++
+                null
+            }
+
+            // Create BassBoost
             val useHardwareBassBoost = bassBoostLevel > 0f && equalizerPreset != "BASS_INCREASED"
-            bassBoost = runCatching {
-                BassBoost(0, audioSessionId).apply { enabled = useHardwareBassBoost }
-            }.getOrNull()
+            bassBoost = try {
+                BassBoost(0, audioSessionId).apply {
+                    enabled = useHardwareBassBoost
+                    Log.d(TAG, "✓ BassBoost created successfully (enabled: $useHardwareBassBoost)")
+                    successCount++
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "✗ Failed to create BassBoost: ${e.message}")
+                failureCount++
+                null
+            }
 
-            equalizer = runCatching {
-                Equalizer(0, audioSessionId).apply { enabled = true }
-            }.getOrNull()
+            // Create Equalizer
+            equalizer = try {
+                Equalizer(0, audioSessionId).apply {
+                    enabled = true
+                    val bandCount = numberOfBands
+                    val levelRange = bandLevelRange
+                    Log.d(TAG, "✓ Equalizer created successfully (bands: $bandCount, range: ${levelRange[0]}..${levelRange[1]} mB)")
+                    successCount++
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "✗ Failed to create Equalizer: ${e.message}")
+                failureCount++
+                null
+            }
 
-            // Apply current settings
-            val normalizedPreset = normalizeEqPresetName(equalizerPreset)
-            equalizer?.let { runCatching { applyEqualizerPreset(it, normalizedPreset) } }
+            // Log summary
+            Log.i(TAG, "Audio effects: $successCount created, $failureCount failed")
+
+            // If all effects failed and we haven't exceeded retry limit, try again
+            if (successCount == 0 && failureCount > 0 && retryAttempt < MAX_EFFECT_RETRY_ATTEMPTS) {
+                Log.w(TAG, "All effects failed, retrying in ${EFFECT_RETRY_DELAY_MS}ms...")
+                mainHandler.postDelayed({
+                    applyAudioEffects(audioSessionId, retryAttempt + 1)
+                }, EFFECT_RETRY_DELAY_MS)
+                return
+            }
+
+            // Apply current settings to successfully created effects
+            if (equalizer != null) {
+                val normalizedPreset = normalizeEqPresetName(equalizerPreset)
+                try {
+                    applyEqualizerPreset(equalizer!!, normalizedPreset)
+                    Log.d(TAG, "✓ Equalizer preset applied: $normalizedPreset")
+                } catch (e: Exception) {
+                    Log.e(TAG, "✗ Failed to apply equalizer preset: ${e.message}")
+                }
+            }
+
             applyLoudness()
             applyBassBoost()
+
+            // Reset retry counter on success
+            if (successCount > 0) {
+                effectRetryCount = 0
+            }
+
         } catch (e: Exception) {
+            Log.e(TAG, "Unexpected error applying audio effects: ${e.message}", e)
             e.printStackTrace()
         }
     }
@@ -376,11 +456,29 @@ class AudioSettingsManager(private val context: Context) {
     }
 
     /**
+     * Manually retry audio effects initialization.
+     * Useful if effects failed on initial creation.
+     */
+    fun retryAudioEffects() {
+        val sessionId = lastAudioSessionId
+        if (sessionId != C.AUDIO_SESSION_ID_UNSET && sessionId != 0) {
+            Log.i(TAG, "Manually retrying audio effects...")
+            effectRetryCount = 0
+            applyAudioEffects(sessionId, 0)
+        } else {
+            Log.w(TAG, "Cannot retry: no valid audio session ID available")
+        }
+    }
+
+    /**
      * Release resources
      */
     fun release() {
         fadeAnimator?.cancel()
         fadeAnimator = null
+
+        // Cancel any pending effect retry operations
+        mainHandler.removeCallbacksAndMessages(null)
 
         // Remove player listener
         playerListener?.let { listener ->
@@ -392,11 +490,23 @@ class AudioSettingsManager(private val context: Context) {
         channelProcessor = null
 
         // Release audio effects
-        try { loudnessEnhancer?.release() } catch (_: Exception) { }
-        try { bassBoost?.release() } catch (_: Exception) { }
-        try { equalizer?.release() } catch (_: Exception) { }
+        try {
+            loudnessEnhancer?.release()
+            Log.d(TAG, "LoudnessEnhancer released")
+        } catch (_: Exception) { }
+        try {
+            bassBoost?.release()
+            Log.d(TAG, "BassBoost released")
+        } catch (_: Exception) { }
+        try {
+            equalizer?.release()
+            Log.d(TAG, "Equalizer released")
+        } catch (_: Exception) { }
+
         loudnessEnhancer = null
         bassBoost = null
         equalizer = null
+
+        Log.i(TAG, "AudioSettingsManager released")
     }
 }

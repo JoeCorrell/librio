@@ -1,9 +1,8 @@
 package com.librio.ui.components
 
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import com.librio.ui.theme.AnimationDefaults
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -79,30 +78,21 @@ fun MinimalSlider(
     // Animate the progress
     val animatedProgress by animateFloatAsState(
         targetValue = normalizedValue,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioNoBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
+        animationSpec = AnimationDefaults.smoothSpring(),
         label = "sliderProgress"
     )
 
     // Animate thumb size when dragging
     val animatedThumbSize by animateDpAsState(
         targetValue = if (isDragging) thumbSize + 4.dp else thumbSize,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
+        animationSpec = AnimationDefaults.standardSpring(),
         label = "thumbSize"
     )
 
     // Animate track height when dragging
     val animatedTrackHeight by animateDpAsState(
         targetValue = if (isDragging) trackHeight + 1.dp else trackHeight,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
+        animationSpec = AnimationDefaults.standardSpring(),
         label = "trackHeight"
     )
 
@@ -295,10 +285,7 @@ fun LibrioProgressBar(
 
     val animatedProgress by animateFloatAsState(
         targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioNoBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
+        animationSpec = AnimationDefaults.smoothSpring(),
         label = "progressBar"
     )
 

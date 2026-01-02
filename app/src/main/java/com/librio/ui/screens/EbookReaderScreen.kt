@@ -383,9 +383,10 @@ fun EbookReaderScreen(
     }
 
     // Periodic auto-save every 10 seconds while reading (prevents data loss on crash/kill)
+    // Note: while(true) is safe here - LaunchedEffect cancels on recomposition, and delay() is a cancellation point
     LaunchedEffect(initialPositionRestored) {
         if (!initialPositionRestored) return@LaunchedEffect
-        while (isActive) {
+        while (true) {
             kotlinx.coroutines.delay(10_000L)
             val pagesToSave = if (pages.isNotEmpty()) pages.size else totalPages.coerceAtLeast(1)
             onPageChange(currentPage.coerceIn(0, pagesToSave - 1), pagesToSave)

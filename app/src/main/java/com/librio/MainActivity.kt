@@ -493,9 +493,11 @@ class MainActivity : ComponentActivity() {
                     music?.let {
                         lastPlayedMusic = it
                         lastPlayedAudiobook = null
-                        // Filter playlist to only include items of the same content type
-                        currentMusicPlaylist = libraryState.music.filter { musicItem ->
-                            musicItem.contentType == it.contentType
+                        // Restore playlist context: use series if track belongs to one, otherwise filter by content type
+                        currentMusicPlaylist = if (it.seriesId != null) {
+                            libraryState.music.filter { m -> m.seriesId == it.seriesId }
+                        } else {
+                            libraryState.music.filter { m -> m.contentType == it.contentType }
                         }
                         musicCurrentPosition = lastMusicPosition
                         isMusicPlaying = lastMusicPlaying

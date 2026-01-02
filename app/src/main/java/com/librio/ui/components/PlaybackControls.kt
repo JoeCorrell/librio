@@ -1,7 +1,8 @@
 package com.librio.ui.components
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.animateFloatAsState
+import com.librio.ui.theme.AnimationDefaults
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -224,8 +225,8 @@ fun SkipButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.9f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 10000f),
+        targetValue = if (isPressed) AnimationDefaults.ButtonPressScale else 1f,
+        animationSpec = AnimationDefaults.snappySpring(),
         label = "scale"
     )
 
@@ -276,8 +277,8 @@ fun ControlButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.9f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 10000f),
+        targetValue = if (isPressed) AnimationDefaults.ButtonPressScale else 1f,
+        animationSpec = AnimationDefaults.snappySpring(),
         label = "scale"
     )
 
@@ -328,8 +329,8 @@ fun PlayPauseButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.93f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 10000f),
+        targetValue = if (isPressed) AnimationDefaults.ButtonPressScale else 1f,
+        animationSpec = AnimationDefaults.snappySpring(),
         label = "scale"
     )
 

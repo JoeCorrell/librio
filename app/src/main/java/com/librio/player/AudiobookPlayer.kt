@@ -604,7 +604,8 @@ class AudiobookPlayer(private val context: Context) {
     private fun startPositionUpdates() {
         positionUpdateJob?.cancel()
         positionUpdateJob = scope.launch {
-            while (isActive) {
+            // Note: while(true) is safe here - job is cancelled in stopPositionUpdates(), and delay() is a cancellation point
+            while (true) {
                 updatePlaybackState()
                 delay(500) // Update every 500ms to save battery
             }

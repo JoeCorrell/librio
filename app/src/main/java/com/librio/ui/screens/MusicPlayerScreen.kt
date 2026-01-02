@@ -399,9 +399,10 @@ fun MusicPlayerScreen(
     }
 
     // Update position periodically - only runs while playing to save battery
+    // Note: while(true) is safe here - LaunchedEffect cancels when isPlaying changes, and delay() is a cancellation point
     LaunchedEffect(isPlaying) {
         if (!isPlaying) return@LaunchedEffect
-        while (isActive) {
+        while (true) {
             currentPosition = exoPlayer.currentPosition
             if (exoPlayer.duration > 0) {
                 duration = exoPlayer.duration
@@ -413,7 +414,7 @@ fun MusicPlayerScreen(
     // Save position periodically while playing
     LaunchedEffect(isPlaying) {
         if (!isPlaying) return@LaunchedEffect
-        while (isActive) {
+        while (true) {
             delay(5000)
             onPositionChange(exoPlayer.currentPosition)
         }

@@ -1,9 +1,8 @@
 package com.librio.ui.components
 
 import android.graphics.Bitmap
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import com.librio.ui.theme.AnimationDefaults
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -63,11 +62,8 @@ fun ContentGridItem(
     // Press animation
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessHigh
-        ),
+        targetValue = if (isPressed) AnimationDefaults.ItemPressScale else 1f,
+        animationSpec = AnimationDefaults.snappySpring(),
         label = "pressScale"
     )
 

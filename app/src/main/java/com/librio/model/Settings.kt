@@ -77,9 +77,6 @@ data class AudioSettings(
     val fadeDurationMs: Int = 300,
     // Gapless playback
     val gaplessPlayback: Boolean = true,
-    // Mono audio and channel balance
-    val monoAudio: Boolean = false,
-    val channelBalance: Float = 0f, // -1.0 (left) to 1.0 (right), 0 = center
     // Silence trimming
     val trimSilence: Boolean = false,
     // Last playback state for music

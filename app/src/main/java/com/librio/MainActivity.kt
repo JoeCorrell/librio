@@ -174,8 +174,6 @@ class MainActivity : ComponentActivity() {
             val showUndoSeekButton by settingsViewModel.showUndoSeekButton?.collectAsState() ?: remember { mutableStateOf(true) }
             val fadeOnPauseResume by settingsViewModel.fadeOnPauseResume?.collectAsState() ?: remember { mutableStateOf(false) }
             val gaplessPlayback by settingsViewModel.gaplessPlayback?.collectAsState() ?: remember { mutableStateOf(true) }
-            val monoAudio by settingsViewModel.monoAudio?.collectAsState() ?: remember { mutableStateOf(false) }
-            val channelBalance by settingsViewModel.channelBalance?.collectAsState() ?: remember { mutableStateOf(0f) }
             val trimSilence by settingsViewModel.trimSilence?.collectAsState() ?: remember { mutableStateOf(false) }
 
             // E-Reader settings
@@ -227,21 +225,20 @@ class MainActivity : ComponentActivity() {
             }
 
             // Apply profile audio effects to audiobook player
-            LaunchedEffect(profileNormalizeAudio, profileBassBoost, profileVolumeBoost, profileVolumeBoostLevel, profileEqualizer, fadeOnPauseResume) {
+            LaunchedEffect(profileNormalizeAudio, profileBassBoost, profileVolumeBoost, profileVolumeBoostLevel, profileEqualizer, fadeOnPauseResume, showPlaybackNotification) {
                 player.setNormalizeAudio(profileNormalizeAudio)
                 player.setBassBoostLevel(profileBassBoost)
                 player.setVolumeBoost(profileVolumeBoost, profileVolumeBoostLevel)
                 player.setEqualizerPreset(profileEqualizer)
                 player.setFadeOnPauseResume(fadeOnPauseResume)
+                player.setShowPlaybackNotification(showPlaybackNotification)
             }
 
             // Apply audio processing settings to shared music player
-            LaunchedEffect(trimSilence, monoAudio, channelBalance, fadeOnPauseResume, gaplessPlayback) {
+            LaunchedEffect(trimSilence, fadeOnPauseResume, gaplessPlayback) {
                 SharedMusicPlayer.updateAudioSettings(
                     context = context,
                     trimSilence = trimSilence,
-                    monoAudio = monoAudio,
-                    channelBalance = channelBalance,
                     fadeOnPauseResume = fadeOnPauseResume,
                     gaplessPlayback = gaplessPlayback
                 )
@@ -269,8 +266,8 @@ class MainActivity : ComponentActivity() {
 
             // Shared music ExoPlayer - persists across screen navigation and background playback
             val musicExoPlayer = remember { SharedMusicPlayer.acquire(context) }
-            val startPlaybackService = remember {
-                {
+            val startPlaybackService: () -> Unit = {
+                if (showPlaybackNotification) {
                     PlaybackService.start(context.applicationContext)
                 }
             }
@@ -1502,10 +1499,6 @@ class MainActivity : ComponentActivity() {
                                 onFadeOnPauseResumeChange = { settingsViewModel.setFadeOnPauseResume(it) },
                                 gaplessPlayback = gaplessPlayback,
                                 onGaplessPlaybackChange = { settingsViewModel.setGaplessPlayback(it) },
-                                monoAudio = monoAudio,
-                                onMonoAudioChange = { settingsViewModel.setMonoAudio(it) },
-                                channelBalance = channelBalance,
-                                onChannelBalanceChange = { settingsViewModel.setChannelBalance(it) },
                                 trimSilence = trimSilence,
                                 onTrimSilenceChange = { settingsViewModel.setTrimSilence(it) },
                                 showBackButton = showBackButton,
@@ -1665,10 +1658,6 @@ class MainActivity : ComponentActivity() {
                                     onFadeOnPauseResumeChange = { settingsViewModel.setFadeOnPauseResume(it) },
                                     gaplessPlayback = gaplessPlayback,
                                     onGaplessPlaybackChange = { settingsViewModel.setGaplessPlayback(it) },
-                                    monoAudio = monoAudio,
-                                    onMonoAudioChange = { settingsViewModel.setMonoAudio(it) },
-                                    channelBalance = channelBalance,
-                                    onChannelBalanceChange = { settingsViewModel.setChannelBalance(it) },
                                     trimSilence = trimSilence,
                                     onTrimSilenceChange = { settingsViewModel.setTrimSilence(it) },
                                     initialShuffleEnabled = musicShuffleEnabled,

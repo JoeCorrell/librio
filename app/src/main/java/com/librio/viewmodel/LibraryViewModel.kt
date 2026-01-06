@@ -667,20 +667,14 @@ class LibraryViewModel : ViewModel() {
                         listOf(audiobooks, categories, books, music, comics, movies, series)
                     }
 
-                    @Suppress("UNCHECKED_CAST")
-                    val loadedAudiobooks = results[0] as List<LibraryAudiobook>
-                    @Suppress("UNCHECKED_CAST")
-                    val savedCategories = results[1] as List<Category>
-                    @Suppress("UNCHECKED_CAST")
-                    val loadedBooks = results[2] as List<LibraryBook>
-                    @Suppress("UNCHECKED_CAST")
-                    val loadedMusic = results[3] as List<LibraryMusic>
-                    @Suppress("UNCHECKED_CAST")
-                    val loadedComics = results[4] as List<LibraryComic>
-                    @Suppress("UNCHECKED_CAST")
-                    val loadedMovies = results[5] as List<LibraryMovie>
-                    @Suppress("UNCHECKED_CAST")
-                    var savedSeries = results[6] as List<LibrarySeries>
+                    // Safe casts with runtime validation to prevent crashes
+                    val loadedAudiobooks = (results.getOrNull(0) as? List<*>)?.filterIsInstance<LibraryAudiobook>() ?: emptyList()
+                    val savedCategories = (results.getOrNull(1) as? List<*>)?.filterIsInstance<Category>() ?: emptyList()
+                    val loadedBooks = (results.getOrNull(2) as? List<*>)?.filterIsInstance<LibraryBook>() ?: emptyList()
+                    val loadedMusic = (results.getOrNull(3) as? List<*>)?.filterIsInstance<LibraryMusic>() ?: emptyList()
+                    val loadedComics = (results.getOrNull(4) as? List<*>)?.filterIsInstance<LibraryComic>() ?: emptyList()
+                    val loadedMovies = (results.getOrNull(5) as? List<*>)?.filterIsInstance<LibraryMovie>() ?: emptyList()
+                    var savedSeries = (results.getOrNull(6) as? List<*>)?.filterIsInstance<LibrarySeries>() ?: emptyList()
 
                     // Filter content to ensure profile isolation - only keep items belonging to current profile
                     val savedAudiobooks = loadedAudiobooks.filter { belongsToCurrentProfile(it.uri) }

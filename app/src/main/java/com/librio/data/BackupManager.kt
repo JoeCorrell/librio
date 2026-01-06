@@ -304,22 +304,25 @@ class BackupManager(
                     if (entry.name == MANIFEST_FILE) {
                         val manifestJson = zipIn.readBytes().decodeToString()
                         val manifest = JSONObject(manifestJson)
-                        profileId = manifest.optString("profileId")
-                        profileName = manifest.optString("profileName")
+                        profileId = manifest.optString("profileId").takeIf { it.isNotEmpty() }
+                        profileName = manifest.optString("profileName").takeIf { it.isNotEmpty() }
                         break
                     }
                     entry = zipIn.nextEntry
                 }
             }
 
-            if (profileId == null || profileName == null) return false
+            // Validate manifest data (optString can return empty string, not null)
+            if (profileId.isNullOrEmpty() || profileName.isNullOrEmpty()) {
+                return false
+            }
 
             // Check if profile exists or create new one
             val existingProfile = settingsRepository.profiles.value.find {
                 it.id == profileId || it.name == profileName
             }
 
-            val targetProfileId = existingProfile?.id ?: profileId!!
+            val targetProfileId = existingProfile?.id ?: profileId
             val profileDir = File(settingsRepository.getLibrioRoot(), "Profiles/$targetProfileId")
             profileDir.mkdirs()
 

@@ -46,10 +46,6 @@ class AudioSettingsManager(private val context: Context) {
     // Current settings state
     var trimSilence: Boolean = false
         private set
-    var monoAudio: Boolean = false
-        private set
-    var channelBalance: Float = 0f  // -1 = left, 0 = center, 1 = right
-        private set
     var fadeOnPauseResume: Boolean = false
         private set
     var fadeDurationMs: Long = 300L
@@ -70,7 +66,7 @@ class AudioSettingsManager(private val context: Context) {
 
     // Audio processors
     private var silenceProcessor: SilenceSkippingAudioProcessor? = null
-    private var channelProcessor: ChannelMixingAudioProcessor? = null
+    // private var channelProcessor: ChannelMixingAudioProcessor? = null // REMOVED - file was deleted
 
     // Audio effects (hardware)
     private var loudnessEnhancer: LoudnessEnhancer? = null
@@ -94,13 +90,13 @@ class AudioSettingsManager(private val context: Context) {
         )
         silenceProcessor = newSilenceProcessor
 
-        // Create channel mixing processor for mono/balance
-        val newChannelProcessor = ChannelMixingAudioProcessor()
-        channelProcessor = newChannelProcessor
+        // Create channel mixing processor for mono/balance - REMOVED
+        // val newChannelProcessor = ChannelMixingAudioProcessor()
+        // channelProcessor = newChannelProcessor
 
         // Create custom audio sink with our processors
         val audioSink = DefaultAudioSink.Builder(context)
-            .setAudioProcessors(arrayOf(newChannelProcessor, newSilenceProcessor))
+            .setAudioProcessors(arrayOf(newSilenceProcessor))
             .build()
 
         // Create renderers factory with custom audio sink
@@ -131,7 +127,6 @@ class AudioSettingsManager(private val context: Context) {
 
         // Apply initial settings
         updateSilenceSkipping()
-        updateChannelMixing()
 
         // Add listener to apply audio effects when player is ready
         val listener = object : Player.Listener {
@@ -295,26 +290,6 @@ class AudioSettingsManager(private val context: Context) {
         silenceProcessor?.setEnabled(trimSilence)
     }
 
-    /**
-     * Update mono audio setting
-     */
-    fun setMonoAudio(enabled: Boolean) {
-        monoAudio = enabled
-        updateChannelMixing()
-    }
-
-    /**
-     * Update channel balance (-1 = left, 0 = center, 1 = right)
-     */
-    fun setChannelBalance(balance: Float) {
-        channelBalance = balance.coerceIn(-1f, 1f)
-        updateChannelMixing()
-    }
-
-    private fun updateChannelMixing() {
-        channelProcessor?.setMono(monoAudio)
-        channelProcessor?.setBalance(channelBalance)
-    }
 
     /**
      * Update fade on pause/resume setting
@@ -393,19 +368,14 @@ class AudioSettingsManager(private val context: Context) {
      */
     fun updateAllSettings(
         trimSilence: Boolean,
-        monoAudio: Boolean,
-        channelBalance: Float,
         fadeOnPauseResume: Boolean,
         gaplessPlayback: Boolean
     ) {
         this.trimSilence = trimSilence
-        this.monoAudio = monoAudio
-        this.channelBalance = channelBalance.coerceIn(-1f, 1f)
         this.fadeOnPauseResume = fadeOnPauseResume
         this.gaplessPlayback = gaplessPlayback
 
         updateSilenceSkipping()
-        updateChannelMixing()
         currentPlayer?.pauseAtEndOfMediaItems = !gaplessPlayback
     }
 
@@ -487,7 +457,7 @@ class AudioSettingsManager(private val context: Context) {
         playerListener = null
         currentPlayer = null
         silenceProcessor = null
-        channelProcessor = null
+        // channelProcessor = null // REMOVED
 
         // Release audio effects
         try {

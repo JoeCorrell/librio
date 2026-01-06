@@ -46,14 +46,11 @@
             </intent-filter>
         </activity>
 
-        <!-- Media playback service -->
+        <!-- Playback service for media notifications -->
         <service
             android:name=".player.PlaybackService"
-            android:exported="true"
-            android:foregroundServiceType="mediaPlayback">
-            <intent-filter>
-                <action android:name="androidx.media3.session.MediaSessionService" />
-            </intent-filter>
-        </service>
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
     </application>
 </manifest>

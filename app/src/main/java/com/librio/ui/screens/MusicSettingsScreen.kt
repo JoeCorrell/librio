@@ -91,10 +91,6 @@ fun MusicSettingsScreen(
     onFadeOnPauseResumeChange: (Boolean) -> Unit = {},
     gaplessPlayback: Boolean = true,
     onGaplessPlaybackChange: (Boolean) -> Unit = {},
-    monoAudio: Boolean = false,
-    onMonoAudioChange: (Boolean) -> Unit = {},
-    channelBalance: Float = 0f,
-    onChannelBalanceChange: (Float) -> Unit = {},
     trimSilence: Boolean = false,
     onTrimSilenceChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
@@ -324,28 +320,6 @@ fun MusicSettingsScreen(
                         icon = AppIcons.VolumeUp,
                         colors = cardColors
                     ) {
-                        ToggleRow(
-                            title = "Mono audio",
-                            subtitle = "Combine left and right channels",
-                            checked = monoAudio,
-                            onCheckedChange = onMonoAudioChange
-                        )
-                        if (!monoAudio) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            SliderRow(
-                                title = "Channel balance",
-                                valueLabel = when {
-                                    channelBalance < -0.1f -> "L ${(-channelBalance * 100).toInt()}%"
-                                    channelBalance > 0.1f -> "R ${(channelBalance * 100).toInt()}%"
-                                    else -> "Center"
-                                },
-                                value = channelBalance,
-                                onChange = { onChannelBalanceChange(it.coerceIn(-1f, 1f)) },
-                                valueRange = -1f..1f,
-                                step = 20
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
                         ToggleRow(
                             title = "Trim silence",
                             subtitle = "Skip silent parts of audio",

@@ -277,12 +277,6 @@ class SettingsViewModel : ViewModel() {
     val gaplessPlayback: StateFlow<Boolean>?
         get() = repository?.gaplessPlayback
 
-    val monoAudio: StateFlow<Boolean>?
-        get() = repository?.monoAudio
-
-    val channelBalance: StateFlow<Float>?
-        get() = repository?.channelBalance
-
     val trimSilence: StateFlow<Boolean>?
         get() = repository?.trimSilence
 
@@ -816,14 +810,6 @@ class SettingsViewModel : ViewModel() {
 
     fun setGaplessPlayback(enabled: Boolean) {
         repository?.setGaplessPlayback(enabled)
-    }
-
-    fun setMonoAudio(enabled: Boolean) {
-        repository?.setMonoAudio(enabled)
-    }
-
-    fun setChannelBalance(balance: Float) {
-        repository?.setChannelBalance(balance)
     }
 
     fun setTrimSilence(enabled: Boolean) {

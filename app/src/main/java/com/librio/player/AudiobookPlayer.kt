@@ -1,6 +1,9 @@
 package com.librio.player
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
@@ -8,6 +11,7 @@ import android.media.audiofx.BassBoost
 import android.media.audiofx.Equalizer
 import android.media.audiofx.LoudnessEnhancer
 import android.net.Uri
+import android.os.Build
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackParameters
@@ -50,6 +54,7 @@ class AudiobookPlayer(private val context: Context) {
     private var bassBoostLevel: Float = 0f
     private var equalizerPreset: String = "DEFAULT"
     private var fadeOnPauseResume: Boolean = false
+    private var showPlaybackNotification: Boolean = true
     private val scopeJob = Job()
     private val scope = CoroutineScope(scopeJob + Dispatchers.Main)
     
@@ -58,9 +63,32 @@ class AudiobookPlayer(private val context: Context) {
     
     private val _playbackState = MutableStateFlow(PlaybackState())
     val playbackState: StateFlow<PlaybackState> = _playbackState.asStateFlow()
-    
+
+    private val chapterNavigationReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                PlaybackService.BROADCAST_PREVIOUS_CHAPTER -> previousChapter()
+                PlaybackService.BROADCAST_NEXT_CHAPTER -> nextChapter()
+            }
+        }
+    }
+
     init {
         initializePlayer()
+        registerChapterNavigationReceiver()
+    }
+
+    private fun registerChapterNavigationReceiver() {
+        val filter = IntentFilter().apply {
+            addAction(PlaybackService.BROADCAST_PREVIOUS_CHAPTER)
+            addAction(PlaybackService.BROADCAST_NEXT_CHAPTER)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(chapterNavigationReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            context.registerReceiver(chapterNavigationReceiver, filter)
+        }
     }
     
     private fun initializePlayer() {
@@ -98,7 +126,9 @@ class AudiobookPlayer(private val context: Context) {
                 _playbackState.value = _playbackState.value.copy(isPlaying = isPlaying)
                 if (isPlaying) {
                     startPositionUpdates()
-                    PlaybackService.start(context)
+                    if (showPlaybackNotification) {
+                        PlaybackService.start(context)
+                    }
                 } else {
                     stopPositionUpdates()
                 }
@@ -422,7 +452,9 @@ class AudiobookPlayer(private val context: Context) {
     }
     
     fun play() {
-        PlaybackService.start(context)
+        if (showPlaybackNotification) {
+            PlaybackService.start(context)
+        }
         if (fadeOnPauseResume) {
             SharedMusicPlayer.playWithFade(context)
         } else {
@@ -447,7 +479,15 @@ class AudiobookPlayer(private val context: Context) {
     fun setFadeOnPauseResume(enabled: Boolean) {
         fadeOnPauseResume = enabled
     }
-    
+
+    fun setShowPlaybackNotification(enabled: Boolean) {
+        showPlaybackNotification = enabled
+        // If disabling notifications, stop the service
+        if (!enabled) {
+            PlaybackService.stop(context)
+        }
+    }
+
     fun seekTo(position: Long) {
         exoPlayer?.seekTo(position)
         updatePlaybackState()
@@ -620,6 +660,14 @@ class AudiobookPlayer(private val context: Context) {
     fun release() {
         stopPositionUpdates()
         scopeJob.cancel()
+
+        // Unregister broadcast receiver
+        try {
+            context.unregisterReceiver(chapterNavigationReceiver)
+        } catch (_: Exception) {
+            // Receiver may not be registered
+        }
+
         playerListener?.let { listener ->
             exoPlayer?.removeListener(listener)
         }

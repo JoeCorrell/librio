@@ -56,8 +56,6 @@ object SharedMusicPlayer {
     fun updateAudioSettings(
         context: Context,
         trimSilence: Boolean? = null,
-        monoAudio: Boolean? = null,
-        channelBalance: Float? = null,
         fadeOnPauseResume: Boolean? = null,
         gaplessPlayback: Boolean? = null,
         equalizerPreset: String? = null,
@@ -68,8 +66,6 @@ object SharedMusicPlayer {
     ) {
         val manager = getAudioSettingsManager(context)
         trimSilence?.let { manager.setTrimSilence(it) }
-        monoAudio?.let { manager.setMonoAudio(it) }
-        channelBalance?.let { manager.setChannelBalance(it) }
         fadeOnPauseResume?.let { manager.setFadeOnPauseResume(it) }
         gaplessPlayback?.let { manager.setGaplessPlayback(it) }
         equalizerPreset?.let { manager.setEqualizerPreset(it) }

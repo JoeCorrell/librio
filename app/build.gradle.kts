@@ -96,7 +96,7 @@ dependencies {
     // RAR/CBR support for comic reader
     implementation("com.github.junrar:junrar:7.5.5")
 
-    // Audio metadata reading/writing (ID3, M4A, OGG, FLAC tags)
+    // JAudioTagger for audio metadata editing
     implementation("net.jthink:jaudiotagger:3.0.1")
 
     // Lifecycle

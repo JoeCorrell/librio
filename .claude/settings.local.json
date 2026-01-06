@@ -72,7 +72,11 @@
       "Bash(\"$ANDROID_HOME/emulator/emulator\" -list-avds)",
       "Bash(\"/c/Users/Administrator/AppData/Local/Android/Sdk/emulator/emulator\" -list-avds)",
       "Bash(JAVA_HOME=\"/c/Program Files/Microsoft/jdk-17.0.17.10-hotspot\" ANDROID_HOME=\"/c/Users/Administrator/AppData/Local/Android/Sdk\" PATH=\"$JAVA_HOME/bin:$PATH\" ./gradlew.bat:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(xargs ls:*)",
+      "Bash(sort:*)",
+      "Bash(wc:*)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Microsoft/jdk-17.0.17.10-hotspot\" ANDROID_HOME=\"/c/Users/Administrator/Android/Sdk\" PATH=\"$JAVA_HOME/bin:$PATH\" ./gradlew.bat assembleRelease:*)"
     ]
   }
 }

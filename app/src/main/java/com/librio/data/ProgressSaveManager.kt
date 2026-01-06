@@ -288,7 +288,11 @@ class ProgressSaveManager(
         try {
             bufferFile.forEachLine { line ->
                 val parts = line.split("|")
-                if (parts.size < 7) return@forEachLine
+                // Validate line has minimum required parts (type + 6 fields)
+                if (parts.size != 7) {
+                    // Skip malformed lines
+                    return@forEachLine
+                }
 
                 val update = when (parts[0]) {
                     "AB" -> {

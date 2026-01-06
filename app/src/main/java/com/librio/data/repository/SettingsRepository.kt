@@ -407,12 +407,6 @@ class SettingsRepository(private val context: Context) {
     private val _gaplessPlayback = MutableStateFlow(true)
     val gaplessPlayback: StateFlow<Boolean> = _gaplessPlayback.asStateFlow()
 
-    private val _monoAudio = MutableStateFlow(false)
-    val monoAudio: StateFlow<Boolean> = _monoAudio.asStateFlow()
-
-    private val _channelBalance = MutableStateFlow(0f)
-    val channelBalance: StateFlow<Float> = _channelBalance.asStateFlow()
-
     private val _trimSilence = MutableStateFlow(false)
     val trimSilence: StateFlow<Boolean> = _trimSilence.asStateFlow()
 
@@ -1052,8 +1046,6 @@ class SettingsRepository(private val context: Context) {
         _lastSeekPosition.value = settings.lastSeekPosition
         _fadeOnPauseResume.value = settings.fadeOnPauseResume
         _gaplessPlayback.value = settings.gaplessPlayback
-        _monoAudio.value = settings.monoAudio
-        _channelBalance.value = settings.channelBalance
         _trimSilence.value = settings.trimSilence
         val prefsLastMusicId = _lastMusicId.value
         val prefsLastAudiobookId = _lastAudiobookId.value
@@ -1333,8 +1325,6 @@ class SettingsRepository(private val context: Context) {
                 lastSeekPosition = _lastSeekPosition.value,
                 fadeOnPauseResume = _fadeOnPauseResume.value,
                 gaplessPlayback = _gaplessPlayback.value,
-                monoAudio = _monoAudio.value,
-                channelBalance = _channelBalance.value,
                 trimSilence = _trimSilence.value,
                 lastMusicId = _lastMusicId.value,
                 lastMusicPosition = _lastMusicPosition.value,
@@ -2572,16 +2562,6 @@ class SettingsRepository(private val context: Context) {
 
     fun setGaplessPlayback(enabled: Boolean) {
         _gaplessPlayback.value = enabled
-        saveAudioSettingsToFile()
-    }
-
-    fun setMonoAudio(enabled: Boolean) {
-        _monoAudio.value = enabled
-        saveAudioSettingsToFile()
-    }
-
-    fun setChannelBalance(balance: Float) {
-        _channelBalance.value = balance
         saveAudioSettingsToFile()
     }
 

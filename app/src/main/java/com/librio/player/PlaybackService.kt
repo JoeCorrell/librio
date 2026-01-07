@@ -32,9 +32,17 @@ class PlaybackService : Service() {
         const val ACTION_NEXT = "com.librio.ACTION_NEXT"
         const val ACTION_STOP = "com.librio.ACTION_STOP"
 
-        // Broadcast actions for chapter navigation
+        // Broadcast actions for chapter navigation (within current audiobook)
         const val BROADCAST_PREVIOUS_CHAPTER = "com.librio.BROADCAST_PREVIOUS_CHAPTER"
         const val BROADCAST_NEXT_CHAPTER = "com.librio.BROADCAST_NEXT_CHAPTER"
+
+        // Broadcast actions for audiobook playlist navigation (to next/previous audiobook)
+        const val BROADCAST_PREVIOUS_AUDIOBOOK = "com.librio.BROADCAST_PREVIOUS_AUDIOBOOK"
+        const val BROADCAST_NEXT_AUDIOBOOK = "com.librio.BROADCAST_NEXT_AUDIOBOOK"
+
+        // Callbacks for playlist navigation (set by MainActivity)
+        var onNextAudiobook: (() -> Unit)? = null
+        var onPreviousAudiobook: (() -> Unit)? = null
 
         fun start(context: Context) {
             val intent = Intent(context, PlaybackService::class.java)
@@ -105,29 +113,32 @@ class PlaybackService : Service() {
                         updateNotification(player)
                     }
                     ACTION_PREVIOUS -> {
-                        // Go to previous track/chapter
+                        // For music playlists (multiple items): use ExoPlayer's built-in navigation
                         if (player.hasPreviousMediaItem()) {
                             player.seekToPreviousMediaItem()
                         } else {
-                            // If no previous item, seek to start of current
-                            player.seekTo(0)
+                            // Single media item (audiobook) - use callback for playlist navigation
+                            onPreviousAudiobook?.invoke()
+                            // Also send chapter broadcast for AudiobookPlayer chapter handling
+                            sendBroadcast(Intent(BROADCAST_PREVIOUS_CHAPTER).apply {
+                                setPackage(packageName)
+                            })
                         }
                         updateNotification(player)
-                        // Also send broadcast in case AudiobookPlayer is alive for chapter handling
-                        sendBroadcast(Intent(BROADCAST_PREVIOUS_CHAPTER).apply {
-                            setPackage(packageName)
-                        })
                     }
                     ACTION_NEXT -> {
-                        // Go to next track/chapter
+                        // For music playlists (multiple items): use ExoPlayer's built-in navigation
                         if (player.hasNextMediaItem()) {
                             player.seekToNextMediaItem()
+                        } else {
+                            // Single media item (audiobook) - use callback for playlist navigation
+                            onNextAudiobook?.invoke()
+                            // Also send chapter broadcast for AudiobookPlayer chapter handling
+                            sendBroadcast(Intent(BROADCAST_NEXT_CHAPTER).apply {
+                                setPackage(packageName)
+                            })
                         }
                         updateNotification(player)
-                        // Also send broadcast in case AudiobookPlayer is alive for chapter handling
-                        sendBroadcast(Intent(BROADCAST_NEXT_CHAPTER).apply {
-                            setPackage(packageName)
-                        })
                     }
                     ACTION_STOP -> {
                         player.pause()

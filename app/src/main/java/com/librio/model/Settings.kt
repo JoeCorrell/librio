@@ -92,6 +92,8 @@ data class AudioSettings(
     // Music playback mode settings
     val musicShuffleEnabled: Boolean = false,
     val musicRepeatMode: Int = 0, // 0 = OFF, 1 = ONE, 2 = ALL (matches Player.REPEAT_MODE_*)
+    // Audiobook playlist navigation settings
+    val audiobookShuffleEnabled: Boolean = false,
     val lastModified: Long = System.currentTimeMillis()
 )
 

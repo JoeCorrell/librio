@@ -1,7 +1,10 @@
 package com.librio
 
 import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -571,6 +574,7 @@ class MainActivity : ComponentActivity() {
             val latestLastPlayedMusic by rememberUpdatedState(lastPlayedMusic)
             val latestSelectedAudiobook by rememberUpdatedState(selectedAudiobook)
             val latestLastPlayedAudiobook by rememberUpdatedState(lastPlayedAudiobook)
+            val latestFilteredAudiobooks by rememberUpdatedState(filteredAudiobooks)
 
             fun isCurrentMediaMusic(currentUri: Uri?): Boolean {
                 if (currentUri == null) return false
@@ -654,6 +658,66 @@ class MainActivity : ComponentActivity() {
                 onDispose {
                     musicExoPlayer.removeListener(listener)
                     SharedMusicPlayer.release()
+                }
+            }
+
+            // Set up callbacks for audiobook playlist navigation from notification
+            DisposableEffect(Unit) {
+                PlaybackService.onNextAudiobook = {
+                    val audiobooks = latestFilteredAudiobooks
+                    if (audiobooks.isNotEmpty()) {
+                        val currentAudiobook = latestSelectedAudiobook ?: latestLastPlayedAudiobook
+                        val currentIndex = currentAudiobook?.let { book ->
+                            audiobooks.indexOfFirst { it.id == book.id }
+                        } ?: -1
+
+                        val nextIndex = if (currentIndex >= 0 && currentIndex < audiobooks.size - 1) {
+                            currentIndex + 1
+                        } else {
+                            0 // Wrap to first
+                        }
+
+                        val nextAudiobook = audiobooks[nextIndex]
+                        libraryViewModel.selectAudiobook(nextAudiobook)
+                        CoroutineScope(Dispatchers.Main).launch {
+                            player.loadAudiobook(nextAudiobook.uri, nextAudiobook.title, nextAudiobook.author)
+                            if (nextAudiobook.lastPosition > 0) {
+                                player.seekTo(nextAudiobook.lastPosition)
+                            }
+                            player.play()
+                        }
+                    }
+                }
+
+                PlaybackService.onPreviousAudiobook = {
+                    val audiobooks = latestFilteredAudiobooks
+                    if (audiobooks.isNotEmpty()) {
+                        val currentAudiobook = latestSelectedAudiobook ?: latestLastPlayedAudiobook
+                        val currentIndex = currentAudiobook?.let { book ->
+                            audiobooks.indexOfFirst { it.id == book.id }
+                        } ?: -1
+
+                        val nextIndex = if (currentIndex > 0) {
+                            currentIndex - 1
+                        } else {
+                            audiobooks.size - 1 // Wrap to last
+                        }
+
+                        val nextAudiobook = audiobooks[nextIndex]
+                        libraryViewModel.selectAudiobook(nextAudiobook)
+                        CoroutineScope(Dispatchers.Main).launch {
+                            player.loadAudiobook(nextAudiobook.uri, nextAudiobook.title, nextAudiobook.author)
+                            if (nextAudiobook.lastPosition > 0) {
+                                player.seekTo(nextAudiobook.lastPosition)
+                            }
+                            player.play()
+                        }
+                    }
+                }
+
+                onDispose {
+                    PlaybackService.onNextAudiobook = null
+                    PlaybackService.onPreviousAudiobook = null
                 }
             }
 

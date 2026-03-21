@@ -274,18 +274,14 @@ fun PlayerScreen(
                         ) {
                             Text(
                                 text = "lib",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    lineHeight = 24.sp
-                                ),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
                                 color = palette.textPrimary
                             )
                             Text(
                                 text = "rio",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    lineHeight = 24.sp
-                                ),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
                                 color = palette.accent
                             )
                         }
@@ -386,7 +382,7 @@ fun PlayerScreen(
                 }
             }
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = palette.background
         ) { paddingValues ->
             Box(
                 modifier = Modifier
@@ -763,7 +759,7 @@ private fun PlayerContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f, fill = false)
-                    .heightIn(max = 312.dp) // ~8 rows
+                    .heightIn(max = 330.dp) // ~8 rows with padding
                     .clip(RoundedCornerShape(14.dp))
                     .background(palette.surfaceCard)
                     .border(1.dp, palette.divider, RoundedCornerShape(14.dp)),

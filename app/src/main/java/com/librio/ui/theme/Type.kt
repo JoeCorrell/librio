@@ -1,102 +1,92 @@
+@file:OptIn(ExperimentalTextApi::class)
+
 package com.librio.ui.theme
 
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.librio.R
 
-// Using system fonts with custom styling
-val Typography = Typography(
+// Plus Jakarta Sans — variable font, all weights in one file
+val JakartaSans = FontFamily(
+    Font(R.font.plus_jakarta_sans_variable, FontWeight.Normal, variationSettings = FontVariation.Settings(FontVariation.weight(400))),
+    Font(R.font.plus_jakarta_sans_variable, FontWeight.Medium, variationSettings = FontVariation.Settings(FontVariation.weight(500))),
+    Font(R.font.plus_jakarta_sans_variable, FontWeight.SemiBold, variationSettings = FontVariation.Settings(FontVariation.weight(600))),
+    Font(R.font.plus_jakarta_sans_variable, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700))),
+    Font(R.font.plus_jakarta_sans_variable, FontWeight.ExtraBold, variationSettings = FontVariation.Settings(FontVariation.weight(800))),
+)
+
+// JetBrains Mono — monospace accent font
+val JetBrainsMono = FontFamily(
+    Font(R.font.jetbrains_mono_regular, FontWeight.Normal),
+    Font(R.font.jetbrains_mono_medium, FontWeight.Medium),
+    Font(R.font.jetbrains_mono_bold, FontWeight.Bold),
+)
+
+val HeadingFont = JakartaSans
+val BodyFont = JakartaSans
+val MonoFont = JetBrainsMono
+
+val LibrioTypography = Typography(
     displayLarge = TextStyle(
-        fontWeight = FontWeight.Light,
-        fontSize = 57.sp,
-        lineHeight = 64.sp,
-        letterSpacing = (-0.25).sp,
+        fontFamily = JakartaSans, fontWeight = FontWeight.ExtraBold,
+        fontSize = 38.sp, letterSpacing = (-0.8).sp,
     ),
     displayMedium = TextStyle(
-        fontWeight = FontWeight.Light,
-        fontSize = 45.sp,
-        lineHeight = 52.sp,
-        letterSpacing = 0.sp,
-    ),
-    displaySmall = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 36.sp,
-        lineHeight = 44.sp,
-        letterSpacing = 0.sp,
+        fontFamily = JakartaSans, fontWeight = FontWeight.Bold,
+        fontSize = 30.sp,
     ),
     headlineLarge = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 32.sp,
-        lineHeight = 40.sp,
-        letterSpacing = 0.sp,
+        fontFamily = JakartaSans, fontWeight = FontWeight.Bold,
+        fontSize = 22.sp,
     ),
     headlineMedium = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 28.sp,
-        lineHeight = 36.sp,
-        letterSpacing = 0.sp,
+        fontFamily = JakartaSans, fontWeight = FontWeight.Bold,
+        fontSize = 20.sp,
     ),
     headlineSmall = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
-        lineHeight = 32.sp,
-        letterSpacing = 0.sp,
+        fontFamily = JakartaSans, fontWeight = FontWeight.Bold,
+        fontSize = 18.sp, lineHeight = 22.sp,
     ),
     titleLarge = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp,
+        fontFamily = JakartaSans, fontWeight = FontWeight.Bold,
+        fontSize = 16.sp,
     ),
     titleMedium = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.15.sp,
+        fontFamily = JakartaSans, fontWeight = FontWeight.SemiBold,
+        fontSize = 15.sp,
     ),
     titleSmall = TextStyle(
-        fontWeight = FontWeight.Medium,
+        fontFamily = JakartaSans, fontWeight = FontWeight.SemiBold,
         fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp,
     ),
     bodyLarge = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp,
+        fontFamily = JakartaSans, fontWeight = FontWeight.Medium,
+        fontSize = 13.sp,
     ),
     bodyMedium = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.25.sp,
+        fontFamily = JakartaSans, fontWeight = FontWeight.Normal,
+        fontSize = 12.5.sp, lineHeight = 21.sp,
     ),
     bodySmall = TextStyle(
-        fontWeight = FontWeight.Normal,
+        fontFamily = JakartaSans, fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.4.sp,
     ),
     labelLarge = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp,
+        fontFamily = JetBrainsMono, fontWeight = FontWeight.Medium,
+        fontSize = 11.sp,
     ),
     labelMedium = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp,
+        fontFamily = JetBrainsMono, fontWeight = FontWeight.Medium,
+        fontSize = 10.sp,
     ),
     labelSmall = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp,
+        fontFamily = JetBrainsMono, fontWeight = FontWeight.Bold,
+        fontSize = 9.sp, letterSpacing = 0.7.sp,
     ),
 )

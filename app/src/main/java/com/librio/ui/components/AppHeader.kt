@@ -39,7 +39,7 @@ fun AppHeader(
                 text = "lib",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 20.sp
                 ),
                 color = palette.textPrimary
             )
@@ -47,7 +47,7 @@ fun AppHeader(
                 text = "rio",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 20.sp
                 ),
                 color = palette.accent
             )

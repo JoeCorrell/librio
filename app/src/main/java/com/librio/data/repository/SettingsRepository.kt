@@ -992,7 +992,14 @@ class SettingsRepository(private val context: Context) {
         _hapticFeedback.value = settings.hapticFeedback
         _confirmBeforeDelete.value = settings.confirmBeforeDelete
         _useSquareCorners.value = settings.useSquareCorners
-        _collapsedSeries.value = settings.collapsedSeries.toSet()
+        // Prefer SharedPreferences collapsed state (always up-to-date) over file.
+        // Check if key EXISTS in prefs (even empty string means "user set it"), don't just check non-empty.
+        val collapsedKey = getProfileKey(KEY_COLLAPSED_SERIES)
+        if (prefs.contains(collapsedKey)) {
+            _collapsedSeries.value = loadCollapsedSeries()
+        } else {
+            _collapsedSeries.value = settings.collapsedSeries.toSet()
+        }
         _selectedContentType.value = settings.selectedContentType
 
         // Update profile picture in the profiles list
@@ -2706,7 +2713,8 @@ class SettingsRepository(private val context: Context) {
     fun setCollapsedSeries(seriesIds: Set<String>) {
         _collapsedSeries.value = seriesIds
         val serialized = seriesIds.joinToString("|")
-        prefs.edit().putString(getProfileKey(KEY_COLLAPSED_SERIES), serialized).apply()
+        // Use commit() for synchronous write to ensure state is persisted before app close
+        prefs.edit().putString(getProfileKey(KEY_COLLAPSED_SERIES), serialized).commit()
         saveProfileSettingsToFile()
     }
 

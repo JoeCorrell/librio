@@ -306,18 +306,14 @@ fun MainScreen(
                         Row {
                             Text(
                                 text = "lib",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    lineHeight = 24.sp
-                                ),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
                                 color = palette.textPrimary
                             )
                             Text(
                                 text = "rio",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    lineHeight = 24.sp
-                                ),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
                                 color = palette.accent
                             )
                         }

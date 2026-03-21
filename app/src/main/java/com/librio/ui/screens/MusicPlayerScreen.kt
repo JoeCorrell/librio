@@ -509,16 +509,14 @@ fun MusicPlayerScreen(
                     ) {
                         Text(
                             text = "lib",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
                             color = palette.textPrimary
                         )
                         Text(
                             text = "rio",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
                             color = palette.accent
                         )
                     }
@@ -737,7 +735,7 @@ fun MusicPlayerScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 312.dp) // ~8 rows at ~39dp each
+                            .heightIn(max = 330.dp) // ~8 rows with padding
                             .clip(RoundedCornerShape(14.dp))
                             .background(palette.surfaceCard)
                             .border(1.dp, palette.divider, RoundedCornerShape(14.dp)),

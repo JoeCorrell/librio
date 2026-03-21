@@ -858,9 +858,10 @@ fun LibraryListScreen(
                         }
                     } else {
                         val filteredAudiobooks = remember(audiobooks, searchQuery, sortOption) {
-                            val searched = if (searchQuery.isNotBlank()) {
+                            val base = if (searchQuery.isNotBlank()) {
                                 audiobooks.filter { it.title.contains(searchQuery, true) || it.author.contains(searchQuery, true) }
                             } else audiobooks
+                            val searched = if (searchQuery.isBlank()) base.filter { it.seriesId == null } else base
                             when (sortOption) {
                                 SortOption.TITLE_AZ -> searched.sortedBy { it.title.lowercase() }
                                 SortOption.TITLE_ZA -> searched.sortedByDescending { it.title.lowercase() }
@@ -1005,7 +1006,8 @@ fun LibraryListScreen(
                         }
                     } else {
                         val filteredBooks = remember(books, searchQuery, sortOption) {
-                            val searched = if (searchQuery.isNotBlank()) books.filter { it.title.contains(searchQuery, true) || it.author.contains(searchQuery, true) } else books
+                            val base = if (searchQuery.isNotBlank()) books.filter { it.title.contains(searchQuery, true) || it.author.contains(searchQuery, true) } else books
+                            val searched = if (searchQuery.isBlank()) base.filter { it.seriesId == null } else base
                             when (sortOption) {
                                 SortOption.TITLE_AZ -> searched.sortedBy { it.title.lowercase() }
                                 SortOption.TITLE_ZA -> searched.sortedByDescending { it.title.lowercase() }
@@ -1071,7 +1073,8 @@ fun LibraryListScreen(
                         }
                     } else {
                         val filteredMusic = remember(musicItems, searchQuery, sortOption) {
-                            val searched = if (searchQuery.isNotBlank()) musicItems.filter { it.title.contains(searchQuery, true) || it.artist.contains(searchQuery, true) } else musicItems
+                            val base = if (searchQuery.isNotBlank()) musicItems.filter { it.title.contains(searchQuery, true) || it.artist.contains(searchQuery, true) } else musicItems
+                            val searched = if (searchQuery.isBlank()) base.filter { it.seriesId == null } else base
                             when (sortOption) {
                                 SortOption.TITLE_AZ -> searched.sortedBy { it.title.lowercase() }
                                 SortOption.TITLE_ZA -> searched.sortedByDescending { it.title.lowercase() }
@@ -1136,7 +1139,8 @@ fun LibraryListScreen(
                         }
                     } else {
                         val filteredComics = remember(comics, searchQuery, sortOption) {
-                            val searched = if (searchQuery.isNotBlank()) comics.filter { it.title.contains(searchQuery, true) || it.author.contains(searchQuery, true) } else comics
+                            val base = if (searchQuery.isNotBlank()) comics.filter { it.title.contains(searchQuery, true) || it.author.contains(searchQuery, true) } else comics
+                            val searched = if (searchQuery.isBlank()) base.filter { it.seriesId == null } else base
                             when (sortOption) {
                                 SortOption.TITLE_AZ -> searched.sortedBy { it.title.lowercase() }
                                 SortOption.TITLE_ZA -> searched.sortedByDescending { it.title.lowercase() }
@@ -1201,7 +1205,8 @@ fun LibraryListScreen(
                         }
                     } else {
                         val filteredMovies = remember(movies, searchQuery, sortOption) {
-                            val searched = if (searchQuery.isNotBlank()) movies.filter { it.title.contains(searchQuery, true) } else movies
+                            val base = if (searchQuery.isNotBlank()) movies.filter { it.title.contains(searchQuery, true) } else movies
+                            val searched = if (searchQuery.isBlank()) base.filter { it.seriesId == null } else base
                             when (sortOption) {
                                 SortOption.TITLE_AZ -> searched.sortedBy { it.title.lowercase() }
                                 SortOption.TITLE_ZA -> searched.sortedByDescending { it.title.lowercase() }

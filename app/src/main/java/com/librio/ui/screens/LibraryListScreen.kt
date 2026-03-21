@@ -2785,12 +2785,36 @@ fun MusicListItem(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Times listened: ${music.timesListened}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = palette.textSecondary
-                )
+                // Progress bar
+                if (music.duration > 0 && music.lastPosition > 0) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        LibrioProgressBar(
+                            progress = music.progress,
+                            modifier = Modifier.weight(1f),
+                            height = 6.dp,
+                            activeColor = palette.accent,
+                            trackColor = palette.accent.copy(alpha = 0.2f)
+                        )
+                        Text(
+                            text = "${(music.progress * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = palette.accent.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+
+                if (music.timesListened > 0) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Listened ${music.timesListened}x",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = palette.textSecondary
+                    )
+                }
             }
 
             // Playing indicator

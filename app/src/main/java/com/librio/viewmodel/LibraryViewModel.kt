@@ -268,6 +268,9 @@ class LibraryViewModel : ViewModel() {
     // Instant-save progress manager (initialized in init())
     private var progressSaveManager: ProgressSaveManager? = null
 
+    // Debounced library save job — writes the full library JSON 3 seconds after last progress update
+    private var librarySaveJob: Job? = null
+
     private val _libraryState = MutableStateFlow(LibraryState())
     val libraryState: StateFlow<LibraryState> = _libraryState.asStateFlow()
 
@@ -478,9 +481,43 @@ class LibraryViewModel : ViewModel() {
     /**
      * Flush all pending progress updates to storage immediately.
      * Call this when the app is pausing or going to background to ensure no data loss.
+     * Also persists the full library state so progress survives app restart.
      */
     suspend fun flushPendingProgress() {
         progressSaveManager?.flushPendingUpdates()
+        // Also persist the in-memory library state (with updated progress) to disk
+        librarySaveJob?.cancel()
+        withContext(Dispatchers.IO) {
+            try {
+                val state = _libraryState.value
+                repository?.saveLibrary(state.audiobooks)
+                repository?.saveBooks(state.books)
+                repository?.saveMusic(state.music)
+                repository?.saveComics(state.comics)
+                repository?.saveMovies(state.movies)
+            } catch (_: Exception) {}
+        }
+    }
+
+    /**
+     * Schedule a debounced save of the full library JSON.
+     * Waits 3 seconds after the last call to avoid excessive I/O during rapid progress updates.
+     */
+    private fun scheduleDebouncedLibrarySave() {
+        librarySaveJob?.cancel()
+        librarySaveJob = viewModelScope.launch {
+            delay(3000)
+            withContext(Dispatchers.IO) {
+                try {
+                    val state = _libraryState.value
+                    repository?.saveLibrary(state.audiobooks)
+                    repository?.saveBooks(state.books)
+                    repository?.saveMusic(state.music)
+                    repository?.saveComics(state.comics)
+                    repository?.saveMovies(state.movies)
+                } catch (_: Exception) {}
+            }
+        }
     }
 
     /**
@@ -1103,16 +1140,74 @@ class LibraryViewModel : ViewModel() {
 
     /**
      * Reload cover art for a book
-     * Uses custom cover art if available, otherwise returns null (books don't have embedded art)
+     * Uses custom cover art if available, otherwise tries to extract from EPUB
      */
     private fun reloadBookCoverArt(context: Context, book: LibraryBook): LibraryBook {
-        // Books typically don't have embedded cover art, so check for custom URI
         val coverArt = if (book.coverArtUri != null) {
             loadCustomCoverArt(book.coverArtUri, 512)
         } else {
-            null
+            // Try extracting cover from EPUB (they are ZIP archives with embedded images)
+            extractEpubCoverArt(context, book.uri, 512)
         }
         return book.copy(coverArt = coverArt)
+    }
+
+    /**
+     * Extract cover art from an EPUB file
+     * EPUBs are ZIP archives; we look for cover image references in the OPF manifest,
+     * then fall back to finding images named "cover" or the first image in the archive
+     */
+    private fun extractEpubCoverArt(context: Context, uri: Uri, targetSize: Int): Bitmap? {
+        return try {
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                val zipInputStream = java.util.zip.ZipInputStream(inputStream)
+                val imageExtensions = setOf("jpg", "jpeg", "png", "gif", "webp", "bmp")
+                val imageEntries = mutableListOf<String>()
+                var coverEntry: String? = null
+                var entry = zipInputStream.nextEntry
+
+                // First pass: collect image entries and look for cover-named ones
+                while (entry != null) {
+                    val name = entry.name.lowercase()
+                    val ext = name.substringAfterLast(".", "")
+                    if (!entry.isDirectory && ext in imageExtensions) {
+                        imageEntries.add(entry.name)
+                        // Common EPUB cover image naming patterns
+                        if (coverEntry == null && (name.contains("cover") || name.contains("title"))) {
+                            coverEntry = entry.name
+                        }
+                    }
+                    entry = zipInputStream.nextEntry
+                }
+
+                // Use cover-named entry, or fall back to first image
+                val targetEntry = coverEntry ?: imageEntries.sortedBy { it.lowercase() }.firstOrNull()
+                if (targetEntry != null) {
+                    // Re-open the stream to read the actual image
+                    context.contentResolver.openInputStream(uri)?.use { stream2 ->
+                        val zip2 = java.util.zip.ZipInputStream(stream2)
+                        var e2 = zip2.nextEntry
+                        while (e2 != null) {
+                            if (e2.name == targetEntry) {
+                                val bytes = zip2.readBytes()
+                                val opts = android.graphics.BitmapFactory.Options().apply {
+                                    inJustDecodeBounds = true
+                                }
+                                android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+                                val scale = maxOf(1, maxOf(opts.outWidth, opts.outHeight) / targetSize)
+                                opts.inJustDecodeBounds = false
+                                opts.inSampleSize = scale
+                                return@use android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+                            }
+                            e2 = zip2.nextEntry
+                        }
+                        null
+                    }
+                } else null
+            }
+        } catch (_: Exception) {
+            null
+        }
     }
 
     /**
@@ -1506,6 +1601,9 @@ class LibraryViewModel : ViewModel() {
                 duration = if (duration > 0) duration else audiobook.duration,
                 isCompleted = isCompleted
             )
+
+            // Also schedule a debounced save of the full library JSON
+            scheduleDebouncedLibrarySave()
         }
     }
 
@@ -2046,6 +2144,7 @@ class LibraryViewModel : ViewModel() {
                 totalPages = effectiveTotalPages,
                 isCompleted = isCompleted
             )
+            scheduleDebouncedLibrarySave()
         }
     }
 
@@ -3171,6 +3270,7 @@ class LibraryViewModel : ViewModel() {
                 duration = it.duration,
                 isCompleted = false // Music completion tracked differently
             )
+            scheduleDebouncedLibrarySave()
         }
     }
 
@@ -3305,6 +3405,7 @@ class LibraryViewModel : ViewModel() {
                 duration = it.duration,
                 isCompleted = false // Movie completion tracked differently
             )
+            scheduleDebouncedLibrarySave()
         }
     }
 
@@ -3388,6 +3489,7 @@ class LibraryViewModel : ViewModel() {
                 totalPages = effectiveTotalPages,
                 isCompleted = effectiveTotalPages > 0 && currentPage >= effectiveTotalPages - 1
             )
+            scheduleDebouncedLibrarySave()
         }
     }
 

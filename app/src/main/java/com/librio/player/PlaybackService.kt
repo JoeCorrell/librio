@@ -17,8 +17,8 @@ import com.librio.MainActivity
 import com.librio.R
 
 /**
- * Foreground service for audiobook playback with media notification
- * Provides playback controls: Previous, Play/Pause, Next, and Shuffle
+ * Foreground service for playback with media notification
+ * Provides 5 controls: Shuffle, Previous, Play/Pause, Next, Repeat
  */
 class PlaybackService : Service() {
 
@@ -31,6 +31,8 @@ class PlaybackService : Service() {
         const val ACTION_PLAY_PAUSE = "com.librio.ACTION_PLAY_PAUSE"
         const val ACTION_PREVIOUS = "com.librio.ACTION_PREVIOUS"
         const val ACTION_NEXT = "com.librio.ACTION_NEXT"
+        const val ACTION_SHUFFLE = "com.librio.ACTION_SHUFFLE"
+        const val ACTION_REPEAT = "com.librio.ACTION_REPEAT"
         const val ACTION_STOP = "com.librio.ACTION_STOP"
 
         // Broadcast actions for chapter navigation (within current audiobook)
@@ -48,6 +50,12 @@ class PlaybackService : Service() {
         // Callbacks for music playlist navigation
         var onNextMusic: (() -> Unit)? = null
         var onPreviousMusic: (() -> Unit)? = null
+
+        // Shuffle/repeat callbacks and state (set by MainActivity)
+        var onShuffleToggle: (() -> Unit)? = null
+        var onRepeatToggle: (() -> Unit)? = null
+        var isShuffleOn: () -> Boolean = { false }
+        var isRepeatOn: () -> Boolean = { false }
 
         // Track what type of content is currently active
         var currentActiveType: String? = null // "AUDIOBOOK" or "MUSIC"
@@ -77,22 +85,18 @@ class PlaybackService : Service() {
         // ForwardingPlayer intercepts skip commands from headphones/Bluetooth and handles them
         val forwardingPlayer = object : ForwardingPlayer(actualPlayer) {
             override fun seekToNext() {
-                // Override to use our custom handler for skip next
                 handleNextAction(wrappedPlayer)
             }
 
             override fun seekToPrevious() {
-                // Override to use our custom handler for skip previous
                 handlePreviousAction(wrappedPlayer)
             }
 
             override fun seekToNextMediaItem() {
-                // Also handle seekToNextMediaItem for full compatibility
                 handleNextAction(wrappedPlayer)
             }
 
             override fun seekToPreviousMediaItem() {
-                // Also handle seekToPreviousMediaItem for full compatibility
                 handlePreviousAction(wrappedPlayer)
             }
         }
@@ -106,11 +110,8 @@ class PlaybackService : Service() {
         // Listen for playback state changes to update notification
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
-                // Always get the current player from mediaSession to avoid stale references
                 val currentPlayer = mediaSession?.player ?: return
                 updateNotification(currentPlayer)
-                // Note: Do NOT call stopForeground() here - it causes Android to kill the service
-                // The service should stay in foreground as long as it exists
             }
 
             override fun onMediaMetadataChanged(mediaMetadata: androidx.media3.common.MediaMetadata) {
@@ -123,11 +124,8 @@ class PlaybackService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Handle intents from notification actions
         intent?.action?.let { action ->
-            // Try mediaSession player first, fall back to SharedMusicPlayer
             val player = mediaSession?.player ?: run {
-                // MediaSession may have been released, try to get player directly
                 try {
                     SharedMusicPlayer.acquire(applicationContext)
                 } catch (_: Exception) {
@@ -138,20 +136,18 @@ class PlaybackService : Service() {
             try {
                 when (action) {
                     ACTION_PLAY_PAUSE -> {
-                        if (player.isPlaying) {
-                            player.pause()
-                        } else {
-                            player.play()
-                        }
-                        updateNotification(player)
+                        if (player.isPlaying) player.pause() else player.play()
                     }
                     ACTION_PREVIOUS -> handlePreviousAction(player)
                     ACTION_NEXT -> handleNextAction(player)
+                    ACTION_SHUFFLE -> onShuffleToggle?.invoke()
+                    ACTION_REPEAT -> onRepeatToggle?.invoke()
                     ACTION_STOP -> {
                         player.pause()
                         stopSelf()
                     }
                 }
+                updateNotification(player)
             } catch (_: Exception) {
                 // Player may be in invalid state, ignore
             }
@@ -165,7 +161,6 @@ class PlaybackService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        // When app is swiped from recents, stop the service if not playing
         val player = mediaSession?.player
         if (player == null || !player.isPlaying) {
             stopSelf()
@@ -178,23 +173,17 @@ class PlaybackService : Service() {
             playerListener?.let { listener ->
                 mediaSession?.player?.removeListener(listener)
             }
-        } catch (_: Exception) {
-            // Player may already be released
-        }
+        } catch (_: Exception) {}
         playerListener = null
 
         try {
             mediaSession?.release()
-        } catch (_: Exception) {
-            // MediaSession may already be released
-        }
+        } catch (_: Exception) {}
         mediaSession = null
 
         try {
             SharedMusicPlayer.release()
-        } catch (_: Exception) {
-            // Already released
-        }
+        } catch (_: Exception) {}
         super.onDestroy()
     }
 
@@ -202,10 +191,10 @@ class PlaybackService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "Audiobook Playback",
+                "Librio Playback",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Audiobook playback controls"
+                description = "Playback controls"
                 setShowBadge(false)
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
@@ -215,6 +204,7 @@ class PlaybackService : Service() {
         }
     }
 
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     private fun createNotification(player: Player): Notification {
         val contentIntent = PendingIntent.getActivity(
             this,
@@ -225,20 +215,16 @@ class PlaybackService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val playPauseIcon = if (player.isPlaying) {
-            android.R.drawable.ic_media_pause
-        } else {
-            android.R.drawable.ic_media_play
-        }
-
-        val playPauseTitle = if (player.isPlaying) "Pause" else "Play"
+        val playPauseIcon = if (player.isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+        val shuffleIcon = if (isShuffleOn()) android.R.drawable.ic_menu_rotate else android.R.drawable.ic_menu_sort_by_size
+        val repeatIcon = if (isRepeatOn()) android.R.drawable.ic_menu_revert else android.R.drawable.ic_menu_recent_history
 
         val mediaMetadata = player.currentMediaItem?.mediaMetadata
-        val title = mediaMetadata?.title?.toString() ?: "Audiobook"
-        val artist = mediaMetadata?.artist?.toString() ?: "Unknown"
+        val title = mediaMetadata?.title?.toString() ?: "Librio"
+        val artist = mediaMetadata?.artist?.toString() ?: "Ready to play"
 
-        // Create notification with Previous, Play/Pause, and Next controls
-        return NotificationCompat.Builder(this, channelId)
+        // 5 actions: Shuffle, Previous, Play/Pause, Next, Repeat
+        val builder = NotificationCompat.Builder(this, channelId)
             .setContentTitle(title)
             .setContentText(artist)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -246,25 +232,25 @@ class PlaybackService : Service() {
             .setOnlyAlertOnce(true)
             .setOngoing(player.isPlaying)
             .setShowWhen(false)
-            .addAction(
-                android.R.drawable.ic_media_previous,
-                "Previous",
-                createServicePendingIntent(ACTION_PREVIOUS)
-            )
-            .addAction(
-                playPauseIcon,
-                playPauseTitle,
-                createServicePendingIntent(ACTION_PLAY_PAUSE)
-            )
-            .addAction(
-                android.R.drawable.ic_media_next,
-                "Next",
-                createServicePendingIntent(ACTION_NEXT)
-            )
+            .addAction(shuffleIcon, if (isShuffleOn()) "Shuffle On" else "Shuffle Off", createServicePendingIntent(ACTION_SHUFFLE))
+            .addAction(android.R.drawable.ic_media_previous, "Previous", createServicePendingIntent(ACTION_PREVIOUS))
+            .addAction(playPauseIcon, if (player.isPlaying) "Pause" else "Play", createServicePendingIntent(ACTION_PLAY_PAUSE))
+            .addAction(android.R.drawable.ic_media_next, "Next", createServicePendingIntent(ACTION_NEXT))
+            .addAction(repeatIcon, if (isRepeatOn()) "Repeat On" else "Repeat Off", createServicePendingIntent(ACTION_REPEAT))
+            .setDeleteIntent(createServicePendingIntent(ACTION_STOP))
             .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .build()
+
+        val session = mediaSession
+        if (session != null) {
+            builder.setStyle(
+                androidx.media3.session.MediaStyleNotificationHelper.MediaStyle(session)
+                    .setShowActionsInCompactView(1, 2, 3) // Previous, Play/Pause, Next in compact
+            )
+        }
+
+        return builder.build()
     }
 
     private fun updateNotification(player: Player) {
@@ -281,15 +267,15 @@ class PlaybackService : Service() {
         val intent = Intent(this, PlaybackService::class.java).apply {
             this.action = action
         }
-        // Use distinct positive request codes for each action
         val requestCode = when (action) {
             ACTION_PLAY_PAUSE -> 1
             ACTION_PREVIOUS -> 2
             ACTION_NEXT -> 3
             ACTION_STOP -> 4
+            ACTION_SHUFFLE -> 5
+            ACTION_REPEAT -> 6
             else -> 0
         }
-        // Use getForegroundService on Android O+ for foreground service intents
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             PendingIntent.getForegroundService(
                 this,
@@ -312,30 +298,22 @@ class PlaybackService : Service() {
      */
     private fun handleNextAction(player: Player) {
         try {
-            // For music playlists (multiple items): use ExoPlayer's built-in navigation
             if (player.hasNextMediaItem()) {
                 player.seekToNextMediaItem()
             } else {
-                // No next media item - use callback based on active type
                 when (currentActiveType) {
                     "MUSIC" -> onNextMusic?.invoke()
                     "AUDIOBOOK" -> {
                         onNextAudiobook?.invoke()
-                        // Also send chapter broadcast for AudiobookPlayer chapter handling
                         sendBroadcast(Intent(BROADCAST_NEXT_CHAPTER).apply {
                             setPackage(packageName)
                         })
                     }
-                    else -> {
-                        // Fallback: try audiobook callback
-                        onNextAudiobook?.invoke()
-                    }
+                    else -> onNextAudiobook?.invoke()
                 }
             }
             updateNotification(player)
-        } catch (_: Exception) {
-            // Player may be in invalid state
-        }
+        } catch (_: Exception) {}
     }
 
     /**
@@ -343,29 +321,21 @@ class PlaybackService : Service() {
      */
     private fun handlePreviousAction(player: Player) {
         try {
-            // For music playlists (multiple items): use ExoPlayer's built-in navigation
             if (player.hasPreviousMediaItem()) {
                 player.seekToPreviousMediaItem()
             } else {
-                // No previous media item - use callback based on active type
                 when (currentActiveType) {
                     "MUSIC" -> onPreviousMusic?.invoke()
                     "AUDIOBOOK" -> {
                         onPreviousAudiobook?.invoke()
-                        // Also send chapter broadcast for AudiobookPlayer chapter handling
                         sendBroadcast(Intent(BROADCAST_PREVIOUS_CHAPTER).apply {
                             setPackage(packageName)
                         })
                     }
-                    else -> {
-                        // Fallback: try audiobook callback
-                        onPreviousAudiobook?.invoke()
-                    }
+                    else -> onPreviousAudiobook?.invoke()
                 }
             }
             updateNotification(player)
-        } catch (_: Exception) {
-            // Player may be in invalid state
-        }
+        } catch (_: Exception) {}
     }
 }

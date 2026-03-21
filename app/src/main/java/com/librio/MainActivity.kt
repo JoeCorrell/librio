@@ -804,11 +804,33 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                // Wire up shuffle/repeat for notification controls
+                PlaybackService.isShuffleOn = { musicShuffleEnabled }
+                PlaybackService.isRepeatOn = { musicRepeatMode != Player.REPEAT_MODE_OFF }
+                PlaybackService.onShuffleToggle = {
+                    val newShuffle = !musicShuffleEnabled
+                    settingsViewModel.setMusicShuffleEnabled(newShuffle)
+                    musicExoPlayer.shuffleModeEnabled = newShuffle
+                }
+                PlaybackService.onRepeatToggle = {
+                    val newMode = when (musicRepeatMode) {
+                        Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ONE
+                        Player.REPEAT_MODE_ONE -> Player.REPEAT_MODE_ALL
+                        else -> Player.REPEAT_MODE_OFF
+                    }
+                    settingsViewModel.setMusicRepeatMode(newMode)
+                    musicExoPlayer.repeatMode = newMode
+                }
+
                 onDispose {
                     PlaybackService.onNextAudiobook = null
                     PlaybackService.onPreviousAudiobook = null
                     PlaybackService.onNextMusic = null
                     PlaybackService.onPreviousMusic = null
+                    PlaybackService.onShuffleToggle = null
+                    PlaybackService.onRepeatToggle = null
+                    PlaybackService.isShuffleOn = { false }
+                    PlaybackService.isRepeatOn = { false }
                     PlaybackService.currentActiveType = null
                 }
             }
@@ -1623,7 +1645,23 @@ class MainActivity : ComponentActivity() {
                                     }
                                     settingsViewModel.setLastActiveType(null)
                                     PlaybackService.currentActiveType = null
-                                }
+                                },
+                                onMiniPlayerShuffle = {
+                                    val newShuffle = !musicShuffleEnabled
+                                    settingsViewModel.setMusicShuffleEnabled(newShuffle)
+                                    musicExoPlayer.shuffleModeEnabled = newShuffle
+                                },
+                                onMiniPlayerRepeat = {
+                                    val newMode = when (musicRepeatMode) {
+                                        androidx.media3.common.Player.REPEAT_MODE_OFF -> androidx.media3.common.Player.REPEAT_MODE_ONE
+                                        androidx.media3.common.Player.REPEAT_MODE_ONE -> androidx.media3.common.Player.REPEAT_MODE_ALL
+                                        else -> androidx.media3.common.Player.REPEAT_MODE_OFF
+                                    }
+                                    settingsViewModel.setMusicRepeatMode(newMode)
+                                    musicExoPlayer.repeatMode = newMode
+                                },
+                                miniPlayerShuffleOn = musicShuffleEnabled,
+                                miniPlayerRepeatOn = musicRepeatMode != androidx.media3.common.Player.REPEAT_MODE_OFF
                             )
                         }
 

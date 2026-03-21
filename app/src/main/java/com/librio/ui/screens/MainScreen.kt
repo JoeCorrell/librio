@@ -225,6 +225,10 @@ fun MainScreen(
     onMiniPlayerSeekForward: () -> Unit = {},
     onMiniPlayerClick: () -> Unit = {},
     onMiniPlayerDismiss: () -> Unit = {},
+    onMiniPlayerShuffle: () -> Unit = {},
+    onMiniPlayerRepeat: () -> Unit = {},
+    miniPlayerShuffleOn: Boolean = false,
+    miniPlayerRepeatOn: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
@@ -351,6 +355,10 @@ fun MainScreen(
                     onSeekForward = onMiniPlayerSeekForward,
                     onClick = { onMiniPlayerClick() },
                     onDismiss = onMiniPlayerDismiss,
+                    onShuffle = onMiniPlayerShuffle,
+                    onRepeat = onMiniPlayerRepeat,
+                    shuffleOn = miniPlayerShuffleOn,
+                    repeatOn = miniPlayerRepeatOn,
                     showPlaceholderIcons = showPlaceholderIcons
                 )
 

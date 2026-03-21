@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import kotlinx.coroutines.Dispatchers
@@ -687,16 +688,18 @@ fun ProfileScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     themeCategories.forEach { category ->
-                        item {
-                            Text(
-                                text = category.title,
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                color = palette.textMuted,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 4.dp, bottom = 2.dp)
-                            )
+                        if (category.title != "Themes") {
+                            item {
+                                Text(
+                                    text = category.title,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = palette.textMuted,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 4.dp, bottom = 2.dp)
+                                )
+                            }
                         }
                         items(category.themes.chunked(columnsCount)) { rowThemes ->
                             Row(
@@ -709,21 +712,13 @@ fun ProfileScreen(
                                     Box(
                                         modifier = Modifier
                                             .size(squareSize)
-                                            .clip(shape10)
-                                            .background(
-                                                Brush.linearGradient(
-                                                    colors = listOf(
-                                                        themePalette.shade1,
-                                                        themePalette.shade3,
-                                                        themePalette.shade5
-                                                    )
-                                                )
-                                            )
+                                            .clip(shape14)
+                                            .background(themePalette.background)
                                             .then(
                                                 if (isSelected) Modifier.border(
-                                                    3.dp,
-                                                    Color.White,
-                                                    shape10
+                                                    2.5.dp,
+                                                    palette.accent,
+                                                    shape14
                                                 ) else Modifier
                                             )
                                             .clickable {
@@ -731,7 +726,6 @@ fun ProfileScreen(
                                                     showThemeDialog = false
                                                     showCustomThemeDialog = true
                                                 } else {
-                                                    // Change both primary and accent theme together
                                                     onThemeChange(theme)
                                                     onAccentThemeChange(theme)
                                                     showThemeDialog = false
@@ -739,21 +733,21 @@ fun ProfileScreen(
                                             },
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        if (isSelected) {
-                                            Icon(
-                                                AppIcons.Check,
-                                                contentDescription = "Selected",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        } else if (theme == AppTheme.CUSTOM) {
-                                            Icon(
-                                                AppIcons.Edit,
-                                                contentDescription = "Custom",
-                                                tint = Color.White.copy(alpha = 0.8f),
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                        }
+                                        // Accent color strip at bottom (40% height)
+                                        Box(
+                                            modifier = Modifier
+                                                .align(Alignment.BottomCenter)
+                                                .fillMaxWidth()
+                                                .fillMaxHeight(0.4f)
+                                                .background(themePalette.accent)
+                                        )
+                                        // Theme abbreviation
+                                        Text(
+                                            text = theme.displayName.take(3),
+                                            fontSize = 7.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = themePalette.textPrimary
+                                        )
                                     }
                                 }
                             }

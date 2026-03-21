@@ -14,8 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
@@ -30,97 +28,61 @@ fun SplashScreen(
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
-    val shape4 = cornerRadius(4.dp)
 
-    // Entry animation
-    var startAnimation by remember { mutableStateOf(false) }
+    // Animation steps matching JSX intro
+    var introStep by remember { mutableIntStateOf(0) }
 
-    // Loading progress
-    var targetProgress by remember { mutableFloatStateOf(0f) }
-    var loadingText by remember { mutableStateOf("Initializing...") }
-
-    // Logo scale animation
+    // Logo scale + alpha
     val logoScale by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0.5f,
+        targetValue = if (introStep >= 1) 1f else 0.7f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
+            dampingRatio = 0.45f,
             stiffness = Spring.StiffnessMedium
         ),
         label = "logoScale"
     )
-
-    // Logo alpha animation
     val logoAlpha by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0f,
-        animationSpec = tween(400, easing = EaseOutCubic),
+        targetValue = if (introStep >= 1) 1f else 0f,
+        animationSpec = tween(600, easing = EaseOutCubic),
         label = "logoAlpha"
     )
 
-    // Smooth animated progress
-    val loadingProgress by animateFloatAsState(
-        targetValue = targetProgress,
-        animationSpec = tween(
-            durationMillis = 500,
-            easing = FastOutSlowInEasing
-        ),
-        label = "loadingProgress"
+    // Tagline alpha
+    val taglineAlpha by animateFloatAsState(
+        targetValue = if (introStep >= 2) 1f else 0f,
+        animationSpec = tween(500, delayMillis = 100, easing = EaseOutCubic),
+        label = "taglineAlpha"
     )
 
-    // Loading bar fade in
-    val barAlpha by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0f,
-        animationSpec = tween(600, delayMillis = 200, easing = EaseOutCubic),
-        label = "barAlpha"
+    // Dots alpha
+    val dotsAlpha by animateFloatAsState(
+        targetValue = if (introStep >= 2) 1f else 0f,
+        animationSpec = tween(500, delayMillis = 300, easing = EaseOutCubic),
+        label = "dotsAlpha"
     )
 
-    // Feature icons stagger animation
-    val icon1Alpha by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0f,
-        animationSpec = tween(400, delayMillis = 100, easing = EaseOutCubic),
-        label = "icon1Alpha"
-    )
-    val icon2Alpha by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0f,
-        animationSpec = tween(400, delayMillis = 200, easing = EaseOutCubic),
-        label = "icon2Alpha"
-    )
-    val icon3Alpha by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0f,
-        animationSpec = tween(400, delayMillis = 300, easing = EaseOutCubic),
-        label = "icon3Alpha"
-    )
-    val icon4Alpha by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0f,
-        animationSpec = tween(400, delayMillis = 400, easing = EaseOutCubic),
-        label = "icon4Alpha"
-    )
-    val icon5Alpha by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0f,
-        animationSpec = tween(400, delayMillis = 500, easing = EaseOutCubic),
-        label = "icon5Alpha"
-    )
-
-    // Shimmer effect across the loading bar
-    val infiniteTransition = rememberInfiniteTransition(label = "shimmer")
-    val shimmerOffset by infiniteTransition.animateFloat(
-        initialValue = -1f,
-        targetValue = 2f,
+    // Pulse animation for dots
+    val infiniteTransition = rememberInfiniteTransition(label = "dotPulse")
+    val dotAlpha1 by infiniteTransition.animateFloat(
+        initialValue = 0.4f, targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "shimmerOffset"
-    )
-
-    // Pulse animation for logo
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.05f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = EaseInOutCubic),
+            animation = tween(1200, easing = EaseInOutCubic),
             repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseScale"
+        ), label = "dot1"
+    )
+    val dotAlpha2 by infiniteTransition.animateFloat(
+        initialValue = 0.4f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, delayMillis = 200, easing = EaseInOutCubic),
+            repeatMode = RepeatMode.Reverse
+        ), label = "dot2"
+    )
+    val dotAlpha3 by infiniteTransition.animateFloat(
+        initialValue = 0.4f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, delayMillis = 400, easing = EaseInOutCubic),
+            repeatMode = RepeatMode.Reverse
+        ), label = "dot3"
     )
 
     // Exit animation
@@ -132,234 +94,80 @@ fun SplashScreen(
     )
 
     LaunchedEffect(Unit) {
-        startAnimation = true
-        delay(100)
-
-        // Stage 1: Quick initial progress
-        targetProgress = 0.3f
-        delay(250)
-
-        // Stage 2: Loading library
-        loadingText = "Loading library..."
-        targetProgress = 0.6f
-        delay(350)
-
-        // Stage 3: Preparing
-        loadingText = "Preparing your media..."
-        targetProgress = 0.85f
-        delay(300)
-
-        // Stage 4: Complete
-        loadingText = "Ready!"
-        targetProgress = 1f
-        delay(250)
-
-        // Exit
+        delay(400)
+        introStep = 1
+        delay(800)
+        introStep = 2
+        delay(1200)
         exitAnimation = true
-        delay(150)
+        delay(250)
         onSplashComplete()
     }
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        palette.shade11,
-                        palette.shade10,
-                        palette.shade9
-                    )
-                )
-            )
+            .background(palette.background)
             .graphicsLayer { alpha = exitAlpha },
         contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // App logo with gradient background
-            Box(
+            // Logo text: "librio" with accent-colored "rio"
+            Row(
                 modifier = Modifier
-                    .size(120.dp)
-                    .scale(logoScale * pulseScale)
-                    .alpha(logoAlpha)
-                    .shadow(12.dp, CircleShape)
-                    .clip(CircleShape)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                palette.shade2,
-                                palette.shade3,
-                                palette.shade4
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
+                    .scale(logoScale)
+                    .alpha(logoAlpha),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = AppIcons.Library,
-                    contentDescription = null,
-                    modifier = Modifier.size(56.dp),
-                    tint = Color.White
+                Text(
+                    text = "lib",
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 38.sp,
+                        letterSpacing = (-0.8).sp
+                    ),
+                    color = palette.textPrimary
+                )
+                Text(
+                    text = "rio",
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 38.sp,
+                        letterSpacing = (-0.8).sp
+                    ),
+                    color = palette.accent
                 )
             }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // App name
-            Text(
-                text = "LIBRIO",
-                style = MaterialTheme.typography.displaySmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 4.sp
-                ),
-                color = palette.shade1,
-                modifier = Modifier.alpha(logoAlpha)
-            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             // Tagline
             Text(
-                text = "Your personal media library",
-                style = MaterialTheme.typography.bodyLarge,
-                color = palette.shade4,
-                modifier = Modifier.alpha(logoAlpha)
+                text = "Your unified media experience",
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.textMuted,
+                modifier = Modifier.alpha(taglineAlpha)
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Feature icons row
+            // Pulsing dots
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                modifier = Modifier.alpha(dotsAlpha),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                SplashFeatureIcon(
-                    icon = AppIcons.Audiobook,
-                    label = "Audiobooks",
-                    alpha = icon1Alpha,
-                    accentColor = palette.shade3
-                )
-                SplashFeatureIcon(
-                    icon = AppIcons.Book,
-                    label = "E-books",
-                    alpha = icon2Alpha,
-                    accentColor = palette.shade3
-                )
-                SplashFeatureIcon(
-                    icon = AppIcons.Music,
-                    label = "Music",
-                    alpha = icon3Alpha,
-                    accentColor = palette.shade3
-                )
-                SplashFeatureIcon(
-                    icon = AppIcons.Comic,
-                    label = "Comics",
-                    alpha = icon4Alpha,
-                    accentColor = palette.shade3
-                )
-                SplashFeatureIcon(
-                    icon = AppIcons.Movie,
-                    label = "Movies",
-                    alpha = icon5Alpha,
-                    accentColor = palette.shade3
-                )
-            }
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // Loading bar section
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .alpha(barAlpha),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Loading bar with visible track
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                ) {
-                    // Track background
+                listOf(dotAlpha1, dotAlpha2, dotAlpha3).forEach { dotAlpha ->
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(shape4)
-                            .background(palette.shade7.copy(alpha = 0.5f))
-                    )
-
-                    // Progress fill with shimmer
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(loadingProgress)
-                            .height(6.dp)
-                            .clip(shape4)
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(
-                                        palette.accent,
-                                        palette.accent.copy(alpha = 0.8f),
-                                        palette.accent
-                                    ),
-                                    startX = shimmerOffset * 300f,
-                                    endX = (shimmerOffset + 0.5f) * 300f
-                                )
-                            )
+                            .size(6.dp)
+                            .alpha(dotAlpha)
+                            .clip(CircleShape)
+                            .background(palette.accent)
                     )
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Loading text
-                Text(
-                    text = loadingText,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Medium,
-                        letterSpacing = 0.5.sp
-                    ),
-                    color = palette.shade3
-                )
             }
         }
-    }
-}
-
-@Composable
-private fun SplashFeatureIcon(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    alpha: Float,
-    accentColor: Color
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.alpha(alpha)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(accentColor.copy(alpha = 0.15f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                tint = accentColor
-            )
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = accentColor.copy(alpha = 0.8f)
-        )
     }
 }

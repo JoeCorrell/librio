@@ -6,7 +6,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -459,10 +463,11 @@ fun MusicPlayerScreen(
     ) {
 
         Column(modifier = Modifier.fillMaxSize()) {
+            // Header - clean theme background with card-style buttons
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(palette.headerGradient())
+                    .background(palette.background)
                     .statusBarsPadding()
             ) {
                 Box(
@@ -480,383 +485,240 @@ fun MusicPlayerScreen(
                             animationSpec = spring(stiffness = Spring.StiffnessHigh),
                             label = "musicBackScale"
                         )
-                        IconButton(
-                            onClick = onBack,
+                        Box(
                             modifier = Modifier
                                 .align(Alignment.CenterStart)
-                                .scale(backScale),
-                            interactionSource = backInteractionSource
+                                .size(34.dp)
+                                .scale(backScale)
+                                .clip(RoundedCornerShape(11.dp))
+                                .background(palette.surfaceCard)
+                                .clickable(
+                                    interactionSource = backInteractionSource,
+                                    indication = null
+                                ) { onBack() },
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(AppIcons.Back, "Back", tint = palette.shade11)
+                            Icon(AppIcons.Back, "Back", tint = palette.textSecondary, modifier = Modifier.size(16.dp))
                         }
                     }
 
-                    Text(
-                        text = headerTitle,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = palette.shade11,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.align(Alignment.Center)
+                    // Center: librio branding
+                    Row(
+                        modifier = Modifier.align(Alignment.Center),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "lib",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = palette.textPrimary
+                        )
+                        Text(
+                            text = "rio",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = palette.accent
+                        )
+                    }
+
+                    Spacer(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .width(34.dp)
                     )
-
-                    if (showSearchBar) {
-                        val searchInteractionSource = remember { MutableInteractionSource() }
-                        val searchIsPressed by searchInteractionSource.collectIsPressedAsState()
-                        val searchScale by animateFloatAsState(
-                            targetValue = if (searchIsPressed) 0.85f else 1f,
-                            animationSpec = spring(stiffness = Spring.StiffnessHigh),
-                            label = "musicSearchScale"
-                        )
-                        IconButton(
-                            onClick = { },
-                            modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .scale(searchScale),
-                            interactionSource = searchInteractionSource
-                        ) {
-                            Icon(AppIcons.Search, "Search", tint = palette.shade11)
-                        }
-                    } else {
-                        Spacer(
-                            modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .width(24.dp)
-                        )
-                    }
                 }
             }
 
-            // Main content - adaptive layout for different screen sizes
+            // Main content - Librio FX layout
             val screenHeight = configuration.screenHeightDp
-            val isLargeScreen = screenHeight > 700
-
-            // Calculate max cover size based on available space (accounting for header ~80dp, controls ~200dp)
-            val availableHeight = screenHeight - 280
-            val maxAllowedCoverSize = (availableHeight * 0.5f).dp.coerceIn(120.dp, maxCoverSize)
 
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = horizontalPadding)
-                    .padding(top = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceEvenly
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
             ) {
-                // Cover art - adaptive size based on available space
-                val adaptiveCoverSize = when {
-                    screenHeight > 800 -> maxAllowedCoverSize.coerceAtMost(maxCoverSize)
-                    screenHeight > 600 -> (maxAllowedCoverSize.value * 0.85f).dp
-                    else -> (maxAllowedCoverSize.value * 0.75f).dp
-                }
-
-                // Cover art using same component as audiobook player
-                val fileExtension = music.uri.lastPathSegment?.substringAfterLast(".", "MP3")?.uppercase() ?: "MP3"
-                CoverArt(
-                    bitmap = music.coverArt,
-                    contentDescription = "Album art for ${music.title}",
-                    modifier = Modifier.size(adaptiveCoverSize),
-                    showPlaceholderAlways = showPlaceholderIcons,
-                    fileExtension = fileExtension,
-                    contentType = CoverArtContentType.MUSIC
-                )
-
-                // Title and artist
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = music.title,
-                        style = if (isLargeScreen) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = palette.textPrimary,
-                        textAlign = TextAlign.Center,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = music.artist,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = palette.textMuted,
-                        textAlign = TextAlign.Center
-                    )
-                    music.album?.let { album ->
-                        Text(
-                            text = album,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = palette.textMuted.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center
+                // Album art — 220dp with shadow and rounded corners
+                Box(
+                    modifier = Modifier
+                        .size(220.dp)
+                        .align(Alignment.CenterHorizontally)
+                        .shadow(16.dp, RoundedCornerShape(24.dp), ambientColor = palette.textPrimary.copy(alpha = 0.25f))
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(palette.thumbnailGradient()),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    val fileExtension = music.uri.lastPathSegment?.substringAfterLast(".", "MP3")?.uppercase() ?: "MP3"
+                    if (music.coverArt != null) {
+                        Image(
+                            bitmap = music.coverArt!!.asImageBitmap(),
+                            contentDescription = "Album art for ${music.title}",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            AppIcons.Music, null,
+                            tint = Color.White.copy(0.4f),
+                            modifier = Modifier.size(64.dp)
                         )
                     }
                 }
+
+                Spacer(Modifier.height(14.dp))
+
+                // Title + Like button row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                        Text(
+                            text = music.title,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = palette.textPrimary,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = "${music.artist}${music.album?.let { " · $it" } ?: ""}",
+                            fontSize = 11.sp,
+                            color = palette.textMuted,
+                        )
+                    }
+                    // Like button placeholder (visual only — matches Librio FX)
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(RoundedCornerShape(9.dp))
+                            .background(palette.accent.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            AppIcons.Heart, "Like",
+                            tint = palette.accent,
+                            modifier = Modifier.size(14.dp),
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(10.dp))
 
                 // Progress slider
                 val progress = if (duration > 0) currentPosition.toFloat() / duration else 0f
-
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    MinimalProgressSlider(
-                        value = progress,
-                        onValueChange = { newProgress ->
-                            val newPosition = (newProgress * duration).toLong()
-                            exoPlayer.seekTo(newPosition)
-                            currentPosition = newPosition
-                        },
-                        activeColor = palette.accent,
-                        inactiveColor = palette.surfaceMedium.copy(alpha = 0.4f)
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(formatTime(currentPosition), style = MaterialTheme.typography.bodySmall, color = palette.accent)
-                        Text(formatTime(duration), style = MaterialTheme.typography.bodySmall, color = palette.accent)
-                    }
-                }
-
-                // Responsive control button sizes
-                val smallButtonSize = if (screenWidth < 400.dp) 36.dp else 40.dp
-                val mediumButtonSize = if (screenWidth < 400.dp) 44.dp else 52.dp
-                val playButtonSize = if (screenWidth < 400.dp) 64.dp else if (isLargeScreen) 76.dp else 68.dp
-                val smallIconSize = if (screenWidth < 400.dp) 18.dp else 20.dp
-                val mediumIconSize = if (screenWidth < 400.dp) 24.dp else 28.dp
-                val playIconSize = if (screenWidth < 400.dp) 32.dp else if (isLargeScreen) 40.dp else 36.dp
-
-                // Main playback controls row - 5 buttons: prev, skip back, play, skip forward, next
+                MinimalProgressSlider(
+                    value = progress,
+                    onValueChange = { newProgress ->
+                        val newPosition = (newProgress * duration).toLong()
+                        exoPlayer.seekTo(newPosition)
+                        currentPosition = newPosition
+                    },
+                    activeColor = palette.accent,
+                    inactiveColor = palette.divider
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Previous track button
-                    Box(
-                        modifier = Modifier
-                            .size(smallButtonSize)
-                            .clip(CircleShape)
-                            .background(palette.accent.copy(alpha = 0.1f))
-                            .clickable(enabled = hasPrevious || playlist.isEmpty()) {
-                                if (hasPrevious) {
-                                    exoPlayer.stop()
-                                    onTrackChange(playlist[currentIndex - 1])
-                                }
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            AppIcons.SkipPrevious,
-                            "Previous",
-                            tint = if (hasPrevious || playlist.isEmpty()) palette.accent else palette.accent.copy(alpha = 0.3f),
-                            modifier = Modifier.size(smallIconSize + 4.dp)
-                        )
-                    }
-
-                    // Rewind button
-                    Box(
-                        modifier = Modifier
-                            .size(mediumButtonSize)
-                            .clip(CircleShape)
-                            .background(palette.accent.copy(alpha = 0.1f))
-                            .clickable {
-                                lastSeekPositionLocal = currentPosition
-                                exoPlayer.seekTo((currentPosition - skipBackSeconds * 1000L).coerceAtLeast(0))
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            AppIcons.Replay10,
-                            "Rewind",
-                            tint = palette.accent,
-                            modifier = Modifier.size(mediumIconSize)
-                        )
-                        Text(
-                            text = "$skipBackSeconds",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = palette.accent,
-                            fontSize = if (screenWidth < 400.dp) 8.sp else 9.sp
-                        )
-                    }
-
-                    // Play/Pause button with gradient
-                    Box(
-                        modifier = Modifier
-                            .size(playButtonSize)
-                            .shadow(8.dp, CircleShape)
-                            .clip(CircleShape)
-                            .background(palette.buttonGradient())
-                            .clickable {
-                                if (isPlaying) {
-                                    if (fadeOnPauseResume) {
-                                        SharedMusicPlayer.pauseWithFade(context)
-                                    } else {
-                                        exoPlayer.pause()
-                                    }
-                                } else {
-                                    if (fadeOnPauseResume) {
-                                        SharedMusicPlayer.playWithFade(context)
-                                    } else {
-                                        exoPlayer.play()
-                                    }
-                                }
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(playIconSize * 0.6f),
-                                color = palette.onPrimary,
-                                strokeWidth = 5.dp
-                            )
-                        } else {
-                            Icon(
-                                imageVector = if (isPlaying) AppIcons.Pause else AppIcons.Play,
-                                contentDescription = if (isPlaying) "Pause" else "Play",
-                                tint = palette.onPrimary,
-                                modifier = Modifier.size(playIconSize)
-                            )
-                        }
-                    }
-
-                    // Forward button (mirrored)
-                    Box(
-                        modifier = Modifier
-                            .size(mediumButtonSize)
-                            .clip(CircleShape)
-                            .background(palette.accent.copy(alpha = 0.1f))
-                            .clickable {
-                                lastSeekPositionLocal = currentPosition
-                                val maxPos = if (duration > 0) duration else Long.MAX_VALUE
-                                exoPlayer.seekTo((currentPosition + skipForwardSeconds * 1000L).coerceAtMost(maxPos))
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            AppIcons.Forward10,
-                            "Forward",
-                            tint = palette.accent,
-                            modifier = Modifier
-                                .size(mediumIconSize)
-                        )
-                        Text(
-                            text = "$skipForwardSeconds",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = palette.accent,
-                            fontSize = if (screenWidth < 400.dp) 8.sp else 9.sp
-                        )
-                    }
-
-                    // Next track button
-                    Box(
-                        modifier = Modifier
-                            .size(smallButtonSize)
-                            .clip(CircleShape)
-                            .background(palette.accent.copy(alpha = 0.1f))
-                            .clickable(enabled = hasNext || playlist.isEmpty()) {
-                                if (hasNext && playlist.isNotEmpty()) {
-                                    exoPlayer.stop()
-                                    val nextTrack = if (isShuffleEnabled && playlist.size > 1) {
-                                        // Pick a random track that's not the current one
-                                        val availableIndices = playlist.indices.filter { it != currentIndex }
-                                        playlist[availableIndices.random()]
-                                    } else {
-                                        // Sequential: just go to next track
-                                        playlist[currentIndex + 1]
-                                    }
-                                    onTrackChange(nextTrack)
-                                }
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            AppIcons.SkipNext,
-                            "Next",
-                            tint = if (hasNext || playlist.isEmpty()) palette.accent else palette.accent.copy(alpha = 0.3f),
-                            modifier = Modifier.size(smallIconSize + 4.dp)
-                        )
-                    }
+                    Text(formatTime(currentPosition), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = palette.textMuted.copy(alpha = 0.5f))
+                    Text(formatTime(duration), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = palette.textMuted.copy(alpha = 0.5f))
                 }
 
-                // Undo seek button
-                val canUndo = showUndoSeekButton && lastSeekPositionLocal > 0L &&
-                    kotlin.math.abs(currentPosition - lastSeekPositionLocal) > 1000L
-                AnimatedVisibility(
-                    visible = canUndo,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 10.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(palette.accent.copy(alpha = 0.15f))
-                                .clickable {
-                                    exoPlayer.seekTo(lastSeekPositionLocal)
-                                    lastSeekPositionLocal = 0L
-                                }
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = AppIcons.Replay,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = palette.accent
-                                )
-                                Text(
-                                    text = "Undo seek",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = palette.accent,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-                }
+                Spacer(Modifier.height(6.dp))
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Shuffle and Repeat controls
+                // 7-button control row: shuffle, rw, prev, play, next, ff, repeat
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    ControlPill(
-                        modifier = Modifier.weight(1f),
-                        text = if (isShuffleEnabled) "On" else "Off",
-                        icon = AppIcons.Shuffle,
-                        isActive = isShuffleEnabled,
-                        onClick = {
+                    Icon(
+                        AppIcons.Shuffle, "Shuffle",
+                        tint = if (isShuffleEnabled) palette.accent else palette.textMuted.copy(alpha = 0.5f),
+                        modifier = Modifier.size(18.dp).clickable {
                             isShuffleEnabled = !isShuffleEnabled
                             exoPlayer.shuffleModeEnabled = isShuffleEnabled
                             onShuffleEnabledChange(isShuffleEnabled)
                         }
                     )
+                    Icon(
+                        AppIcons.Replay10, "Rewind",
+                        tint = palette.textSecondary,
+                        modifier = Modifier.size(20.dp).clickable {
+                            lastSeekPositionLocal = currentPosition
+                            exoPlayer.seekTo((currentPosition - skipBackSeconds * 1000L).coerceAtLeast(0))
+                        }
+                    )
+                    Icon(
+                        AppIcons.SkipPrevious, "Previous",
+                        tint = palette.textSecondary,
+                        modifier = Modifier.size(22.dp).clickable {
+                            if (hasPrevious) { exoPlayer.stop(); onTrackChange(playlist[currentIndex - 1]) }
+                        }
+                    )
 
-                    ControlPill(
-                        modifier = Modifier.weight(1f),
-                        text = when (repeatMode) {
-                            Player.REPEAT_MODE_ONE -> "One"
-                            Player.REPEAT_MODE_ALL -> "All"
-                            else -> "Off"
-                        },
-                        icon = when (repeatMode) {
+                    // Play/Pause — 54dp accent circle with shadow
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .shadow(6.dp, CircleShape, ambientColor = palette.accent.copy(alpha = 0.4f))
+                            .clip(CircleShape)
+                            .background(palette.accent)
+                            .clickable {
+                                if (isPlaying) {
+                                    if (fadeOnPauseResume) SharedMusicPlayer.pauseWithFade(context) else exoPlayer.pause()
+                                } else {
+                                    if (fadeOnPauseResume) SharedMusicPlayer.playWithFade(context) else exoPlayer.play()
+                                }
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 3.dp)
+                        } else {
+                            Icon(
+                                imageVector = if (isPlaying) AppIcons.Pause else AppIcons.Play,
+                                contentDescription = if (isPlaying) "Pause" else "Play",
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp),
+                            )
+                        }
+                    }
+
+                    Icon(
+                        AppIcons.SkipNext, "Next",
+                        tint = palette.textSecondary,
+                        modifier = Modifier.size(22.dp).clickable {
+                            if (hasNext && playlist.isNotEmpty()) {
+                                exoPlayer.stop()
+                                val nextTrack = if (isShuffleEnabled && playlist.size > 1) {
+                                    val availableIndices = playlist.indices.filter { it != currentIndex }
+                                    playlist[availableIndices.random()]
+                                } else { playlist[currentIndex + 1] }
+                                onTrackChange(nextTrack)
+                            }
+                        }
+                    )
+                    Icon(
+                        AppIcons.Forward10, "Forward",
+                        tint = palette.textSecondary,
+                        modifier = Modifier.size(20.dp).clickable {
+                            lastSeekPositionLocal = currentPosition
+                            val maxPos = if (duration > 0) duration else Long.MAX_VALUE
+                            exoPlayer.seekTo((currentPosition + skipForwardSeconds * 1000L).coerceAtMost(maxPos))
+                        }
+                    )
+                    Icon(
+                        imageVector = when (repeatMode) {
                             Player.REPEAT_MODE_ONE -> AppIcons.RepeatOne
                             else -> AppIcons.Repeat
                         },
-                        isActive = repeatMode != Player.REPEAT_MODE_OFF,
-                        onClick = {
+                        contentDescription = "Repeat",
+                        tint = if (repeatMode != Player.REPEAT_MODE_OFF) palette.accent else palette.textMuted.copy(alpha = 0.5f),
+                        modifier = Modifier.size(18.dp).clickable {
                             repeatMode = when (repeatMode) {
                                 Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ONE
                                 Player.REPEAT_MODE_ONE -> Player.REPEAT_MODE_ALL
@@ -867,19 +729,86 @@ fun MusicPlayerScreen(
                         }
                     )
                 }
+
+                Spacer(Modifier.height(8.dp))
+
+                // Up Next — shows ~5 items, scrollable
+                if (playlist.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 312.dp) // ~8 rows at ~39dp each
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(palette.surfaceCard)
+                            .border(1.dp, palette.divider, RoundedCornerShape(14.dp)),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 7.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text("Up Next", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary)
+                            Text("${playlist.size} tracks", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = palette.accent)
+                        }
+                        HorizontalDivider(color = palette.divider, thickness = 1.dp)
+                        LazyColumn(modifier = Modifier.weight(1f)) {
+                            itemsIndexed(playlist) { idx, track ->
+                                val isCurrent = idx == currentIndex
+                                Row(
+                                    modifier = Modifier.fillMaxWidth()
+                                        .background(if (isCurrent) palette.accent.copy(alpha = 0.15f) else Color.Transparent)
+                                        .clickable { exoPlayer.stop(); onTrackChange(track) }
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Text(
+                                        text = if (isCurrent) "\u25B6" else "${idx + 1}",
+                                        fontSize = 9.sp, fontWeight = FontWeight.Bold,
+                                        color = if (isCurrent) palette.accent else palette.textMuted.copy(alpha = 0.5f),
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                    Box(
+                                        modifier = Modifier.size(26.dp).clip(RoundedCornerShape(6.dp))
+                                            .background(palette.thumbnailGradient()),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        if (track.coverArt != null) {
+                                            Image(
+                                                bitmap = track.coverArt!!.asImageBitmap(),
+                                                contentDescription = track.title,
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        }
+                                    }
+                                    Text(track.title, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+                                        color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f))
+                                    Text(formatTime(track.duration), fontSize = 9.sp, color = palette.textMuted.copy(alpha = 0.5f))
+                                }
+                                if (idx < playlist.size - 1) {
+                                    HorizontalDivider(color = palette.divider, thickness = 0.5.dp)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // Audio Visualizer Bar
+                AudioVisualizerBar(isPlaying = isPlaying, audioSessionId = exoPlayer.audioSessionId, accentColor = palette.accent, cardBg = palette.surfaceCard, borderColor = palette.divider)
             }
 
-            // Bottom navigation bar matching header color with light icons
+            // Bottom navigation bar - clean theme background
             // Swipe up to open player settings
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .background(palette.headerGradient())
-                    .padding(bottom = 8.dp)
+                    .background(palette.background)
                     .pointerInput(Unit) {
                         detectVerticalDragGestures { _, dragAmount ->
-                            // Swipe up (negative dragAmount) opens settings
                             if (dragAmount < -20 && !showSettings) {
                                 showSettings = true
                                 selectedNavItem = BottomNavItem.SETTINGS
@@ -887,25 +816,19 @@ fun MusicPlayerScreen(
                         }
                     }
             ) {
+                HorizontalDivider(color = palette.divider, thickness = 1.dp)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
+                        .height(58.dp)
                         .padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     listOf(
-                        BottomNavItem.LIBRARY to {
-                            // Don't highlight - navigating away
-                            onNavigateToLibrary()
-                        },
-                        BottomNavItem.PROFILE to {
-                            // Don't highlight - navigating away
-                            onNavigateToProfile()
-                        },
+                        BottomNavItem.LIBRARY to { onNavigateToLibrary() },
+                        BottomNavItem.PROFILE to { onNavigateToProfile() },
                         BottomNavItem.SETTINGS to {
-                            // Toggle settings - close if already open
                             if (showSettings) {
                                 showSettings = false
                                 selectedNavItem = null
@@ -919,7 +842,6 @@ fun MusicPlayerScreen(
                         val interactionSource = remember { MutableInteractionSource() }
                         val isPressed by interactionSource.collectIsPressedAsState()
 
-                        // Subtle press scale animation only
                         val scale by animateFloatAsState(
                             targetValue = if (isPressed) 0.92f else 1f,
                             animationSpec = spring(
@@ -929,15 +851,7 @@ fun MusicPlayerScreen(
                             label = "navScale"
                         )
 
-                        // Icon size based on selection
-                        val iconSize = if (isSelected) 26.dp else 24.dp
-
-                        // Animate color alpha for smooth transition
-                        val iconAlpha by animateFloatAsState(
-                            targetValue = if (isSelected) 1f else 0.6f,
-                            animationSpec = tween(200),
-                            label = "iconAlpha"
-                        )
+                        val iconSize = if (isSelected) 22.dp else 20.dp
 
                         Column(
                             modifier = Modifier
@@ -947,33 +861,33 @@ fun MusicPlayerScreen(
                                     interactionSource = interactionSource,
                                     indication = null
                                 ) { action() }
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 6.dp, horizontal = 14.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
-                            ) {
-                                // Crossfade between filled and outlined icons
-                                Crossfade(
-                                    targetState = isSelected,
-                                    animationSpec = tween(200),
-                                    label = "iconCrossfade"
-                                ) { selected ->
-                                    Icon(
-                                        imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                                        contentDescription = item.title,
-                                        modifier = Modifier.size(iconSize),
-                                        tint = palette.shade12.copy(alpha = iconAlpha)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = item.title,
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                    fontSize = 11.sp,
-                                    color = palette.shade12.copy(alpha = iconAlpha)
+                        ) {
+                            Crossfade(
+                                targetState = isSelected,
+                                animationSpec = tween(200),
+                                label = "iconCrossfade"
+                            ) { selected ->
+                                Icon(
+                                    imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                    contentDescription = item.title,
+                                    modifier = Modifier.size(iconSize),
+                                    tint = if (selected) palette.accent else palette.textMuted
                                 )
                             }
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = item.title,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 9.sp,
+                                letterSpacing = 0.2.sp,
+                                color = if (isSelected) palette.accent else palette.textMuted
+                            )
                         }
                     }
+                }
             }
         }
 
@@ -1122,6 +1036,123 @@ private fun ControlPill(
                 fontWeight = FontWeight.SemiBold,
                 color = contentColor
             )
+        }
+    }
+}
+
+/**
+ * Real-time audio visualizer bar using Android's Visualizer API.
+ * Captures waveform data from the active audio session and renders
+ * smoothly animated bars with accent color gradient.
+ */
+@Composable
+internal fun AudioVisualizerBar(
+    isPlaying: Boolean,
+    audioSessionId: Int,
+    accentColor: androidx.compose.ui.graphics.Color,
+    cardBg: androidx.compose.ui.graphics.Color,
+    borderColor: androidx.compose.ui.graphics.Color,
+) {
+    val barCount = 24
+    val smoothing = 0.3f
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val hasPermission = remember {
+        mutableStateOf(
+            android.content.pm.PackageManager.PERMISSION_GRANTED ==
+                androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO)
+        )
+    }
+
+    val permLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { granted -> hasPermission.value = granted }
+
+    LaunchedEffect(Unit) {
+        if (!hasPermission.value) permLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+    }
+
+    val rawTargets = remember { FloatArray(barCount) { 0.05f } }
+    val displayBars = remember { mutableStateOf(FloatArray(barCount) { 0.05f }) }
+
+    val sessionId = audioSessionId
+
+    DisposableEffect(hasPermission.value, sessionId) {
+        var vis: android.media.audiofx.Visualizer? = null
+        if (hasPermission.value && sessionId != 0) {
+            try {
+                vis = android.media.audiofx.Visualizer(sessionId).apply {
+                    captureSize = android.media.audiofx.Visualizer.getCaptureSizeRange()[1].coerceAtMost(256)
+                    setDataCaptureListener(
+                        object : android.media.audiofx.Visualizer.OnDataCaptureListener {
+                            override fun onWaveFormDataCapture(v: android.media.audiofx.Visualizer?, waveform: ByteArray?, samplingRate: Int) {
+                                if (waveform == null) return
+                                val step = (waveform.size / barCount).coerceAtLeast(1)
+                                for (i in 0 until barCount) {
+                                    var sum = 0f
+                                    val start = i * step
+                                    val end = (start + step).coerceAtMost(waveform.size)
+                                    for (j in start until end) {
+                                        val sample = (waveform[j].toInt() and 0xFF) - 128
+                                        sum += kotlin.math.abs(sample)
+                                    }
+                                    val avg = sum / (end - start) / 128f
+                                    rawTargets[i] = avg.coerceIn(0.03f, 1f)
+                                }
+                            }
+                            override fun onFftDataCapture(v: android.media.audiofx.Visualizer?, fft: ByteArray?, samplingRate: Int) {}
+                        },
+                        android.media.audiofx.Visualizer.getMaxCaptureRate() / 3,
+                        true, false,
+                    )
+                    enabled = true
+                }
+            } catch (_: Exception) {}
+        }
+        onDispose {
+            try { vis?.enabled = false; vis?.release() } catch (_: Exception) {}
+        }
+    }
+
+    // Smooth animation loop
+    LaunchedEffect(isPlaying) {
+        while (true) {
+            val current = displayBars.value.copyOf()
+            for (i in current.indices) {
+                val target = if (isPlaying) rawTargets[i] else 0.03f
+                val speed = if (target > current[i]) smoothing * 1.5f else smoothing * 0.6f
+                current[i] = current[i] + (target - current[i]) * speed
+            }
+            displayBars.value = current
+            kotlinx.coroutines.delay(32) // ~30fps
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(cardBg)
+            .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+            .padding(horizontal = 6.dp, vertical = 6.dp),
+    ) {
+        val bars = displayBars.value
+        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+            val gap = 3f
+            val barWidth = (size.width - (barCount - 1) * gap) / barCount
+            for (i in 0 until barCount) {
+                val magnitude = bars[i]
+                val barHeight = (magnitude * size.height).coerceAtLeast(2f)
+                val x = i * (barWidth + gap)
+                val centerDist = kotlin.math.abs(i - barCount / 2f) / (barCount / 2f)
+                val alpha = 0.5f + magnitude * 0.5f - centerDist * 0.1f
+                drawRoundRect(
+                    color = accentColor.copy(alpha = alpha.coerceIn(0.2f, 1f)),
+                    topLeft = androidx.compose.ui.geometry.Offset(x, size.height - barHeight),
+                    size = androidx.compose.ui.geometry.Size(barWidth, barHeight),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(barWidth / 2f, barWidth / 2f),
+                )
+            }
         }
     }
 }

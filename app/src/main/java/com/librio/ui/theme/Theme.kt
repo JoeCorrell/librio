@@ -105,7 +105,7 @@ private fun createLightColorScheme(palette: ThemePalette) = lightColorScheme(
 
 @Composable
 fun AudiobookPlayerTheme(
-    appTheme: AppTheme = AppTheme.TEAL,
+    appTheme: AppTheme = AppTheme.PARCHMENT,
     accentTheme: AppTheme = appTheme,
     darkTheme: Boolean = false,
     customPrimaryColor: Int = 0x00897B, // Used to trigger recomposition for custom theme
@@ -132,12 +132,11 @@ fun AudiobookPlayerTheme(
 
     val view = LocalView.current
     if (!view.isInEditMode) {
-        // Use SideEffect for immediate synchronous updates during composition
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = if (darkTheme) OneDarkBackground.toArgb() else palette.shade2.toArgb()
-            window.navigationBarColor = if (darkTheme) OneDarkBackground.toArgb() else palette.shade9.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            window.statusBarColor = if (darkTheme) palette.surfaceDark.toArgb() else palette.background.toArgb()
+            window.navigationBarColor = if (darkTheme) palette.background.toArgb() else palette.background.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
             WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
         }
     }

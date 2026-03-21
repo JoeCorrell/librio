@@ -8,6 +8,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.foundation.border
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -147,6 +148,7 @@ fun LibraryListScreen(
     val useSquareCorners = LocalUseSquareCorners.current
     val dimens = rememberResponsiveDimens(denseGrid = useSquareCorners)
     val shape12 = cornerRadius(12.dp)
+    val shape14 = cornerRadius(14.dp)
     var showEditDialog by remember { mutableStateOf<LibraryAudiobook?>(null) }
     var showDeleteDialog by remember { mutableStateOf<LibraryAudiobook?>(null) }
     var showEditBookDialog by remember { mutableStateOf<LibraryBook?>(null) }
@@ -763,144 +765,42 @@ fun LibraryListScreen(
                 )
             }
     ) {
-        // Small gap before filter bar
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Category and Playlist filter bar
-        CategoryPlaylistBar(
-            selectedContentType = selectedContentType,
-            onContentTypeChange = onContentTypeChange,
-            selectedPlaylistFilter = selectedPlaylistFilter,
-            playlists = seriesList,
-            onPlaylistFilterChange = { selectedPlaylistFilter = it },
-            onAddPlaylist = { showAddPlaylistDialog = true },
-            onEditPlaylist = { showRenameSeriesDialog = it },
-            onDeletePlaylist = { showDeletePlaylistDialog = it }
-        )
-
-        // Search bar (if visible)
-        AnimatedVisibility(
-            visible = isSearchVisible,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut()
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .background(palette.surfaceMedium, shape12)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        AppIcons.Search,
-                        contentDescription = null,
-                        tint = palette.textMuted,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    // Dynamic placeholder based on content type
-                    val searchPlaceholder = when (selectedContentType) {
-                        ContentType.AUDIOBOOK -> "Search Audiobooks..."
-                        ContentType.EBOOK -> "Search E Books..."
-                        ContentType.COMICS -> "Search Comics..."
-                        ContentType.MUSIC -> "Search Music..."
-                        ContentType.MOVIE -> "Search Movies..."
-                    }
-                    BasicTextField(
-                        value = searchQuery,
-                        onValueChange = onSearchQueryChange,
-                        textStyle = TextStyle(
-                            color = palette.primary,
-                            fontSize = 16.sp
-                        ),
-                        cursorBrush = SolidColor(palette.primary),
-                        modifier = Modifier.weight(1f),
-                        decorationBox = { innerTextField ->
-                            Box {
-                                if (searchQuery.isEmpty()) {
-                                    Text(
-                                        searchPlaceholder,
-                                        color = palette.primary.copy(alpha = 0.5f),
-                                        fontSize = 16.sp
-                                    )
-                                }
-                                innerTextField()
-                            }
-                        }
-                    )
-                }
-            }
-        }
-
-        // Category filter bar - always show so users can add categories
-        LazyRow(
+        // Always-visible search bar (JSX style)
+        Row(
             modifier = Modifier
+                .padding(horizontal = 18.dp, vertical = 8.dp)
                 .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 4.dp),
+                .height(40.dp)
+                .clip(shape14)
+                .background(palette.surfaceCard)
+                .border(1.dp, palette.divider, shape14)
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp)
         ) {
-            // Category chips
-            items(categories, key = { it.id }) { category ->
-                val isSelected = selectedCategoryId == category.id
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { onSelectCategory(category.id) },
-                    label = { Text(category.name, color = if (isSelected) palette.onPrimary else palette.primary) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = palette.primary,
-                        selectedLabelColor = palette.onPrimary,
-                        containerColor = palette.primary.copy(alpha = 0.1f),
-                        labelColor = palette.primary
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
-                        selected = isSelected,
-                        borderColor = palette.primary.copy(alpha = 0.5f),
-                        selectedBorderColor = palette.primary
-                    )
-                )
+            Icon(AppIcons.Search, null, tint = palette.textMuted, modifier = Modifier.size(15.dp))
+            val searchPlaceholder = when (selectedContentType) {
+                ContentType.AUDIOBOOK -> "Search audiobooks..."
+                ContentType.EBOOK -> "Search e-books..."
+                ContentType.COMICS -> "Search comics..."
+                ContentType.MUSIC -> "Search music..."
+                ContentType.MOVIE -> "Search movies..."
             }
-        }
-
-        // Sort/Filter indicator button - full width
-        val displayText = if (selectedPlaylistFilter != null) {
-            val playlist = seriesList.find { it.id == selectedPlaylistFilter }
-            playlist?.name ?: sortOption.displayName
-        } else {
-            sortOption.displayName
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 2.dp)
-                .clickable { showSortMenu = true }
-                .padding(vertical = 8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            BasicTextField(
+                value = searchQuery,
+                onValueChange = onSearchQueryChange,
+                textStyle = TextStyle(fontSize = 12.sp, color = palette.textPrimary),
+                cursorBrush = SolidColor(palette.accent),
+                modifier = Modifier.weight(1f),
+                decorationBox = { inner ->
+                    if (searchQuery.isEmpty()) Text(searchPlaceholder, fontSize = 12.sp, color = palette.textMuted)
+                    inner()
+                },
+            )
+            if (searchQuery.isNotBlank()) {
                 Icon(
-                    if (selectedPlaylistFilter != null) AppIcons.Playlist else AppIcons.Sort,
-                    contentDescription = if (selectedPlaylistFilter != null) "Filter" else "Sort",
-                    tint = palette.accent,
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    text = displayText,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = palette.accent,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Icon(
-                    AppIcons.KeyboardArrowDown,
-                    contentDescription = "Change sort",
-                    tint = palette.accent.copy(alpha = 0.7f),
-                    modifier = Modifier.size(22.dp)
+                    AppIcons.Close, null, tint = palette.textMuted,
+                    modifier = Modifier.size(16.dp).clickable { onSearchQueryChange("") }
                 )
             }
         }
@@ -944,496 +844,411 @@ fun LibraryListScreen(
             when (contentType) {
                 ContentType.AUDIOBOOK -> {
                     if (audiobooks.isEmpty()) {
-                        // Empty state for audiobooks
                         Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
+                            modifier = Modifier.weight(1f).fillMaxWidth(),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    AppIcons.Audiobook,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(64.dp),
-                                    tint = palette.primary.copy(alpha = 0.6f)
-                                )
+                                Icon(AppIcons.Audiobook, null, modifier = Modifier.size(64.dp), tint = palette.accent.copy(alpha = 0.4f))
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "No audiobooks yet",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = palette.primary
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Place audiobooks in your\nprofile's Audiobooks folder",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = palette.primary.copy(alpha = 0.5f),
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
+                                Text("No audiobooks yet", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Place audiobooks in your\nprofile's Audiobooks folder", fontSize = 11.sp, color = palette.textMuted, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                             }
                         }
                     } else {
-                        // Filter and sort audiobooks by playlist
-                        val filteredAudiobooks = remember(audiobooks, selectedPlaylistFilter, sortOption) {
-                            val filtered = if (selectedPlaylistFilter != null) {
-                                audiobooks.filter { it.seriesId == selectedPlaylistFilter }
-                            } else {
-                                audiobooks
-                            }
-
-                            // Sort filtered audiobooks
+                        val filteredAudiobooks = remember(audiobooks, searchQuery, sortOption) {
+                            val searched = if (searchQuery.isNotBlank()) {
+                                audiobooks.filter { it.title.contains(searchQuery, true) || it.author.contains(searchQuery, true) }
+                            } else audiobooks
                             when (sortOption) {
-                                SortOption.TITLE_AZ -> filtered.sortedBy { it.title.lowercase() }
-                                SortOption.TITLE_ZA -> filtered.sortedByDescending { it.title.lowercase() }
-                                SortOption.AUTHOR_AZ -> filtered.sortedBy { it.author.lowercase() }
-                                SortOption.RECENTLY_ADDED -> filtered.sortedByDescending { it.dateAdded }
-                                SortOption.RECENTLY_PLAYED -> filtered.sortedByDescending { it.lastPlayed }
-                                SortOption.PROGRESS -> filtered.sortedByDescending { it.progress }
-                                SortOption.BOOK_NUMBER -> filtered.sortedBy { it.seriesOrder }
+                                SortOption.TITLE_AZ -> searched.sortedBy { it.title.lowercase() }
+                                SortOption.TITLE_ZA -> searched.sortedByDescending { it.title.lowercase() }
+                                SortOption.AUTHOR_AZ -> searched.sortedBy { it.author.lowercase() }
+                                SortOption.RECENTLY_ADDED -> searched.sortedByDescending { it.dateAdded }
+                                SortOption.RECENTLY_PLAYED -> searched.sortedByDescending { it.lastPlayed }
+                                SortOption.PROGRESS -> searched.sortedByDescending { it.progress }
+                                SortOption.BOOK_NUMBER -> searched.sortedBy { it.seriesOrder }
                             }
                         }
+                        val recentAudiobooks = remember(audiobooks) {
+                            audiobooks.filter { it.lastPlayed > 0 && !it.isCompleted }.sortedByDescending { it.lastPlayed }.take(3)
+                        }
+                        val audiobookPlaylists = remember(seriesList) { seriesList.filter { it.contentType == ContentType.AUDIOBOOK } }
 
-                        // Flat audiobook list without series dividers
-                        if (defaultLibraryView == "GRID_2") {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(dimens.columns),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth(),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                itemsIndexed(filteredAudiobooks, key = { _, item -> item.id }) { _, audiobook ->
-                                    AudiobookGridItem(
-                                        audiobook = audiobook,
-                                        onClick = { onSelectAudiobook(audiobook) },
-                                        onLongClick = { showEditDialog = audiobook },
-                                        showPlayingIndicator = audiobook.lastPlayed > 0 && !audiobook.isCompleted,
-                                        showPlaceholderIcons = showPlaceholderIcons
-                                    )
-                                }
-
+                        LazyColumn(
+                            modifier = Modifier.weight(1f).fillMaxWidth(),
+                            contentPadding = PaddingValues(bottom = 80.dp),
+                        ) {
+                            // Continue Listening
+                            if (recentAudiobooks.isNotEmpty() && searchQuery.isBlank()) {
                                 item {
-                                    Spacer(modifier = Modifier.height(100.dp))
+                                    Text("Continue Listening", fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                                        color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 10.dp, bottom = 8.dp))
+                                }
+                                item {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    ) {
+                                        recentAudiobooks.forEach { ab ->
+                                            Column(modifier = Modifier.weight(1f).clickable { onSelectAudiobook(ab) }) {
+                                                CoverArt(
+                                                    bitmap = ab.coverArt,
+                                                    contentDescription = ab.title,
+                                                    modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                                                    showPlaceholderAlways = showPlaceholderIcons,
+                                                    fileExtension = ab.uri.lastPathSegment?.substringAfterLast(".", "") ?: "",
+                                                    contentType = CoverArtContentType.AUDIOBOOK
+                                                )
+                                                Spacer(Modifier.height(6.dp))
+                                                Text(ab.title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                                Text(ab.author, fontSize = 9.sp, color = palette.textMuted, maxLines = 1)
+                                            }
+                                        }
+                                        repeat(3 - recentAudiobooks.size) { Spacer(Modifier.weight(1f)) }
+                                    }
                                 }
                             }
-                        } else {
-                            LazyColumn(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth()
-                            ) {
-                                itemsIndexed(filteredAudiobooks, key = { _, item -> item.id }) { index, audiobook ->
-                                    AnimatedAudiobookListItem(
-                                        audiobook = audiobook,
-                                        index = index,
-                                        onClick = { onSelectAudiobook(audiobook) },
-                                        onLongClick = { showEditDialog = audiobook },
-                                        showPlayingIndicator = audiobook.lastPlayed > 0 && !audiobook.isCompleted,
-                                        showPlaceholderIcons = showPlaceholderIcons
-                                    )
-                                }
 
+                            // Playlists
+                            if (audiobookPlaylists.isNotEmpty() && searchQuery.isBlank()) {
                                 item {
-                                    Spacer(modifier = Modifier.height(100.dp))
+                                    Text("Playlists", fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                                        color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp))
                                 }
+                                items(audiobookPlaylists, key = { it.id }) { playlist ->
+                                    val playlistItems = remember(audiobooks, playlist.id) { audiobooks.filter { it.seriesId == playlist.id } }
+                                    val isExpanded = collapsedSeries.contains(playlist.id).not()
+                                    Column(
+                                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth()
+                                            .clip(RoundedCornerShape(14.dp)).background(palette.surfaceCard)
+                                            .border(1.dp, if (isExpanded) palette.accent else palette.divider, RoundedCornerShape(14.dp))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().clickable { onPlaylistClick(playlist) }
+                                                .padding(start = 12.dp, top = 10.dp, bottom = if (!isExpanded && playlistItems.isNotEmpty()) 4.dp else 10.dp, end = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        ) {
+                                            Box(
+                                                modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))),
+                                                contentAlignment = Alignment.Center,
+                                            ) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(playlist.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary)
+                                                Text("${playlistItems.size} items", fontSize = 10.sp, color = palette.textMuted)
+                                            }
+                                            Box(
+                                                modifier = Modifier.size(30.dp).clip(RoundedCornerShape(8.dp))
+                                                    .clickable { val newCollapsed = if (isExpanded) collapsedSeries + playlist.id else collapsedSeries - playlist.id; onCollapsedSeriesChange(newCollapsed) },
+                                                contentAlignment = Alignment.Center,
+                                            ) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
+                                        }
+                                        // Preview first track when collapsed
+                                        if (!isExpanded && playlistItems.isNotEmpty()) {
+                                            val first = playlistItems.first()
+                                            HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = palette.divider)
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth().clickable { onSelectAudiobook(first) }.padding(horizontal = 12.dp, vertical = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            ) {
+                                                CoverArt(bitmap = first.coverArt, contentDescription = first.title, modifier = Modifier.size(24.dp),
+                                                    showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.AUDIOBOOK)
+                                                Text(first.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                            }
+                                        }
+                                        // Expanded: show all tracks
+                                        if (isExpanded && playlistItems.isNotEmpty()) {
+                                            HorizontalDivider(color = palette.divider)
+                                            playlistItems.forEach { item ->
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth().clickable { onSelectAudiobook(item) }.padding(horizontal = 12.dp, vertical = 6.dp),
+                                                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                ) {
+                                                    CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp),
+                                                        showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.AUDIOBOOK)
+                                                    Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // All items
+                            item {
+                                Text("All Audiobooks", fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                                    color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp))
+                            }
+                            itemsIndexed(filteredAudiobooks, key = { _, item -> item.id }) { index, audiobook ->
+                                AnimatedAudiobookListItem(
+                                    audiobook = audiobook, index = index,
+                                    onClick = { onSelectAudiobook(audiobook) },
+                                    onLongClick = { showEditDialog = audiobook },
+                                    showPlayingIndicator = audiobook.lastPlayed > 0 && !audiobook.isCompleted,
+                                    showPlaceholderIcons = showPlaceholderIcons
+                                )
                             }
                         }
                     }
                 }
                 ContentType.EBOOK -> {
                     if (books.isEmpty()) {
-                        // Empty state for books
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    AppIcons.Book,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(64.dp),
-                                    tint = palette.primary.copy(alpha = 0.6f)
-                                )
+                                Icon(AppIcons.Book, null, modifier = Modifier.size(64.dp), tint = palette.accent.copy(alpha = 0.4f))
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "No books yet",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = palette.primary
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Place books in your\nprofile's Books folder",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = palette.primary.copy(alpha = 0.5f),
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
+                                Text("No books yet", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Place books in your\nprofile's Books folder", fontSize = 11.sp, color = palette.textMuted, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                             }
                         }
                     } else {
-                        // Filter and sort books by playlist
-                        val filteredBooks = remember(books, selectedPlaylistFilter, sortOption) {
-                            val filtered = if (selectedPlaylistFilter != null) {
-                                books.filter { it.seriesId == selectedPlaylistFilter }
-                            } else {
-                                books
-                            }
-
-                            // Sort filtered books
+                        val filteredBooks = remember(books, searchQuery, sortOption) {
+                            val searched = if (searchQuery.isNotBlank()) books.filter { it.title.contains(searchQuery, true) || it.author.contains(searchQuery, true) } else books
                             when (sortOption) {
-                                SortOption.TITLE_AZ -> filtered.sortedBy { it.title.lowercase() }
-                                SortOption.TITLE_ZA -> filtered.sortedByDescending { it.title.lowercase() }
-                                SortOption.AUTHOR_AZ -> filtered.sortedBy { it.author.lowercase() }
-                                SortOption.RECENTLY_ADDED -> filtered.sortedByDescending { it.dateAdded }
-                                SortOption.RECENTLY_PLAYED -> filtered.sortedByDescending { it.dateAdded }
-                                SortOption.PROGRESS -> filtered.sortedByDescending { it.progress }
-                                SortOption.BOOK_NUMBER -> filtered.sortedBy { it.seriesOrder }
+                                SortOption.TITLE_AZ -> searched.sortedBy { it.title.lowercase() }
+                                SortOption.TITLE_ZA -> searched.sortedByDescending { it.title.lowercase() }
+                                SortOption.AUTHOR_AZ -> searched.sortedBy { it.author.lowercase() }
+                                SortOption.RECENTLY_ADDED -> searched.sortedByDescending { it.dateAdded }
+                                SortOption.RECENTLY_PLAYED -> searched.sortedByDescending { it.dateAdded }
+                                SortOption.PROGRESS -> searched.sortedByDescending { it.progress }
+                                SortOption.BOOK_NUMBER -> searched.sortedBy { it.seriesOrder }
                             }
                         }
+                        val recentBooks = remember(books) { books.filter { it.lastRead > 0 && !it.isCompleted }.sortedByDescending { it.lastRead }.take(3) }
+                        val bookPlaylists = remember(seriesList) { seriesList.filter { it.contentType == ContentType.EBOOK } }
 
-                        // Flat books list without series dividers
-                        if (defaultLibraryView == "GRID_2") {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(dimens.columns),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth(),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                itemsIndexed(filteredBooks, key = { _, item -> item.id }) { _, book ->
-                                    BookGridItem(
-                                        book = book,
-                                        onClick = { onSelectBook(book) },
-                                        onLongClick = { showEditBookDialog = book },
-                                        showPlaceholderIcons = showPlaceholderIcons
-                                    )
-                                }
-
+                        LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(bottom = 80.dp)) {
+                            if (recentBooks.isNotEmpty() && searchQuery.isBlank()) {
+                                item { Text("Continue Reading", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 10.dp, bottom = 8.dp)) }
                                 item {
-                                    Spacer(modifier = Modifier.height(100.dp))
+                                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        recentBooks.forEach { book ->
+                                            Column(modifier = Modifier.weight(1f).clickable { onSelectBook(book) }) {
+                                                CoverArt(bitmap = book.coverArt, contentDescription = book.title, modifier = Modifier.fillMaxWidth().aspectRatio(1f), showPlaceholderAlways = showPlaceholderIcons, fileExtension = book.uri.lastPathSegment?.substringAfterLast(".", "") ?: "", contentType = CoverArtContentType.EBOOK)
+                                                Spacer(Modifier.height(6.dp))
+                                                Text(book.title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                                Text(book.author, fontSize = 9.sp, color = palette.textMuted, maxLines = 1)
+                                            }
+                                        }
+                                        repeat(3 - recentBooks.size) { Spacer(Modifier.weight(1f)) }
+                                    }
                                 }
                             }
-                        } else {
-                            LazyColumn(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth()
-                            ) {
-                                itemsIndexed(filteredBooks, key = { _, item -> item.id }) { index, book ->
-                                    AnimatedBookListItem(
-                                        book = book,
-                                        index = index,
-                                        onClick = { onSelectBook(book) },
-                                        onLongClick = { showEditBookDialog = book },
-                                        showPlaceholderIcons = showPlaceholderIcons
-                                    )
-                                }
-
-                                item {
-                                    Spacer(modifier = Modifier.height(100.dp))
+                            if (bookPlaylists.isNotEmpty() && searchQuery.isBlank()) {
+                                item { Text("Playlists", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
+                                items(bookPlaylists, key = { it.id }) { playlist ->
+                                    val plItems = remember(books, playlist.id) { books.filter { it.seriesId == playlist.id } }
+                                    val isExpanded = collapsedSeries.contains(playlist.id).not()
+                                    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(palette.surfaceCard).border(1.dp, if (isExpanded) palette.accent else palette.divider, RoundedCornerShape(14.dp))) {
+                                        Row(modifier = Modifier.fillMaxWidth().clickable { onPlaylistClick(playlist) }.padding(start = 12.dp, top = 10.dp, bottom = if (!isExpanded && plItems.isNotEmpty()) 4.dp else 10.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))), contentAlignment = Alignment.Center) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
+                                            Column(modifier = Modifier.weight(1f)) { Text(playlist.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary); Text("${plItems.size} items", fontSize = 10.sp, color = palette.textMuted) }
+                                            Box(modifier = Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).clickable { val nc = if (isExpanded) collapsedSeries + playlist.id else collapsedSeries - playlist.id; onCollapsedSeriesChange(nc) }, contentAlignment = Alignment.Center) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
+                                        }
+                                        if (!isExpanded && plItems.isNotEmpty()) { val f = plItems.first(); HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = palette.divider); Row(modifier = Modifier.fillMaxWidth().clickable { onSelectBook(f) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = f.coverArt, contentDescription = f.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.EBOOK); Text(f.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } }
+                                        if (isExpanded && plItems.isNotEmpty()) { HorizontalDivider(color = palette.divider); plItems.forEach { item -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelectBook(item) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.EBOOK); Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } } }
+                                    }
                                 }
                             }
+                            item { Text("All Books", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
+                            itemsIndexed(filteredBooks, key = { _, item -> item.id }) { index, book -> AnimatedBookListItem(book = book, index = index, onClick = { onSelectBook(book) }, onLongClick = { showEditBookDialog = book }, showPlaceholderIcons = showPlaceholderIcons) }
                         }
                     }
                 }
                 ContentType.MUSIC -> {
                     val musicItems = music.filter { it.contentType == ContentType.MUSIC }
                     if (musicItems.isEmpty()) {
-                        // Music empty state
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    AppIcons.Music,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(64.dp),
-                                    tint = palette.primary.copy(alpha = 0.6f)
-                                )
+                                Icon(AppIcons.Music, null, modifier = Modifier.size(64.dp), tint = palette.accent.copy(alpha = 0.4f))
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "No music yet",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = palette.primary
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Place music files in your\nprofile's Music folder",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = palette.primary.copy(alpha = 0.5f),
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
+                                Text("No music yet", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Place music files in your\nprofile's Music folder", fontSize = 11.sp, color = palette.textMuted, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                             }
                         }
                     } else {
-                        // Filter and sort music by playlist
-                        val filteredMusic = remember(musicItems, selectedPlaylistFilter, sortOption) {
-                            val filtered = if (selectedPlaylistFilter != null) {
-                                musicItems.filter { it.seriesId == selectedPlaylistFilter }
-                            } else {
-                                musicItems
-                            }
-
-                            // Sort filtered music
+                        val filteredMusic = remember(musicItems, searchQuery, sortOption) {
+                            val searched = if (searchQuery.isNotBlank()) musicItems.filter { it.title.contains(searchQuery, true) || it.artist.contains(searchQuery, true) } else musicItems
                             when (sortOption) {
-                                SortOption.TITLE_AZ -> filtered.sortedBy { it.title.lowercase() }
-                                SortOption.TITLE_ZA -> filtered.sortedByDescending { it.title.lowercase() }
-                                SortOption.AUTHOR_AZ -> filtered.sortedBy { it.artist.lowercase() }
-                                SortOption.RECENTLY_ADDED -> filtered.sortedByDescending { it.dateAdded }
-                                SortOption.RECENTLY_PLAYED -> filtered.sortedByDescending { it.lastPlayed }
-                                SortOption.PROGRESS -> filtered.sortedByDescending { it.progress }
-                                SortOption.BOOK_NUMBER -> filtered.sortedBy { it.seriesOrder }
+                                SortOption.TITLE_AZ -> searched.sortedBy { it.title.lowercase() }
+                                SortOption.TITLE_ZA -> searched.sortedByDescending { it.title.lowercase() }
+                                SortOption.AUTHOR_AZ -> searched.sortedBy { it.artist.lowercase() }
+                                SortOption.RECENTLY_ADDED -> searched.sortedByDescending { it.dateAdded }
+                                SortOption.RECENTLY_PLAYED -> searched.sortedByDescending { it.lastPlayed }
+                                SortOption.PROGRESS -> searched.sortedByDescending { it.progress }
+                                SortOption.BOOK_NUMBER -> searched.sortedBy { it.seriesOrder }
                             }
                         }
+                        val recentMusic = remember(musicItems) { musicItems.filter { it.lastPlayed > 0 && !it.isCompleted }.sortedByDescending { it.lastPlayed }.take(3) }
+                        val musicPlaylists = remember(seriesList) { seriesList.filter { it.contentType == ContentType.MUSIC } }
 
-                        // Flat music list without playlist dividers
-                        if (defaultLibraryView == "GRID_2") {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(dimens.columns),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth(),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                itemsIndexed(filteredMusic, key = { _, item -> item.id }) { _, musicItem ->
-                                    MusicGridItem(
-                                        music = musicItem,
-                                        onClick = { onSelectMusic(musicItem) },
-                                        onLongClick = { showEditMusicDialog = musicItem },
-                                        showPlaceholderIcons = showPlaceholderIcons
-                                    )
-                                }
-
+                        LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(bottom = 80.dp)) {
+                            if (recentMusic.isNotEmpty() && searchQuery.isBlank()) {
+                                item { Text("Continue Listening", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 10.dp, bottom = 8.dp)) }
                                 item {
-                                    Spacer(modifier = Modifier.height(100.dp))
+                                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        recentMusic.forEach { track ->
+                                            Column(modifier = Modifier.weight(1f).clickable { onSelectMusic(track) }) {
+                                                CoverArt(bitmap = track.coverArt, contentDescription = track.title, modifier = Modifier.fillMaxWidth().aspectRatio(1f), showPlaceholderAlways = showPlaceholderIcons, fileExtension = track.fileType, contentType = CoverArtContentType.MUSIC)
+                                                Spacer(Modifier.height(6.dp))
+                                                Text(track.title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                                Text(track.artist, fontSize = 9.sp, color = palette.textMuted, maxLines = 1)
+                                            }
+                                        }
+                                        repeat(3 - recentMusic.size) { Spacer(Modifier.weight(1f)) }
+                                    }
                                 }
                             }
-                        } else {
-                            LazyColumn(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth()
-                            ) {
-                                itemsIndexed(filteredMusic, key = { _, item -> item.id }) { _, musicItem ->
-                                    MusicListItem(
-                                        music = musicItem,
-                                        onClick = { onSelectMusic(musicItem) },
-                                        onLongClick = { showEditMusicDialog = musicItem },
-                                        showPlaceholderIcons = showPlaceholderIcons,
-                                        modifier = Modifier
-                                            .animateItem()
-                                    )
-                                }
-
-                                item {
-                                    Spacer(modifier = Modifier.height(100.dp))
+                            if (musicPlaylists.isNotEmpty() && searchQuery.isBlank()) {
+                                item { Text("Playlists", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
+                                items(musicPlaylists, key = { it.id }) { playlist ->
+                                    val plItems = remember(musicItems, playlist.id) { musicItems.filter { it.seriesId == playlist.id } }
+                                    val isExpanded = collapsedSeries.contains(playlist.id).not()
+                                    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(palette.surfaceCard).border(1.dp, if (isExpanded) palette.accent else palette.divider, RoundedCornerShape(14.dp))) {
+                                        Row(modifier = Modifier.fillMaxWidth().clickable { onPlaylistClick(playlist) }.padding(start = 12.dp, top = 10.dp, bottom = if (!isExpanded && plItems.isNotEmpty()) 4.dp else 10.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))), contentAlignment = Alignment.Center) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
+                                            Column(modifier = Modifier.weight(1f)) { Text(playlist.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary); Text("${plItems.size} tracks", fontSize = 10.sp, color = palette.textMuted) }
+                                            Box(modifier = Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).clickable { val nc = if (isExpanded) collapsedSeries + playlist.id else collapsedSeries - playlist.id; onCollapsedSeriesChange(nc) }, contentAlignment = Alignment.Center) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
+                                        }
+                                        if (!isExpanded && plItems.isNotEmpty()) { val f = plItems.first(); HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = palette.divider); Row(modifier = Modifier.fillMaxWidth().clickable { onSelectMusic(f) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = f.coverArt, contentDescription = f.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.MUSIC); Text(f.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } }
+                                        if (isExpanded && plItems.isNotEmpty()) { HorizontalDivider(color = palette.divider); plItems.forEach { item -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelectMusic(item) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.MUSIC); Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } } }
+                                    }
                                 }
                             }
+                            item { Text("All Tracks", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
+                            itemsIndexed(filteredMusic, key = { _, item -> item.id }) { _, musicItem -> MusicListItem(music = musicItem, onClick = { onSelectMusic(musicItem) }, onLongClick = { showEditMusicDialog = musicItem }, showPlaceholderIcons = showPlaceholderIcons, modifier = Modifier.animateItem()) }
                         }
                     }
                 }
                 ContentType.COMICS -> {
                     if (comics.isEmpty()) {
-                        // Comics empty state
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    AppIcons.Comic,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(64.dp),
-                                    tint = palette.primary.copy(alpha = 0.6f)
-                                )
+                                Icon(AppIcons.Comic, null, modifier = Modifier.size(64.dp), tint = palette.accent.copy(alpha = 0.4f))
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "No comics yet",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = palette.primary
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Place CBZ, CBR, or PDF comics in your\nprofile's Comics folder",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = palette.primary.copy(alpha = 0.5f),
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
+                                Text("No comics yet", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Place CBZ, CBR, or PDF comics in your\nprofile's Comics folder", fontSize = 11.sp, color = palette.textMuted, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                             }
                         }
                     } else {
-                        // Filter and sort comics by playlist
-                        val filteredComics = remember(comics, selectedPlaylistFilter, sortOption) {
-                            val filtered = if (selectedPlaylistFilter != null) {
-                                comics.filter { it.seriesId == selectedPlaylistFilter }
-                            } else {
-                                comics
-                            }
-
-                            // Sort filtered comics
+                        val filteredComics = remember(comics, searchQuery, sortOption) {
+                            val searched = if (searchQuery.isNotBlank()) comics.filter { it.title.contains(searchQuery, true) || it.author.contains(searchQuery, true) } else comics
                             when (sortOption) {
-                                SortOption.TITLE_AZ -> filtered.sortedBy { it.title.lowercase() }
-                                SortOption.TITLE_ZA -> filtered.sortedByDescending { it.title.lowercase() }
-                                SortOption.AUTHOR_AZ -> filtered.sortedBy { it.author.lowercase() }
-                                SortOption.RECENTLY_ADDED -> filtered.sortedByDescending { it.dateAdded }
-                                SortOption.RECENTLY_PLAYED -> filtered.sortedByDescending { it.dateAdded }
-                                SortOption.PROGRESS -> filtered.sortedByDescending { it.progress }
-                                SortOption.BOOK_NUMBER -> filtered.sortedBy { it.seriesOrder }
+                                SortOption.TITLE_AZ -> searched.sortedBy { it.title.lowercase() }
+                                SortOption.TITLE_ZA -> searched.sortedByDescending { it.title.lowercase() }
+                                SortOption.AUTHOR_AZ -> searched.sortedBy { it.author.lowercase() }
+                                SortOption.RECENTLY_ADDED -> searched.sortedByDescending { it.dateAdded }
+                                SortOption.RECENTLY_PLAYED -> searched.sortedByDescending { it.dateAdded }
+                                SortOption.PROGRESS -> searched.sortedByDescending { it.progress }
+                                SortOption.BOOK_NUMBER -> searched.sortedBy { it.seriesOrder }
                             }
                         }
+                        val recentComics = remember(comics) { comics.filter { it.lastRead > 0 && !it.isCompleted }.sortedByDescending { it.lastRead }.take(3) }
+                        val comicPlaylists = remember(seriesList) { seriesList.filter { it.contentType == ContentType.COMICS } }
 
-                        // Flat comics list without series dividers
-                        if (defaultLibraryView == "GRID_2") {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(dimens.columns),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth(),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                itemsIndexed(filteredComics, key = { _, item -> item.id }) { _, comicItem ->
-                                    ComicGridItem(
-                                        comic = comicItem,
-                                        onClick = { onSelectComic(comicItem) },
-                                        onLongClick = { showEditComicDialog = comicItem },
-                                        showPlaceholderIcons = showPlaceholderIcons
-                                    )
-                                }
+                        LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(bottom = 80.dp)) {
+                            if (recentComics.isNotEmpty() && searchQuery.isBlank()) {
+                                item { Text("Continue Reading", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 10.dp, bottom = 8.dp)) }
                                 item {
-                                    Spacer(modifier = Modifier.height(100.dp))
+                                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        recentComics.forEach { comic ->
+                                            Column(modifier = Modifier.weight(1f).clickable { onSelectComic(comic) }) {
+                                                CoverArt(bitmap = comic.coverArt, contentDescription = comic.title, modifier = Modifier.fillMaxWidth().aspectRatio(1f), showPlaceholderAlways = showPlaceholderIcons, fileExtension = comic.fileType, contentType = CoverArtContentType.COMICS)
+                                                Spacer(Modifier.height(6.dp))
+                                                Text(comic.title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                                Text(comic.author, fontSize = 9.sp, color = palette.textMuted, maxLines = 1)
+                                            }
+                                        }
+                                        repeat(3 - recentComics.size) { Spacer(Modifier.weight(1f)) }
+                                    }
                                 }
                             }
-                        } else {
-                            LazyColumn(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth()
-                            ) {
-                                itemsIndexed(filteredComics, key = { _, item -> item.id }) { _, comicItem ->
-                                    ComicListItem(
-                                        comic = comicItem,
-                                        onClick = { onSelectComic(comicItem) },
-                                        onLongClick = { showEditComicDialog = comicItem },
-                                        showPlaceholderIcons = showPlaceholderIcons,
-                                        modifier = Modifier.animateItem()
-                                    )
-                                }
-                                item {
-                                    Spacer(modifier = Modifier.height(100.dp))
+                            if (comicPlaylists.isNotEmpty() && searchQuery.isBlank()) {
+                                item { Text("Playlists", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
+                                items(comicPlaylists, key = { it.id }) { playlist ->
+                                    val plItems = remember(comics, playlist.id) { comics.filter { it.seriesId == playlist.id } }
+                                    val isExpanded = collapsedSeries.contains(playlist.id).not()
+                                    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(palette.surfaceCard).border(1.dp, if (isExpanded) palette.accent else palette.divider, RoundedCornerShape(14.dp))) {
+                                        Row(modifier = Modifier.fillMaxWidth().clickable { onPlaylistClick(playlist) }.padding(start = 12.dp, top = 10.dp, bottom = if (!isExpanded && plItems.isNotEmpty()) 4.dp else 10.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))), contentAlignment = Alignment.Center) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
+                                            Column(modifier = Modifier.weight(1f)) { Text(playlist.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary); Text("${plItems.size} items", fontSize = 10.sp, color = palette.textMuted) }
+                                            Box(modifier = Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).clickable { val nc = if (isExpanded) collapsedSeries + playlist.id else collapsedSeries - playlist.id; onCollapsedSeriesChange(nc) }, contentAlignment = Alignment.Center) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
+                                        }
+                                        if (!isExpanded && plItems.isNotEmpty()) { val f = plItems.first(); HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = palette.divider); Row(modifier = Modifier.fillMaxWidth().clickable { onSelectComic(f) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = f.coverArt, contentDescription = f.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.COMICS); Text(f.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } }
+                                        if (isExpanded && plItems.isNotEmpty()) { HorizontalDivider(color = palette.divider); plItems.forEach { item -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelectComic(item) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.COMICS); Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } } }
+                                    }
                                 }
                             }
+                            item { Text("All Comics", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
+                            itemsIndexed(filteredComics, key = { _, item -> item.id }) { _, comicItem -> ComicListItem(comic = comicItem, onClick = { onSelectComic(comicItem) }, onLongClick = { showEditComicDialog = comicItem }, showPlaceholderIcons = showPlaceholderIcons, modifier = Modifier.animateItem()) }
                         }
                     }
                 }
                 ContentType.MOVIE -> {
                     if (movies.isEmpty()) {
-                        // Movie empty state
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    AppIcons.Movie,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(64.dp),
-                                    tint = palette.primary.copy(alpha = 0.6f)
-                                )
+                                Icon(AppIcons.Movie, null, modifier = Modifier.size(64.dp), tint = palette.accent.copy(alpha = 0.4f))
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "No movies yet",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = palette.primary
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Place MP4, MKV, or other movie files in your\nprofile's Movies folder",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = palette.primary.copy(alpha = 0.5f),
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
+                                Text("No movies yet", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Place MP4, MKV, or other movie files in your\nprofile's Movies folder", fontSize = 11.sp, color = palette.textMuted, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                             }
                         }
                     } else {
-                        // Filter and sort movies by playlist
-                        val filteredMovies = remember(movies, selectedPlaylistFilter, sortOption) {
-                            val filtered = if (selectedPlaylistFilter != null) {
-                                movies.filter { it.seriesId == selectedPlaylistFilter }
-                            } else {
-                                movies
-                            }
-
-                            // Sort filtered movies
+                        val filteredMovies = remember(movies, searchQuery, sortOption) {
+                            val searched = if (searchQuery.isNotBlank()) movies.filter { it.title.contains(searchQuery, true) } else movies
                             when (sortOption) {
-                                SortOption.TITLE_AZ -> filtered.sortedBy { it.title.lowercase() }
-                                SortOption.TITLE_ZA -> filtered.sortedByDescending { it.title.lowercase() }
-                                SortOption.AUTHOR_AZ -> filtered.sortedBy { it.title.lowercase() }
-                                SortOption.RECENTLY_ADDED -> filtered.sortedByDescending { it.dateAdded }
-                                SortOption.RECENTLY_PLAYED -> filtered.sortedByDescending { it.lastPlayed }
-                                SortOption.PROGRESS -> filtered.sortedByDescending { it.progress }
-                                SortOption.BOOK_NUMBER -> filtered.sortedBy { it.seriesOrder }
+                                SortOption.TITLE_AZ -> searched.sortedBy { it.title.lowercase() }
+                                SortOption.TITLE_ZA -> searched.sortedByDescending { it.title.lowercase() }
+                                SortOption.AUTHOR_AZ -> searched.sortedBy { it.title.lowercase() }
+                                SortOption.RECENTLY_ADDED -> searched.sortedByDescending { it.dateAdded }
+                                SortOption.RECENTLY_PLAYED -> searched.sortedByDescending { it.lastPlayed }
+                                SortOption.PROGRESS -> searched.sortedByDescending { it.progress }
+                                SortOption.BOOK_NUMBER -> searched.sortedBy { it.seriesOrder }
                             }
                         }
+                        val recentMovies = remember(movies) { movies.filter { it.lastPlayed > 0 && !it.isCompleted }.sortedByDescending { it.lastPlayed }.take(3) }
+                        val moviePlaylists = remember(seriesList) { seriesList.filter { it.contentType == ContentType.MOVIE } }
 
-                        // Flat movies list without series dividers
-                        if (defaultLibraryView == "GRID_2") {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(dimens.columns),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth(),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                itemsIndexed(filteredMovies, key = { _, item -> item.id }) { _, movieItem ->
-                                    MovieGridItem(
-                                        movie = movieItem,
-                                        onClick = { onSelectMovie(movieItem) },
-                                        onLongClick = { showEditMovieDialog = movieItem },
-                                        showPlaceholderIcons = showPlaceholderIcons
-                                    )
-                                }
+                        LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(bottom = 80.dp)) {
+                            if (recentMovies.isNotEmpty() && searchQuery.isBlank()) {
+                                item { Text("Continue Watching", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 10.dp, bottom = 8.dp)) }
                                 item {
-                                    Spacer(modifier = Modifier.height(100.dp))
+                                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        recentMovies.forEach { movie ->
+                                            Column(modifier = Modifier.weight(1f).clickable { onSelectMovie(movie) }) {
+                                                CoverArt(bitmap = movie.coverArt, contentDescription = movie.title, modifier = Modifier.fillMaxWidth().aspectRatio(1f), showPlaceholderAlways = showPlaceholderIcons, fileExtension = movie.fileType, contentType = CoverArtContentType.MOVIE)
+                                                Spacer(Modifier.height(6.dp))
+                                                Text(movie.title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                            }
+                                        }
+                                        repeat(3 - recentMovies.size) { Spacer(Modifier.weight(1f)) }
+                                    }
                                 }
                             }
-                        } else {
-                            LazyColumn(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth()
-                            ) {
-                                itemsIndexed(filteredMovies, key = { _, item -> item.id }) { _, movieItem ->
-                                    MovieListItem(
-                                        movie = movieItem,
-                                        onClick = { onSelectMovie(movieItem) },
-                                        onLongClick = { showEditMovieDialog = movieItem },
-                                        showPlaceholderIcons = showPlaceholderIcons,
-                                        modifier = Modifier.animateItem()
-                                    )
-                                }
-                                item {
-                                    Spacer(modifier = Modifier.height(100.dp))
+                            if (moviePlaylists.isNotEmpty() && searchQuery.isBlank()) {
+                                item { Text("Playlists", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
+                                items(moviePlaylists, key = { it.id }) { playlist ->
+                                    val plItems = remember(movies, playlist.id) { movies.filter { it.seriesId == playlist.id } }
+                                    val isExpanded = collapsedSeries.contains(playlist.id).not()
+                                    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(palette.surfaceCard).border(1.dp, if (isExpanded) palette.accent else palette.divider, RoundedCornerShape(14.dp))) {
+                                        Row(modifier = Modifier.fillMaxWidth().clickable { onPlaylistClick(playlist) }.padding(start = 12.dp, top = 10.dp, bottom = if (!isExpanded && plItems.isNotEmpty()) 4.dp else 10.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))), contentAlignment = Alignment.Center) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
+                                            Column(modifier = Modifier.weight(1f)) { Text(playlist.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary); Text("${plItems.size} items", fontSize = 10.sp, color = palette.textMuted) }
+                                            Box(modifier = Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).clickable { val nc = if (isExpanded) collapsedSeries + playlist.id else collapsedSeries - playlist.id; onCollapsedSeriesChange(nc) }, contentAlignment = Alignment.Center) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
+                                        }
+                                        if (!isExpanded && plItems.isNotEmpty()) { val f = plItems.first(); HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = palette.divider); Row(modifier = Modifier.fillMaxWidth().clickable { onSelectMovie(f) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = f.coverArt, contentDescription = f.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.MOVIE); Text(f.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } }
+                                        if (isExpanded && plItems.isNotEmpty()) { HorizontalDivider(color = palette.divider); plItems.forEach { item -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelectMovie(item) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.MOVIE); Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } } }
+                                    }
                                 }
                             }
+                            item { Text("All Movies", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
+                            itemsIndexed(filteredMovies, key = { _, item -> item.id }) { _, movieItem -> MovieListItem(movie = movieItem, onClick = { onSelectMovie(movieItem) }, onLongClick = { showEditMovieDialog = movieItem }, showPlaceholderIcons = showPlaceholderIcons, modifier = Modifier.animateItem()) }
                         }
                     }
                 }

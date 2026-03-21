@@ -43,6 +43,9 @@ import kotlinx.coroutines.withContext
 class AudiobookPlayer(private val context: Context) {
 
     private var exoPlayer: androidx.media3.exoplayer.ExoPlayer? = null
+
+    /** Expose audio session ID for visualizer */
+    val audioSessionId: Int get() = exoPlayer?.audioSessionId ?: 0
     private var playerListener: Player.Listener? = null
     private var positionUpdateJob: Job? = null
     private var loudnessEnhancer: LoudnessEnhancer? = null

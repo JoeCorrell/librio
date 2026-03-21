@@ -360,7 +360,7 @@ fun MoviePlayerScreen(
                     shadowElevation = 0.dp,
                     modifier = Modifier
                         .statusBarsPadding()
-                        .background(palette.headerGradient())
+                        .background(palette.background)
                 ) {
                     Box(
                         modifier = Modifier
@@ -369,46 +369,52 @@ fun MoviePlayerScreen(
                             .height(headerContentHeight),
                         contentAlignment = Alignment.Center
                     ) {
-                        // Back button on the left
                         if (showBackButton) {
-                            IconButton(
-                                onClick = onBack,
-                                modifier = Modifier.align(Alignment.CenterStart)
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(11.dp))
+                                    .background(palette.surfaceCard)
+                                    .clickable { onBack() },
+                                contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     AppIcons.Back,
                                     contentDescription = "Back",
-                                    tint = palette.shade11
+                                    tint = palette.textSecondary,
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
 
-                        Text(
-                            text = headerTitle,
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                lineHeight = 24.sp
-                            ),
-                            color = palette.shade11,
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.align(Alignment.Center)
+                        Row(
+                            modifier = Modifier.align(Alignment.Center),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "lib",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 24.sp
+                                ),
+                                color = palette.textPrimary
+                            )
+                            Text(
+                                text = "rio",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 24.sp
+                                ),
+                                color = palette.accent
+                            )
+                        }
+
+                        Spacer(
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .width(34.dp)
                         )
-
-                        // Search icon on the right - only shown when showSearchBar is enabled
-                        if (showSearchBar) {
-                            IconButton(
-                                onClick = { /* Search functionality placeholder */ },
-                                modifier = Modifier.align(Alignment.CenterEnd)
-                            ) {
-                                Icon(
-                                    AppIcons.Search,
-                                    contentDescription = "Search",
-                                    tint = palette.shade11
-                                )
-                            }
-                        }
                     }
                 }
             }
@@ -719,15 +725,13 @@ fun MoviePlayerScreen(
                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                 exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
             ) {
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
-                        .background(palette.headerGradient())
-                        .padding(bottom = 8.dp)
+                        .background(palette.background)
                         .pointerInput(Unit) {
                             detectVerticalDragGestures { _, dragAmount ->
-                                // Swipe up (negative dragAmount) opens settings
                                 if (dragAmount < -20 && !showSettings) {
                                     showSettings = true
                                     selectedNavItem = BottomNavItem.SETTINGS
@@ -735,10 +739,11 @@ fun MoviePlayerScreen(
                             }
                         }
                 ) {
+                    HorizontalDivider(color = palette.divider, thickness = 1.dp)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(64.dp)
+                            .height(58.dp)
                             .padding(horizontal = 8.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
@@ -746,12 +751,10 @@ fun MoviePlayerScreen(
                         listOf(
                             BottomNavItem.LIBRARY to {
                                 showSettings = false
-                                // Don't highlight - navigating away
                                 onNavigateToLibrary()
                             },
                             BottomNavItem.PROFILE to {
                                 showSettings = false
-                                // Don't highlight - navigating away
                                 onNavigateToProfile()
                             },
                             BottomNavItem.SETTINGS to {
@@ -765,11 +768,7 @@ fun MoviePlayerScreen(
                             val isPressed by interactionSource.collectIsPressedAsState()
 
                             val scale by animateFloatAsState(
-                                targetValue = when {
-                                    isPressed -> 0.85f
-                                    isSelected -> 1.1f
-                                    else -> 1f
-                                },
+                                targetValue = if (isPressed) 0.92f else 1f,
                                 animationSpec = spring(
                                     dampingRatio = Spring.DampingRatioMediumBouncy,
                                     stiffness = Spring.StiffnessHigh
@@ -777,45 +776,36 @@ fun MoviePlayerScreen(
                                 label = "navScale"
                             )
 
-                            val offsetY by animateFloatAsState(
-                                targetValue = if (isSelected) -4f else 0f,
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                                    stiffness = Spring.StiffnessMedium
-                                ),
-                                label = "navOffset"
-                            )
-
                             Column(
                                 modifier = Modifier
                                     .weight(1f)
                                     .scale(scale)
-                                    .offset(y = offsetY.dp)
                                     .clickable(
                                         interactionSource = interactionSource,
                                         indication = null
                                     ) { action() }
-                                    .padding(vertical = 8.dp),
+                                    .padding(vertical = 6.dp, horizontal = 14.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                                        contentDescription = item.title,
-                                        modifier = Modifier.size(24.dp),
-                                        tint = if (isSelected) palette.shade12 else palette.shade11.copy(alpha = 0.7f)
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = item.title,
-                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                        fontSize = 11.sp,
-                                        color = if (isSelected) palette.shade12 else palette.shade11.copy(alpha = 0.7f)
-                                    )
-                                }
+                            ) {
+                                Icon(
+                                    imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                                    contentDescription = item.title,
+                                    modifier = Modifier.size(if (isSelected) 22.dp else 20.dp),
+                                    tint = if (isSelected) palette.accent else palette.textMuted
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = item.title,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 9.sp,
+                                    letterSpacing = 0.2.sp,
+                                    color = if (isSelected) palette.accent else palette.textMuted
+                                )
                             }
                         }
                     }
+                }
                 }
         }
 

@@ -1,29 +1,20 @@
 package com.librio.ui.components
 
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.librio.R
 import com.librio.ui.theme.*
-import com.librio.ui.theme.AppIcons
 
 /**
- * App header with logo, title, and action buttons
+ * App header with logo and action buttons - JSX-style clean design
  */
 @Composable
 fun AppHeader(
@@ -38,71 +29,63 @@ fun AppHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = dimens.horizontalPadding),
+            .padding(horizontal = dimens.horizontalPadding, vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // App logo
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .shadow(4.dp, CircleShape)
-                    .clip(CircleShape)
-                    .background(
-                        brush = palette.accentGradient()
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.app_logo),
-                    contentDescription = "Librio",
-                    modifier = Modifier.size(36.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column {
-                Text(
-                    text = "My Library",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontSize = (dimens.titleTextSize + 8).sp
-                    ),
+        // Logo: "librio" with accent-colored "rio"
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "lib",
+                style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    color = palette.primary
-                )
-                Text(
-                    text = "$audiobookCount audiobook${if (audiobookCount != 1) "s" else ""}",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = dimens.bodyTextSize.sp
-                    ),
-                    color = palette.primary.copy(alpha = 0.5f)
-                )
-            }
+                    fontSize = 18.sp
+                ),
+                color = palette.textPrimary
+            )
+            Text(
+                text = "rio",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                ),
+                color = palette.accent
+            )
         }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            IconButton(onClick = onSearchClick) {
-                Icon(
-                    imageVector = AppIcons.Search,
-                    contentDescription = "Search",
-                    tint = palette.primaryLight,
-                    modifier = Modifier.size(dimens.iconSize)
-                )
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(RoundedCornerShape(11.dp))
+                    .background(palette.surfaceCard),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(onClick = onSearchClick, modifier = Modifier.size(34.dp)) {
+                    Icon(
+                        imageVector = AppIcons.Search,
+                        contentDescription = "Search",
+                        tint = palette.textSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
 
-            IconButton(onClick = onSettingsClick) {
-                Icon(
-                    imageVector = AppIcons.Settings,
-                    contentDescription = "Settings",
-                    tint = palette.primaryLight,
-                    modifier = Modifier.size(dimens.iconSize)
-                )
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(RoundedCornerShape(11.dp))
+                    .background(palette.surfaceCard),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(onClick = onSettingsClick, modifier = Modifier.size(34.dp)) {
+                    Icon(
+                        imageVector = AppIcons.Settings,
+                        contentDescription = "Settings",
+                        tint = palette.textSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }
@@ -131,10 +114,10 @@ fun SectionHeader(
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium.copy(
-                fontSize = dimens.titleTextSize.sp
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
             ),
-            fontWeight = FontWeight.SemiBold,
-            color = palette.primaryLight
+            color = palette.textPrimary
         )
 
         if (actionText != null && onActionClick != null) {

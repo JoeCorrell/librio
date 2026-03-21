@@ -6,21 +6,21 @@ import com.librio.ui.theme.AnimationDefaults
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,11 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,19 +43,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.librio.ui.theme.AppIcons
 import com.librio.ui.theme.CornerSize
-import com.librio.ui.theme.Elevation
 import com.librio.ui.theme.IconSize
 import com.librio.ui.theme.Spacing
-import com.librio.ui.theme.ThumbnailSize
 import com.librio.ui.theme.cornerRadius
 import com.librio.ui.theme.currentPalette
 import com.librio.ui.theme.thumbnailGradient
 
 /**
  * Unified list item component for all content types
- * Uses Material 3 ElevatedCard with consistent styling
- *
- * Replaces: AudiobookListItem, BookListItem, MusicListItem, ComicListItem, MovieListItem
+ * Clean row layout with divider separator - matches JSX design
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -77,21 +71,6 @@ fun ContentListItem(
 ) {
     val palette = currentPalette()
     val haptic = LocalHapticFeedback.current
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
-
-    // Responsive thumbnail size
-    val thumbnailSize = when {
-        screenWidth < 360.dp -> ThumbnailSize.sm
-        screenWidth < 400.dp -> ThumbnailSize.md
-        screenWidth < 600.dp -> ThumbnailSize.lg
-        else -> ThumbnailSize.xl
-    }
-
-    val iconSize = when {
-        screenWidth < 400.dp -> IconSize.md
-        else -> IconSize.lg
-    }
 
     // Press animation
     var isPressed by remember { mutableStateOf(false) }
@@ -101,23 +80,11 @@ fun ContentListItem(
         label = "pressScale"
     )
 
-    ElevatedCard(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
-            .scale(scale),
-        shape = cornerRadius(CornerSize.lg),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = Elevation.md
-        ),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = palette.shade10
-        )
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = 88.dp)
+                .scale(scale)
                 .combinedClickable(
                     onClick = {
                         isPressed = true
@@ -128,88 +95,76 @@ fun ContentListItem(
                         onLongClick()
                     }
                 )
-                .padding(Spacing.md),
+                .padding(horizontal = 18.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Cover Art thumbnail
+            // 38dp thumbnail with rounded corners
             ContentThumbnail(
                 coverArt = coverArt,
                 contentType = contentType,
                 fileType = fileType,
-                size = thumbnailSize,
-                iconSize = iconSize,
+                size = 38.dp,
+                iconSize = 14.dp,
                 showPlaceholderIcons = showPlaceholderIcons
             )
 
-            Spacer(modifier = Modifier.width(Spacing.lg))
+            Spacer(modifier = Modifier.width(10.dp))
 
-            // Content info
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            // Title + subtitle
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
                     color = palette.textPrimary,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(Spacing.xs))
-
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = palette.textSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-
-                // Duration or metadata
-                if (duration != null) {
-                    Spacer(modifier = Modifier.height(Spacing.xs))
-                    Text(
-                        text = duration,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = palette.textMuted
-                    )
-                }
-
-                // Progress bar
+                Text(
+                    text = subtitle,
+                    fontSize = 10.sp,
+                    color = palette.textMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                // Progress bar (compact)
                 if (progress > 0f) {
-                    Spacer(modifier = Modifier.height(Spacing.sm))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                    ) {
-                        LibrioProgressBar(
-                            progress = progress,
-                            modifier = Modifier.weight(1f),
-                            height = 4.dp,
-                            activeColor = palette.accent,
-                            trackColor = palette.accent.copy(alpha = 0.2f)
-                        )
-                        Text(
-                            text = "${(progress * 100).toInt()}%",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = palette.accent.copy(alpha = 0.8f)
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(3.dp))
+                    LibrioProgressBar(
+                        progress = progress,
+                        modifier = Modifier.fillMaxWidth(),
+                        height = 2.dp,
+                        activeColor = palette.accent,
+                        trackColor = palette.accent.copy(alpha = 0.15f)
+                    )
                 }
             }
 
-            // Playing indicator
+            // Playing indicator or duration
             if (isPlaying) {
-                Spacer(modifier = Modifier.width(Spacing.sm))
+                Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     imageVector = AppIcons.VolumeUp,
                     contentDescription = "Now playing",
                     tint = palette.accent,
-                    modifier = Modifier.size(IconSize.sm)
+                    modifier = Modifier.size(14.dp)
+                )
+            } else if (duration != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = duration,
+                    fontSize = 10.sp,
+                    color = palette.textMuted.copy(alpha = 0.7f)
                 )
             }
         }
+
+        // Bottom divider
+        HorizontalDivider(
+            modifier = Modifier.padding(horizontal = 18.dp),
+            thickness = 1.dp,
+            color = palette.divider
+        )
     }
 }
 
@@ -226,47 +181,29 @@ fun ContentThumbnail(
     showPlaceholderIcons: Boolean = true
 ) {
     val palette = currentPalette()
-    val shape = cornerRadius(CornerSize.md)
+    val shape = RoundedCornerShape(10.dp)
 
     Box(
         modifier = Modifier
             .size(size)
-            .shadow(Elevation.md, shape)
             .clip(shape)
             .background(palette.thumbnailGradient()),
         contentAlignment = Alignment.Center
     ) {
         val usePlaceholder = showPlaceholderIcons || coverArt == null
         if (usePlaceholder) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(Spacing.xs)
-            ) {
-                Icon(
-                    imageVector = when (contentType) {
-                        CoverArtContentType.AUDIOBOOK -> AppIcons.Audiobook
-                        CoverArtContentType.MUSIC -> AppIcons.Music
-                        CoverArtContentType.MOVIE -> AppIcons.Movie
-                        CoverArtContentType.EBOOK -> AppIcons.Book
-                        CoverArtContentType.COMICS -> AppIcons.Comic
-                    },
-                    contentDescription = null,
-                    tint = palette.shade2,
-                    modifier = Modifier.size(iconSize)
-                )
-                if (fileType.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = fileType.uppercase(),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = palette.accent
-                    )
-                }
-            }
+            Icon(
+                imageVector = when (contentType) {
+                    CoverArtContentType.AUDIOBOOK -> AppIcons.Audiobook
+                    CoverArtContentType.MUSIC -> AppIcons.Music
+                    CoverArtContentType.MOVIE -> AppIcons.Movie
+                    CoverArtContentType.EBOOK -> AppIcons.Book
+                    CoverArtContentType.COMICS -> AppIcons.Comic
+                },
+                contentDescription = null,
+                tint = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.3f),
+                modifier = Modifier.size(iconSize)
+            )
         } else {
             Image(
                 bitmap = coverArt!!.asImageBitmap(),

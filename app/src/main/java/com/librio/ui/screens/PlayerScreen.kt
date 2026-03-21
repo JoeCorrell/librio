@@ -40,6 +40,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -75,7 +76,17 @@ import com.librio.ui.components.PlaybackControls
 import com.librio.ui.theme.*
 import com.librio.ui.theme.AppIcons
 import com.librio.ui.screens.MusicSettingsScreen
+import com.librio.ui.screens.AudioVisualizerBar
 import com.librio.utils.formatTime
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import kotlinx.coroutines.launch
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
@@ -215,84 +226,78 @@ fun PlayerScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                    .background(palette.headerGradient())
-                    .statusBarsPadding()
-            ) {
-                Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                    .height(headerContentHeight),
-                contentAlignment = Alignment.Center
+                        .background(palette.background)
+                        .statusBarsPadding()
                 ) {
-                    if (showBackButton) {
-                        val backInteractionSource = remember { MutableInteractionSource() }
-                        val backIsPressed by backInteractionSource.collectIsPressedAsState()
-                        val backScale by animateFloatAsState(
-                            targetValue = if (backIsPressed) 0.85f else 1f,
-                            animationSpec = spring(stiffness = Spring.StiffnessHigh),
-                            label = "playerBackScale"
-                        )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .height(headerContentHeight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (showBackButton) {
+                            val backInteractionSource = remember { MutableInteractionSource() }
+                            val backIsPressed by backInteractionSource.collectIsPressedAsState()
+                            val backScale by animateFloatAsState(
+                                targetValue = if (backIsPressed) 0.85f else 1f,
+                                animationSpec = spring(stiffness = Spring.StiffnessHigh),
+                                label = "playerBackScale"
+                            )
 
-                        IconButton(
-                            onClick = { onBackToLibrary?.invoke() },
-                            modifier = Modifier
-                                .align(Alignment.CenterStart)
-                                .scale(backScale),
-                            interactionSource = backInteractionSource
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .size(34.dp)
+                                    .scale(backScale)
+                                    .clip(RoundedCornerShape(11.dp))
+                                    .background(palette.surfaceCard)
+                                    .clickable(
+                                        interactionSource = backInteractionSource,
+                                        indication = null
+                                    ) { onBackToLibrary?.invoke() },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    AppIcons.Back,
+                                    contentDescription = "Back",
+                                    tint = palette.textSecondary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+
+                        // Center: librio branding
+                        Row(
+                            modifier = Modifier.align(Alignment.Center),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                AppIcons.Back,
-                                contentDescription = "Back",
-                                tint = palette.shade11
+                            Text(
+                                text = "lib",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 24.sp
+                                ),
+                                color = palette.textPrimary
+                            )
+                            Text(
+                                text = "rio",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 24.sp
+                                ),
+                                color = palette.accent
                             )
                         }
-                    }
 
-                    Text(
-                        text = headerTitle,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            lineHeight = 24.sp
-                        ),
-                        color = palette.shade11,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-
-                    if (showSearchBar) {
-                        val searchInteractionSource = remember { MutableInteractionSource() }
-                        val searchIsPressed by searchInteractionSource.collectIsPressedAsState()
-                        val searchScale by animateFloatAsState(
-                            targetValue = if (searchIsPressed) 0.85f else 1f,
-                            animationSpec = spring(stiffness = Spring.StiffnessHigh),
-                            label = "playerSearchScale"
-                        )
-                        IconButton(
-                            onClick = { onToggleSearch?.invoke() },
-                            modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .scale(searchScale),
-                            interactionSource = searchInteractionSource
-                        ) {
-                            Icon(
-                                AppIcons.Search,
-                                contentDescription = "Search",
-                                tint = palette.shade11
-                            )
-                        }
-                    } else {
                         Spacer(
                             modifier = Modifier
                                 .align(Alignment.CenterEnd)
-                                .width(24.dp)
+                                .width(34.dp)
                         )
                     }
                 }
-            }
-        },
+            },
         snackbarHost = {
             SnackbarHost(snackbarHostState) { data ->
                 Snackbar(
@@ -303,17 +308,14 @@ fun PlayerScreen(
             }
         },
         bottomBar = {
-            // Full-width navigation bar matching header color with light icons
-            // Swipe up to open player settings
-            Box(
+            // Clean bottom navigation bar
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .background(palette.headerGradient())
-                    .padding(bottom = 8.dp)
+                    .background(palette.background)
                     .pointerInput(Unit) {
                         detectVerticalDragGestures { _, dragAmount ->
-                            // Swipe up (negative dragAmount) opens settings
                             if (dragAmount < -20 && !showSettings) {
                                 showSettings = true
                                 selectedTab = BottomNavItem.SETTINGS
@@ -321,10 +323,11 @@ fun PlayerScreen(
                         }
                     }
             ) {
+                HorizontalDivider(color = palette.divider, thickness = 1.dp)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
+                        .height(58.dp)
                         .padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
@@ -332,7 +335,6 @@ fun PlayerScreen(
                     BottomNavItem.entries.forEach { item ->
                         val isSelected = selectedTab == item
 
-                        // Animation for selection
                         val scale by animateFloatAsState(
                             targetValue = if (isSelected) 1.03f else 1f,
                             animationSpec = spring(
@@ -347,12 +349,10 @@ fun PlayerScreen(
                                 .weight(1f)
                                 .scale(scale)
                                 .clickable {
-                                    // Only highlight settings button - library/profile navigate away
                                     when (item) {
                                         BottomNavItem.LIBRARY -> onNavigateToLibrary?.invoke()
                                         BottomNavItem.PROFILE -> onNavigateToProfile?.invoke()
                                         BottomNavItem.SETTINGS -> {
-                                            // Toggle settings - close if already open
                                             if (showSettings) {
                                                 showSettings = false
                                                 selectedTab = null
@@ -363,25 +363,26 @@ fun PlayerScreen(
                                         }
                                     }
                                 }
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 6.dp, horizontal = 14.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                                Icon(
-                                    imageVector = item.unselectedIcon, // Always show unselected icon in player
-                                    contentDescription = item.title,
-                                    modifier = Modifier.size(24.dp),
-                                    tint = if (isSelected) palette.shade12 else palette.shade11.copy(alpha = 0.7f)
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = item.title,
-                                    fontWeight = FontWeight.Normal, // Always show as unselected
-                                    fontSize = 11.sp,
-                                    color = if (isSelected) palette.shade12 else palette.shade11.copy(alpha = 0.7f)
-                                )
-                            }
+                            Icon(
+                                imageVector = item.unselectedIcon,
+                                contentDescription = item.title,
+                                modifier = Modifier.size(if (isSelected) 22.dp else 20.dp),
+                                tint = if (isSelected) palette.accent else palette.textMuted
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = item.title,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 9.sp,
+                                letterSpacing = 0.2.sp,
+                                color = if (isSelected) palette.accent else palette.textMuted
+                            )
                         }
+                    }
                 }
             }
         },
@@ -434,6 +435,7 @@ fun PlayerScreen(
                             player.seekTo(lastSeekPositionLocal)
                             lastSeekPositionLocal = 0L
                         },
+                        player = player,
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
@@ -534,7 +536,7 @@ fun PlayerScreen(
 }
 
 /**
- * Main player content when an audiobook is loaded
+ * Main player content when an audiobook is loaded — matches music player UI
  */
 @Composable
 private fun PlayerContent(
@@ -553,9 +555,9 @@ private fun PlayerContent(
     lastSeekPosition: Long = 0L,
     onUndoSeek: () -> Unit = {},
     modifier: Modifier = Modifier,
+    player: AudiobookPlayer? = null,
 ) {
     val palette = currentPalette()
-    val dimens = com.librio.ui.components.rememberResponsiveDimens()
 
     // Animation for cover art appearance
     var coverVisible by remember { mutableStateOf(false) }
@@ -579,116 +581,243 @@ private fun PlayerContent(
         label = "coverAlpha"
     )
 
-    BoxWithConstraints(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp, vertical = 8.dp),
     ) {
-        val availableHeight = maxHeight
-        // Use responsive cover art size, capped based on available space
-        val coverArtSize = minOf(
-            dimens.playerCoverArtSize,
-            availableHeight * 0.42f,
-            dimens.screenWidthDp * 0.7f
-        )
-
-        // Estimate content height for scroll decision
-        val controlsHeight = if (dimens.isCompactHeight) 180.dp else 220.dp
-        val estimatedContentHeight = coverArtSize + dimens.spacing * 4 + controlsHeight
-        val needsScroll = estimatedContentHeight > (availableHeight - dimens.verticalPadding * 2)
-        val scrollModifier = if (needsScroll) Modifier.verticalScroll(rememberScrollState()) else Modifier
-
-        Column(
-            modifier = scrollModifier
-                .fillMaxHeight()
-                .padding(horizontal = dimens.horizontalPadding)
-                .padding(vertical = dimens.verticalPadding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = if (needsScroll) Arrangement.Top else Arrangement.SpaceEvenly
+        // Cover art — 220dp with shadow, matching music player
+        val fileExtension = audiobook.fileName.substringAfterLast('.', "").ifEmpty { "AUDIO" }
+        Box(
+            modifier = Modifier
+                .size(220.dp)
+                .align(Alignment.CenterHorizontally)
+                .shadow(16.dp, RoundedCornerShape(24.dp), ambientColor = palette.textPrimary.copy(alpha = 0.25f))
+                .clip(RoundedCornerShape(24.dp))
+                .background(palette.thumbnailGradient())
+                .graphicsLayer {
+                    scaleX = coverScale
+                    scaleY = coverScale
+                    alpha = coverAlpha
+                },
+            contentAlignment = Alignment.Center,
         ) {
-            // Cover art with responsive sizing and entrance animation
-            val fileExtension = audiobook.fileName.substringAfterLast('.', "").ifEmpty { "AUDIO" }
-            CoverArt(
-                bitmap = audiobook.coverArt,
-                contentDescription = "Cover art for ${audiobook.title}",
-                modifier = Modifier
-                    .size(coverArtSize)
-                    .graphicsLayer {
-                        scaleX = coverScale
-                        scaleY = coverScale
-                        alpha = coverAlpha
-                    },
-                showPlaceholderAlways = showPlaceholderIcons,
-                fileExtension = fileExtension,
-                contentType = CoverArtContentType.AUDIOBOOK
-            )
+            if (audiobook.coverArt != null) {
+                Image(
+                    bitmap = audiobook.coverArt!!.asImageBitmap(),
+                    contentDescription = "Cover art for ${audiobook.title}",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    AppIcons.Audiobook, null,
+                    tint = Color.White.copy(0.4f),
+                    modifier = Modifier.size(64.dp)
+                )
+            }
+        }
 
-            Spacer(modifier = Modifier.height(dimens.spacing))
+        Spacer(Modifier.height(14.dp))
 
-            // Title and author with responsive text
-            Text(
-                text = audiobook.title,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = palette.primary,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(dimens.spacingSmall))
-
-            Text(
-                text = audiobook.author,
-                style = MaterialTheme.typography.bodyLarge,
-                color = palette.primary.copy(alpha = 0.7f),
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Chapter info
-            if (audiobook.chapters.size > 1) {
-                Spacer(modifier = Modifier.height(dimens.spacingSmall))
+        // Title + chapter info row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top,
+        ) {
+            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                Text(
+                    text = audiobook.title,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = palette.textPrimary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 val currentChapter = audiobook.chapters.getOrNull(playbackState.currentChapterIndex)
                 Text(
-                    text = "Chapter ${playbackState.currentChapterIndex + 1} of ${audiobook.chapters.size}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = palette.primary,
-                    textAlign = TextAlign.Center
+                    text = buildString {
+                        append(audiobook.author)
+                        if (currentChapter != null) {
+                            append(" · ")
+                            append(currentChapter.title)
+                        }
+                    },
+                    fontSize = 11.sp,
+                    color = palette.textMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                currentChapter?.let {
+            }
+            // Chapter badge
+            if (audiobook.chapters.size > 1) {
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(RoundedCornerShape(9.dp))
+                        .background(palette.accent.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Text(
-                        text = it.title,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = palette.primary.copy(alpha = 0.5f),
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        "${playbackState.currentChapterIndex + 1}",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = palette.accent,
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        // Progress slider
+        val progress = if (playbackState.duration > 0) playbackState.currentPosition.toFloat() / playbackState.duration else 0f
+        var sliderPosition by remember { mutableStateOf<Float?>(null) }
+        val displayProgress = sliderPosition ?: progress
+
+        com.librio.ui.components.MinimalProgressSlider(
+            value = displayProgress.coerceIn(0f, 1f),
+            onValueChange = { sliderPosition = it },
+            onValueChangeFinished = {
+                sliderPosition?.let { pos ->
+                    onSeekTo((pos * playbackState.duration).toLong())
+                }
+                sliderPosition = null
+            },
+            activeColor = palette.accent,
+            inactiveColor = palette.divider
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                formatTime(
+                    if (sliderPosition != null) (sliderPosition!! * playbackState.duration).toLong()
+                    else playbackState.currentPosition
+                ),
+                fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = palette.textMuted.copy(alpha = 0.5f)
+            )
+            Text(formatTime(playbackState.duration), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = palette.textMuted.copy(alpha = 0.5f))
+        }
+
+        Spacer(Modifier.height(6.dp))
+
+        // 5-button control row: rw, prev, play, next, ff (audiobook doesn't need shuffle/repeat)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                AppIcons.Replay10, "Rewind $skipBackSeconds seconds",
+                tint = palette.textSecondary,
+                modifier = Modifier.size(22.dp).clickable { onSeekBackward() }
+            )
+            Icon(
+                AppIcons.SkipPrevious, "Previous chapter",
+                tint = palette.textSecondary,
+                modifier = Modifier.size(24.dp).clickable { onPreviousChapter() }
+            )
+
+            // Play/Pause — 54dp accent circle with shadow
+            Box(
+                modifier = Modifier
+                    .size(54.dp)
+                    .shadow(6.dp, CircleShape, ambientColor = palette.accent.copy(alpha = 0.4f))
+                    .clip(CircleShape)
+                    .background(palette.accent)
+                    .clickable { onPlayPause() },
+                contentAlignment = Alignment.Center,
+            ) {
+                if (playbackState.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 3.dp)
+                } else {
+                    Icon(
+                        imageVector = if (playbackState.isPlaying) AppIcons.Pause else AppIcons.Play,
+                        contentDescription = if (playbackState.isPlaying) "Pause" else "Play",
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp),
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(dimens.spacing))
-
-            // Playback controls
-            PlaybackControls(
-                playbackState = playbackState,
-                onPlayPause = onPlayPause,
-                onSeekForward = onSeekForward,
-                onSeekBackward = onSeekBackward,
-                onNextChapter = onNextChapter,
-                onPreviousChapter = onPreviousChapter,
-                onSeekTo = onSeekTo,
-                skipForwardSeconds = skipForwardSeconds,
-                skipBackSeconds = skipBackSeconds,
-                showUndoSeekButton = showUndoSeekButton,
-                lastSeekPosition = lastSeekPosition,
-                onUndoSeek = onUndoSeek,
-                modifier = Modifier.fillMaxWidth()
+            Icon(
+                AppIcons.SkipNext, "Next chapter",
+                tint = palette.textSecondary,
+                modifier = Modifier.size(24.dp).clickable { onNextChapter() }
+            )
+            Icon(
+                AppIcons.Forward10, "Forward $skipForwardSeconds seconds",
+                tint = palette.textSecondary,
+                modifier = Modifier.size(22.dp).clickable { onSeekForward() }
             )
         }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Chapters section — matches music player "Up Next"
+        if (audiobook.chapters.isNotEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = false)
+                    .heightIn(max = 312.dp) // ~8 rows
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(palette.surfaceCard)
+                    .border(1.dp, palette.divider, RoundedCornerShape(14.dp)),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 7.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text("Chapters", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary)
+                    Text("${audiobook.chapters.size} chapters", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = palette.accent)
+                }
+                HorizontalDivider(color = palette.divider, thickness = 1.dp)
+                val chapters = audiobook.chapters
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    itemsIndexed(chapters) { idx, chapter ->
+                        val isCurrent = idx == playbackState.currentChapterIndex
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                                .background(if (isCurrent) palette.accent.copy(alpha = 0.15f) else Color.Transparent)
+                                .clickable { onSeekTo(chapter.startTime) }
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                text = if (isCurrent) "\u25B6" else "${idx + 1}",
+                                fontSize = 9.sp, fontWeight = FontWeight.Bold,
+                                color = if (isCurrent) palette.accent else palette.textMuted.copy(alpha = 0.5f),
+                                modifier = Modifier.width(14.dp),
+                            )
+                            Text(chapter.title, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+                                color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f))
+                            Text(formatTime(chapter.duration), fontSize = 9.sp, color = palette.textMuted.copy(alpha = 0.5f))
+                        }
+                        if (idx < chapters.size - 1) {
+                            HorizontalDivider(color = palette.divider, thickness = 0.5.dp)
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Audio Visualizer Bar
+        val sessionId = player?.audioSessionId ?: 0
+        AudioVisualizerBar(
+            isPlaying = playbackState.isPlaying,
+            audioSessionId = sessionId,
+            accentColor = palette.accent,
+            cardBg = palette.surfaceCard,
+            borderColor = palette.divider
+        )
     }
 }
 

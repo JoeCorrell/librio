@@ -68,7 +68,7 @@ fun OnboardingScreen(
     currentProfile: UserProfile?,
     onRenameProfile: (UserProfile, String) -> Unit,
     onSetProfilePicture: (UserProfile, String?) -> Unit,
-    currentTheme: AppTheme = AppTheme.TEAL,
+    currentTheme: AppTheme = AppTheme.PARCHMENT,
     onThemeChange: (AppTheme) -> Unit = {},
     onAccentThemeChange: (AppTheme) -> Unit = {},
     onComplete: () -> Unit,
@@ -768,7 +768,7 @@ private fun ThemePickerStep(
             text = "Pick Your Theme",
             style = if (isSmallScreen) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = palette.shade1
+            color = palette.textPrimary
         )
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -776,7 +776,7 @@ private fun ThemePickerStep(
         Text(
             text = "Choose a color scheme that suits you",
             style = MaterialTheme.typography.bodyMedium,
-            color = palette.shade2
+            color = palette.textSecondary
         )
 
         Spacer(modifier = Modifier.height(if (isSmallScreen) 16.dp else 24.dp))
@@ -793,35 +793,34 @@ private fun ThemePickerStep(
             items(cachedThemes) { theme ->
                 val themePalette = cachedPalettes[theme] ?: getThemePalette(theme)
                 val isSelected = theme == currentTheme
+                val shape14 = cornerRadius(14.dp)
 
                 Box(
                     modifier = Modifier
                         .aspectRatio(1f)
-                        .clip(shape10)
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    themePalette.accent,
-                                    themePalette.shade3,
-                                    themePalette.shade5
-                                )
-                            )
-                        )
+                        .clip(shape14)
+                        .background(themePalette.background)
                         .then(
-                            if (isSelected) Modifier.border(3.dp, palette.shade1, shape10)
+                            if (isSelected) Modifier.border(2.5.dp, palette.accent, shape14)
                             else Modifier
                         )
                         .clickable { onThemeChange(theme) },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (isSelected) {
-                        Icon(
-                            AppIcons.Check,
-                            contentDescription = "Selected",
-                            tint = Color.White,
-                            modifier = Modifier.size(if (isSmallScreen) 18.dp else 22.dp)
-                        )
-                    }
+                    // Accent color strip at bottom
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.4f)
+                            .background(themePalette.accent)
+                    )
+                    Text(
+                        text = theme.displayName.take(3),
+                        fontSize = 7.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = themePalette.textPrimary
+                    )
                 }
             }
         }

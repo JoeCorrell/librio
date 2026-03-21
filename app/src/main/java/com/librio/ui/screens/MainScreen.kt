@@ -5,6 +5,8 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.unit.IntOffset
@@ -227,15 +229,24 @@ fun MainScreen(
 ) {
     val palette = currentPalette()
     var selectedTab by remember { mutableStateOf(initialTab) }
+    var showCategorySwitcher by remember { mutableStateOf(false) }
 
+    // Content type icon for the switcher logo
+    val contentTypeIcon = when (selectedContentType) {
+        ContentType.AUDIOBOOK -> AppIcons.Audiobook
+        ContentType.EBOOK -> AppIcons.Book
+        ContentType.MUSIC -> AppIcons.Music
+        ContentType.COMICS -> AppIcons.Comic
+        ContentType.MOVIE -> AppIcons.Movie
+    }
 
     Scaffold(
         topBar = {
-            // Fixed Header with gradient animation
+            // Header: [back] ··· [librio switcher] ··· [profile avatar placeholder]
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(palette.headerGradient())
+                    .background(palette.background)
             ) {
                 val headerContentHeight = 40.dp
                 Box(
@@ -246,7 +257,7 @@ fun MainScreen(
                         .height(headerContentHeight),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Back button on the left - exits app if on LIBRARY, otherwise goes to LIBRARY
+                    // Back button on the left
                     if (showBackButton) {
                         val backInteractionSource = remember { MutableInteractionSource() }
                         val backIsPressed by backInteractionSource.collectIsPressedAsState()
@@ -255,63 +266,75 @@ fun MainScreen(
                             animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 10000f),
                             label = "backScale"
                         )
-                        IconButton(
-                            onClick = {
-                                if (selectedTab == BottomNavItem.LIBRARY) {
-                                    onBackPressed()
-                                } else {
-                                    selectedTab = BottomNavItem.LIBRARY
-                                }
-                            },
+                        Box(
                             modifier = Modifier
                                 .align(Alignment.CenterStart)
-                                .scale(backScale),
-                            interactionSource = backInteractionSource
+                                .size(34.dp)
+                                .scale(backScale)
+                                .clip(RoundedCornerShape(11.dp))
+                                .background(palette.surfaceCard)
+                                .clickable(
+                                    interactionSource = backInteractionSource,
+                                    indication = null
+                                ) {
+                                    if (selectedTab == BottomNavItem.LIBRARY) {
+                                        onBackPressed()
+                                    } else {
+                                        selectedTab = BottomNavItem.LIBRARY
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 AppIcons.Back,
                                 contentDescription = "Back",
-                                tint = palette.shade11
+                                tint = palette.textSecondary,
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }
 
-                    Text(
-                        text = headerTitle,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            lineHeight = 24.sp
-                        ),
-                        color = palette.shade11,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-
-                    // Search icon on the right
-                    if (showSearchBar) {
-                        val searchInteractionSource = remember { MutableInteractionSource() }
-                        val searchIsPressed by searchInteractionSource.collectIsPressedAsState()
-                        val searchScale by animateFloatAsState(
-                            targetValue = if (searchIsPressed) 0.9f else 1f,
-                            animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 10000f),
-                            label = "searchScale"
+                    // Center: Librio switcher logo (tap to open content type selector)
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .clickable { showCategorySwitcher = true }
+                            .padding(horizontal = 4.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Row {
+                            Text(
+                                text = "lib",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 24.sp
+                                ),
+                                color = palette.textPrimary
+                            )
+                            Text(
+                                text = "rio",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 24.sp
+                                ),
+                                color = palette.accent
+                            )
+                        }
+                        Icon(
+                            AppIcons.ExpandMore,
+                            contentDescription = "Switch media type",
+                            tint = palette.textMuted,
+                            modifier = Modifier.size(16.dp)
                         )
-                        IconButton(
-                            onClick = onToggleSearch,
-                            modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .scale(searchScale),
-                            interactionSource = searchInteractionSource
-                        ) {
-                            Icon(
-                                AppIcons.Search,
-                                contentDescription = "Search",
-                                tint = palette.shade11
-                            )
-                        }
                     }
+
+                    // Right side: empty spacer to balance layout
+                    Spacer(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .size(34.dp)
+                    )
                 }
             }
         },
@@ -335,17 +358,21 @@ fun MainScreen(
                     showPlaceholderIcons = showPlaceholderIcons
                 )
 
-                // Full-width navigation bar matching header color with light icons
+                // Clean bottom navigation bar with theme background
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(palette.headerGradient())
-                        .padding(bottom = 8.dp)
+                        .background(palette.background)
                 ) {
+                    // Top border line
+                    HorizontalDivider(
+                        color = palette.divider,
+                        thickness = 1.dp
+                    )
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(64.dp)
+                            .height(58.dp)
                             .padding(horizontal = 8.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
@@ -355,7 +382,6 @@ fun MainScreen(
                             val interactionSource = remember { MutableInteractionSource() }
                             val isPressed by interactionSource.collectIsPressedAsState()
 
-                            // Subtle press scale animation only
                             val scale by animateFloatAsState(
                                 targetValue = if (isPressed) 0.92f else 1f,
                                 animationSpec = spring(
@@ -365,21 +391,13 @@ fun MainScreen(
                                 label = "navScale"
                             )
 
-                            // Smooth icon size transition
                             val iconSize by animateDpAsState(
-                                targetValue = if (isSelected) 26.dp else 24.dp,
+                                targetValue = if (isSelected) 22.dp else 20.dp,
                                 animationSpec = spring(
                                     dampingRatio = Spring.DampingRatioMediumBouncy,
                                     stiffness = Spring.StiffnessMedium
                                 ),
                                 label = "iconSize"
-                            )
-
-                            // Animate color alpha for smooth transition
-                            val iconAlpha by animateFloatAsState(
-                                targetValue = if (isSelected) 1f else 0.6f,
-                                animationSpec = tween(200),
-                                label = "iconAlpha"
                             )
 
                             Column(
@@ -390,11 +408,10 @@ fun MainScreen(
                                         interactionSource = interactionSource,
                                         indication = null
                                     ) { selectedTab = item }
-                                    .padding(vertical = 8.dp),
+                                    .padding(vertical = 6.dp, horizontal = 14.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
-                                // Crossfade between filled and outlined icons
                                 Crossfade(
                                     targetState = isSelected,
                                     animationSpec = tween(200),
@@ -404,15 +421,16 @@ fun MainScreen(
                                         imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
                                         contentDescription = item.title,
                                         modifier = Modifier.size(iconSize),
-                                        tint = palette.shade12.copy(alpha = iconAlpha)
+                                        tint = if (selected) palette.accent else palette.textMuted
                                     )
                                 }
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = item.title,
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                    fontSize = 11.sp,
-                                    color = palette.shade12.copy(alpha = iconAlpha)
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 9.sp,
+                                    letterSpacing = 0.2.sp,
+                                    color = if (isSelected) palette.accent else palette.textMuted
                                 )
                             }
                         }
@@ -611,6 +629,127 @@ fun MainScreen(
                             currentProfileName = activeProfile?.name ?: "Default"
                         )
                     }
+                }
+            }
+        }
+    }
+
+    // Category Switcher Bottom Sheet overlay
+    if (showCategorySwitcher) {
+        ContentTypeSwitcherSheet(
+            currentContentType = selectedContentType,
+            onSelect = { type ->
+                onContentTypeChange(type)
+                showCategorySwitcher = false
+            },
+            onDismiss = { showCategorySwitcher = false }
+        )
+    }
+}
+
+/**
+ * Bottom sheet for switching content types (Music, Audiobooks, E-Books, Comics, Movies)
+ * Matches the JSX CategorySwitcher / Librio FX CategorySwitcherSheet design
+ */
+@Composable
+private fun ContentTypeSwitcherSheet(
+    currentContentType: ContentType,
+    onSelect: (ContentType) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val palette = currentPalette()
+
+    data class MediaCategory(val type: ContentType, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val color: androidx.compose.ui.graphics.Color)
+
+    val categories = listOf(
+        MediaCategory(ContentType.MUSIC, "Music", AppIcons.Music, palette.accent),
+        MediaCategory(ContentType.MOVIE, "Movies", AppIcons.Movie, palette.accentGradientEnd),
+        MediaCategory(ContentType.AUDIOBOOK, "Books", AppIcons.Audiobook, androidx.compose.ui.graphics.Color(0xFF8B5E3C)),
+        MediaCategory(ContentType.EBOOK, "E-Books", AppIcons.Book, androidx.compose.ui.graphics.Color(0xFF3A6B8A)),
+        MediaCategory(ContentType.COMICS, "Comics", AppIcons.Comic, androidx.compose.ui.graphics.Color(0xFF7A4A8B)),
+    )
+
+    Box(Modifier.fillMaxSize()) {
+        // Scrim
+        Box(
+            Modifier.fillMaxSize()
+                .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.4f))
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                ) { onDismiss() }
+        )
+
+        // Bottom sheet
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                .background(palette.background)
+                .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {}
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp, bottom = 24.dp),
+        ) {
+            // Handle bar
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .size(width = 36.dp, height = 4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(palette.divider)
+            )
+
+            Text(
+                "Switch Media",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = palette.textPrimary,
+                modifier = Modifier.padding(top = 14.dp, bottom = 14.dp)
+            )
+
+            // 3-column grid
+            categories.chunked(3).forEach { row ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    row.forEach { cat ->
+                        val isActive = currentContentType == cat.type
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(if (isActive) cat.color.copy(alpha = 0.1f) else palette.surfaceCard)
+                                .then(
+                                    if (isActive) Modifier.border(1.5.dp, cat.color, RoundedCornerShape(16.dp))
+                                    else Modifier.border(1.dp, palette.divider, RoundedCornerShape(16.dp))
+                                )
+                                .clickable { onSelect(cat.type) }
+                                .padding(vertical = 12.dp, horizontal = 6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        Brush.linearGradient(listOf(cat.color, cat.color.copy(alpha = 0.73f)))
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(cat.icon, null, tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(18.dp))
+                            }
+                            Text(
+                                cat.label,
+                                fontSize = 10.sp,
+                                fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.SemiBold,
+                                color = if (isActive) cat.color else palette.textSecondary,
+                            )
+                        }
+                    }
+                    repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }

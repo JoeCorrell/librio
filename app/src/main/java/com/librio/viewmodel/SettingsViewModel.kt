@@ -263,6 +263,9 @@ class SettingsViewModel : ViewModel() {
     val lastActiveType: StateFlow<String?>?
         get() = repository?.lastActiveType
 
+    val lastScreen: StateFlow<String?>?
+        get() = repository?.lastScreen
+
     // Music playback mode settings
     val musicShuffleEnabled: StateFlow<Boolean>?
         get() = repository?.musicShuffleEnabled
@@ -503,7 +506,7 @@ class SettingsViewModel : ViewModel() {
     }
 
     fun getThemeSync(): AppTheme {
-        return repository?.appTheme?.value ?: AppTheme.TEAL
+        return repository?.appTheme?.value ?: AppTheme.PARCHMENT
     }
 
     // E-Reader settings setters
@@ -769,6 +772,10 @@ class SettingsViewModel : ViewModel() {
 
     fun setLastActiveType(type: String?) {
         repository?.setLastActiveType(type)
+    }
+
+    fun setLastScreen(screen: String?) {
+        repository?.setLastScreen(screen)
     }
 
     fun setMusicShuffleEnabled(enabled: Boolean) {

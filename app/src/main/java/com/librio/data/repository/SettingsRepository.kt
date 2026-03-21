@@ -504,6 +504,9 @@ class SettingsRepository(private val context: Context) {
     private val _lastActiveType = MutableStateFlow(loadString(KEY_LAST_ACTIVE_TYPE))
     val lastActiveType: StateFlow<String?> = _lastActiveType.asStateFlow()
 
+    private val _lastScreen = MutableStateFlow(loadString(KEY_LAST_SCREEN))
+    val lastScreen: StateFlow<String?> = _lastScreen.asStateFlow()
+
     // Music playback mode settings
     private val _musicShuffleEnabled = MutableStateFlow(loadBoolean(KEY_MUSIC_SHUFFLE_ENABLED, false))
     val musicShuffleEnabled: StateFlow<Boolean> = _musicShuffleEnabled.asStateFlow()
@@ -749,7 +752,7 @@ class SettingsRepository(private val context: Context) {
     ): UserProfile {
         val theme = profileSettings?.optString("theme").takeIf { !it.isNullOrBlank() }
             ?: baseProfile?.theme
-            ?: AppTheme.DARK_TEAL.name
+            ?: AppTheme.PARCHMENT.name
         val darkMode = profileSettings?.optBoolean("darkMode", baseProfile?.darkMode ?: false)
             ?: baseProfile?.darkMode
             ?: false
@@ -967,9 +970,9 @@ class SettingsRepository(private val context: Context) {
         val settings = profileFileManager.loadProfileSettings(currentProfileName) ?: return
 
         // Update StateFlows with loaded values
-        _appTheme.value = try { AppTheme.valueOf(settings.theme) } catch (e: Exception) { AppTheme.DARK_TEAL }
+        _appTheme.value = try { AppTheme.valueOf(settings.theme) } catch (e: Exception) { AppTheme.PARCHMENT }
         _darkMode.value = settings.darkMode
-        _accentTheme.value = try { AppTheme.valueOf(settings.accentTheme) } catch (e: Exception) { AppTheme.DARK_TEAL }
+        _accentTheme.value = try { AppTheme.valueOf(settings.accentTheme) } catch (e: Exception) { AppTheme.PARCHMENT }
         _backgroundTheme.value = try { BackgroundTheme.valueOf(settings.backgroundTheme) } catch (e: Exception) { BackgroundTheme.DEFAULT }
         _customPrimaryColor.value = settings.customPrimaryColor
         _customAccentColor.value = settings.customAccentColor
@@ -1031,6 +1034,7 @@ class SettingsRepository(private val context: Context) {
             putBoolean(getProfileKey(KEY_CONFIRM_BEFORE_DELETE), settings.confirmBeforeDelete)
             putBoolean(getProfileKey(KEY_USE_SQUARE_CORNERS), settings.useSquareCorners)
             putString(getProfileKey(KEY_SELECTED_CONTENT_TYPE), settings.selectedContentType)
+            putString(getProfileKey(KEY_COLLAPSED_SERIES), settings.collapsedSeries.joinToString("|"))
             apply()
         }
     }
@@ -1850,6 +1854,15 @@ class SettingsRepository(private val context: Context) {
         saveAudioSettingsToFile()
     }
 
+    fun setLastScreen(screen: String?) {
+        _lastScreen.value = screen
+        if (screen != null) {
+            prefs.edit().putString(getProfileKey(KEY_LAST_SCREEN), screen).commit()
+        } else {
+            prefs.edit().remove(getProfileKey(KEY_LAST_SCREEN)).commit()
+        }
+    }
+
     fun setMusicShuffleEnabled(enabled: Boolean) {
         _musicShuffleEnabled.value = enabled
         // Use commit() for synchronous write to ensure state is persisted before app close
@@ -1892,7 +1905,7 @@ class SettingsRepository(private val context: Context) {
             id = UUID.randomUUID().toString(),
             name = name,
             isActive = false,
-            theme = AppTheme.DARK_TEAL.name,
+            theme = AppTheme.PARCHMENT.name,
             darkMode = false,
             profilePicture = null
         )
@@ -1910,7 +1923,7 @@ class SettingsRepository(private val context: Context) {
                 version = 1,
                 id = newProfile.id,
                 name = name,
-                theme = AppTheme.DARK_TEAL.name,
+                theme = AppTheme.PARCHMENT.name,
                 darkMode = false,
                 libraryOwnerName = name
             )
@@ -2017,7 +2030,7 @@ class SettingsRepository(private val context: Context) {
             _appTheme.value = try {
                 AppTheme.valueOf(activeProfile.theme)
             } catch (e: Exception) {
-                AppTheme.DARK_TEAL
+                AppTheme.PARCHMENT
             }
             _darkMode.value = activeProfile.darkMode
             prefs.edit()
@@ -2345,7 +2358,7 @@ class SettingsRepository(private val context: Context) {
                             id = parts[0],
                             name = parts[1],
                             isActive = parts[0] == activeId,
-                            theme = parts[2].ifEmpty { AppTheme.DARK_TEAL.name },
+                            theme = parts[2].ifEmpty { AppTheme.PARCHMENT.name },
                             darkMode = parts[3].toBooleanStrictOrNull() ?: false,
                             profilePicture = null
                         )
@@ -2356,7 +2369,7 @@ class SettingsRepository(private val context: Context) {
                             id = parts[0],
                             name = parts[1],
                             isActive = parts[0] == activeId,
-                            theme = AppTheme.DARK_TEAL.name,
+                            theme = AppTheme.PARCHMENT.name,
                             darkMode = false,
                             profilePicture = null
                         )
@@ -2374,7 +2387,7 @@ class SettingsRepository(private val context: Context) {
                 id = "default",
                 name = "Default",
                 isActive = true,
-                theme = AppTheme.DARK_TEAL.name,
+                theme = AppTheme.PARCHMENT.name,
                 darkMode = false
             )
             listOf(defaultProfile)
@@ -2399,11 +2412,11 @@ class SettingsRepository(private val context: Context) {
 
     private fun loadTheme(): AppTheme {
         loadActiveProfileThemeFromPrefs()?.first?.let { return it }
-        val themeName = prefs.getString(KEY_THEME, AppTheme.DARK_TEAL.name)
+        val themeName = prefs.getString(KEY_THEME, AppTheme.PARCHMENT.name)
         return try {
-            AppTheme.valueOf(themeName ?: AppTheme.DARK_TEAL.name)
+            AppTheme.valueOf(themeName ?: AppTheme.PARCHMENT.name)
         } catch (e: Exception) {
-            AppTheme.DARK_TEAL
+            AppTheme.PARCHMENT
         }
     }
 
@@ -2694,6 +2707,7 @@ class SettingsRepository(private val context: Context) {
         _collapsedSeries.value = seriesIds
         val serialized = seriesIds.joinToString("|")
         prefs.edit().putString(getProfileKey(KEY_COLLAPSED_SERIES), serialized).apply()
+        saveProfileSettingsToFile()
     }
 
     fun setSelectedPlaylistForCategory(category: String, playlistId: String?) {
@@ -2875,6 +2889,7 @@ class SettingsRepository(private val context: Context) {
         private const val KEY_LAST_ACTIVE_TYPE = "last_active_type"
         private const val KEY_MUSIC_SHUFFLE_ENABLED = "music_shuffle_enabled"
         private const val KEY_MUSIC_REPEAT_MODE = "music_repeat_mode"
+        private const val KEY_LAST_SCREEN = "last_screen"
         private const val KEY_ONBOARDING_COMPLETE = "onboarding_complete"
     }
 

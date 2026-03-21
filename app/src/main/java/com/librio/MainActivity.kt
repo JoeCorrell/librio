@@ -105,8 +105,8 @@ class MainActivity : ComponentActivity() {
             }
 
             // Observe settings
-            val appTheme by settingsViewModel.appTheme?.collectAsState() ?: remember { mutableStateOf(AppTheme.TEAL) }
-            val accentTheme by settingsViewModel.accentTheme?.collectAsState() ?: remember { mutableStateOf(AppTheme.TEAL) }
+            val appTheme by settingsViewModel.appTheme?.collectAsState() ?: remember { mutableStateOf(AppTheme.PARCHMENT) }
+            val accentTheme by settingsViewModel.accentTheme?.collectAsState() ?: remember { mutableStateOf(AppTheme.PARCHMENT) }
             val darkMode by settingsViewModel.darkMode?.collectAsState() ?: remember { mutableStateOf(false) }
             val skipForward by settingsViewModel.skipForwardDuration?.collectAsState() ?: remember { mutableStateOf(30) }
             val skipBack by settingsViewModel.skipBackDuration?.collectAsState() ?: remember { mutableStateOf(10) }
@@ -133,6 +133,7 @@ class MainActivity : ComponentActivity() {
             val lastAudiobookPosition by settingsViewModel.lastAudiobookPosition?.collectAsState() ?: remember { mutableStateOf(0L) }
             val lastAudiobookPlaying by settingsViewModel.lastAudiobookPlaying?.collectAsState() ?: remember { mutableStateOf(false) }
             val lastActiveType by settingsViewModel.lastActiveType?.collectAsState() ?: remember { mutableStateOf<String?>(null) }
+            val lastScreen by settingsViewModel.lastScreen?.collectAsState() ?: remember { mutableStateOf<String?>(null) }
             val musicShuffleEnabled by settingsViewModel.musicShuffleEnabled?.collectAsState() ?: remember { mutableStateOf(false) }
             val musicRepeatMode by settingsViewModel.musicRepeatMode?.collectAsState() ?: remember { mutableStateOf(0) }
             val showOnboarding by settingsViewModel.showOnboarding.collectAsState()
@@ -958,6 +959,16 @@ class MainActivity : ComponentActivity() {
                     useSquareCorners = useSquareCorners,
                     fontFamily = selectedFontFamily
                 ) {
+                    // Track current screen for persistence
+                    LaunchedEffect(navController) {
+                        navController.currentBackStackEntryFlow.collect { entry ->
+                            val route = entry.destination.route
+                            if (route != null && route != Screen.Splash.route && route != Screen.Onboarding.route) {
+                                settingsViewModel.setLastScreen(route)
+                            }
+                        }
+                    }
+
                     Surface(modifier = Modifier.fillMaxSize()) {
                         NavHost(
                             navController = navController,
@@ -1002,8 +1013,20 @@ class MainActivity : ComponentActivity() {
                                             popUpTo(Screen.Splash.route) { inclusive = true }
                                         }
                                     } else {
+                                        // Restore last screen if available
+                                        val restoreRoute = when (lastScreen) {
+                                            Screen.Player.route -> Screen.Player.route
+                                            Screen.MusicPlayer.route -> Screen.MusicPlayer.route
+                                            Screen.MoviePlayer.route -> Screen.MoviePlayer.route
+                                            Screen.EbookReader.route -> Screen.EbookReader.route
+                                            Screen.ComicReader.route -> Screen.ComicReader.route
+                                            else -> null
+                                        }
                                         navController.navigate(Screen.Main.createRoute("library")) {
                                             popUpTo(Screen.Splash.route) { inclusive = true }
+                                        }
+                                        if (restoreRoute != null) {
+                                            navController.navigate(restoreRoute)
                                         }
                                     }
                                 }

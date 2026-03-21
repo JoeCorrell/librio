@@ -105,6 +105,10 @@ object AppIcons {
     val Tune: ImageVector = Icons.Rounded.Tune
     val AutoStories: ImageVector = Icons.Rounded.AutoStories
 
+    // Social
+    val Heart: ImageVector = Icons.Rounded.FavoriteBorder
+    val HeartFilled: ImageVector = Icons.Rounded.Favorite
+
     // Media States
     val PlayCircle: ImageVector = Icons.Rounded.PlayCircle
     val Movie: ImageVector = Icons.Rounded.Movie

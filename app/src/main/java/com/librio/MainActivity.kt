@@ -2050,8 +2050,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Flush all pending progress updates to ensure no data loss
-        CoroutineScope(Dispatchers.Main).launch {
+        // Flush all pending progress updates synchronously to ensure no data loss
+        kotlinx.coroutines.runBlocking {
             libraryViewModelRef?.flushPendingProgress()
         }
     }

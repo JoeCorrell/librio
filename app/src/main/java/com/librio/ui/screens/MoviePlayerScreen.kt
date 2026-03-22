@@ -461,7 +461,7 @@ fun MoviePlayerScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
-                            color = palette.primary,
+                            color = palette.textPrimary,
                             modifier = Modifier.size(48.dp),
                             strokeWidth = 5.dp
                         )

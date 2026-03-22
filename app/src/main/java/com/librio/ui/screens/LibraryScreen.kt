@@ -174,7 +174,7 @@ fun LibraryScreen(
                                     fontSize = titleSize
                                 ),
                                 fontWeight = FontWeight.Bold,
-                                color = palette.primary,
+                                color = palette.textPrimary,
                                 maxLines = 1
                             )
                             Text(
@@ -182,7 +182,7 @@ fun LibraryScreen(
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontSize = if (isCompact) 11.sp else 12.sp
                                 ),
-                                color = palette.primary.copy(alpha = 0.5f)
+                                color = palette.textMuted
                             )
                         }
                     }
@@ -200,7 +200,7 @@ fun LibraryScreen(
                             Icon(
                                 imageVector = if (isSearchVisible) AppIcons.Close else AppIcons.Search,
                                 contentDescription = "Search",
-                                tint = palette.primaryLight,
+                                tint = palette.accent,
                                 modifier = Modifier.size(if (isCompact) 20.dp else 24.dp)
                             )
                         }
@@ -255,7 +255,7 @@ fun LibraryScreen(
                             Icon(
                                 imageVector = AppIcons.Settings,
                                 contentDescription = "Settings",
-                                tint = palette.primaryLight,
+                                tint = palette.accent,
                                 modifier = Modifier.size(if (isCompact) 20.dp else 24.dp)
                             )
                         }
@@ -314,7 +314,7 @@ fun LibraryScreen(
                                     if (searchQuery.isEmpty()) {
                                         Text(
                                             "Search audiobooks...",
-                                            color = palette.primary.copy(alpha = 0.5f),
+                                            color = palette.textMuted,
                                             fontSize = 16.sp
                                         )
                                     }
@@ -357,7 +357,7 @@ fun LibraryScreen(
                         text = "Continue Listening",
                         style = MaterialTheme.typography.titleMedium.copy(fontSize = dimens.titleTextSize.sp),
                         fontWeight = FontWeight.SemiBold,
-                        color = palette.primaryLight,
+                        color = palette.textSecondary,
                         modifier = Modifier.padding(horizontal = dimens.horizontalPadding)
                     )
 
@@ -426,12 +426,12 @@ fun LibraryScreen(
                         text = "All Audiobooks",
                         style = MaterialTheme.typography.titleMedium.copy(fontSize = dimens.titleTextSize.sp),
                         fontWeight = FontWeight.SemiBold,
-                        color = palette.primaryLight
+                        color = palette.textSecondary
                     )
                     Text(
                         text = sortOption.displayName,
                         style = MaterialTheme.typography.labelSmall,
-                        color = palette.primary.copy(alpha = 0.5f)
+                        color = palette.textMuted
                     )
                 }
 
@@ -493,7 +493,7 @@ private fun ScrollArrowButton(
             imageVector = if (direction == ScrollDirection.LEFT)
                 AppIcons.ChevronLeft else AppIcons.ChevronRight,
             contentDescription = if (direction == ScrollDirection.LEFT) "Scroll left" else "Scroll right",
-            tint = palette.primaryLight,
+            tint = palette.accent,
             modifier = Modifier.size(28.dp)
         )
     }
@@ -802,7 +802,7 @@ private fun EmptyLibraryState(
                 .scale(iconScale)
                 .offset(y = -floatOffset.dp)
                 .background(
-                    color = palette.primary.copy(alpha = 0.15f),
+                    color = palette.accent.copy(alpha = 0.15f),
                     shape = shape35
                 ),
             contentAlignment = Alignment.Center
@@ -811,7 +811,7 @@ private fun EmptyLibraryState(
                 imageVector = AppIcons.LibraryMusic,
                 contentDescription = null,
                 modifier = Modifier.size(dimens.splashLogoSize * 0.4f),
-                tint = palette.primaryLight
+                tint = palette.accent
             )
         }
 
@@ -821,7 +821,7 @@ private fun EmptyLibraryState(
             text = "Your Library is Empty",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color = palette.primary,
+            color = palette.textPrimary,
             modifier = Modifier.graphicsLayer(alpha = contentAlpha)
         )
 
@@ -830,7 +830,7 @@ private fun EmptyLibraryState(
         Text(
             text = "Add your first audiobook to get started",
             style = MaterialTheme.typography.bodyLarge,
-            color = palette.primary.copy(alpha = 0.7f),
+            color = palette.textSecondary,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .padding(horizontal = 48.dp)
@@ -842,7 +842,7 @@ private fun EmptyLibraryState(
         Text(
             text = "Supports M4B, MP3, M4A, AAC, OGG,\nFLAC, WAV, OPUS, WMA and more",
             style = MaterialTheme.typography.bodySmall,
-            color = palette.primary.copy(alpha = 0.5f),
+            color = palette.textMuted,
             textAlign = TextAlign.Center,
             modifier = Modifier.graphicsLayer(alpha = contentAlpha)
         )

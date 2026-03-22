@@ -226,7 +226,7 @@ fun ProfileScreen(
             title = {
                 Text(
                     "Crop Profile Picture",
-                    color = palette.primary
+                    color = palette.textPrimary
                 )
             },
             text = {
@@ -406,7 +406,7 @@ fun ProfileScreen(
                         }
                     }
                 ) {
-                    Text("Save", color = palette.primary)
+                    Text("Save", color = palette.accent)
                 }
             },
             dismissButton = {
@@ -431,7 +431,7 @@ fun ProfileScreen(
             title = {
                 Text(
                     "Add New Profile",
-                    color = palette.primary
+                    color = palette.textPrimary
                 )
             },
             text = {
@@ -441,8 +441,8 @@ fun ProfileScreen(
                     label = { Text("Profile Name") },
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
-                        cursorColor = palette.primary
+                        focusedBorderColor = palette.accent,
+                        cursorColor = palette.accent
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -458,7 +458,7 @@ fun ProfileScreen(
                     },
                     enabled = newProfileName.isNotBlank()
                 ) {
-                    Text("Add", color = palette.primary)
+                    Text("Add", color = palette.accent)
                 }
             },
             dismissButton = {
@@ -480,14 +480,14 @@ fun ProfileScreen(
             title = {
                 Text(
                     "Delete Profile",
-                    color = palette.primary
+                    color = palette.textPrimary
                 )
             },
             text = {
                 Column {
                     Text(
                         "Are you sure you want to delete \"${profile.name}\"?",
-                        color = palette.primary.copy(alpha = 0.7f)
+                        color = palette.textSecondary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -529,7 +529,7 @@ fun ProfileScreen(
             title = {
                 Text(
                     profile.name,
-                    color = palette.primary
+                    color = palette.textPrimary
                 )
             },
             text = {
@@ -549,13 +549,13 @@ fun ProfileScreen(
                         Icon(
                             AppIcons.Edit,
                             contentDescription = null,
-                            tint = palette.primary,
+                            tint = palette.accent,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
                             "Rename Profile",
-                            color = palette.primary
+                            color = palette.textPrimary
                         )
                     }
 
@@ -607,7 +607,7 @@ fun ProfileScreen(
             title = {
                 Text(
                     "Rename Profile",
-                    color = palette.primary
+                    color = palette.textPrimary
                 )
             },
             text = {
@@ -617,8 +617,8 @@ fun ProfileScreen(
                     label = { Text("Profile Name") },
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
-                        cursorColor = palette.primary
+                        focusedBorderColor = palette.accent,
+                        cursorColor = palette.accent
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -634,7 +634,7 @@ fun ProfileScreen(
                     },
                     enabled = renameProfileName.isNotBlank() && renameProfileName != profile.name
                 ) {
-                    Text("Save", color = palette.primary)
+                    Text("Save", color = palette.accent)
                 }
             },
             dismissButton = {
@@ -816,7 +816,7 @@ fun ProfileScreen(
                         text = "Generated Palette",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = palette.primary
+                        color = palette.textPrimary
                     )
                     Row(
                         modifier = Modifier
@@ -964,7 +964,7 @@ fun ProfileScreen(
                         text = "Choose Your Color",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = palette.primary
+                        color = palette.textPrimary
                     )
 
                     // Color preview swatch
@@ -990,11 +990,11 @@ fun ProfileScreen(
                                 } catch (_: Exception) { }
                             }
                         },
-                        label = { Text("Hex (#RRGGBB)", color = palette.primary) },
+                        label = { Text("Hex (#RRGGBB)", color = palette.textSecondary) },
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = palette.primary,
-                            cursorColor = palette.primary
+                            focusedBorderColor = palette.accent,
+                            cursorColor = palette.accent
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -1127,7 +1127,7 @@ fun ProfileScreen(
                     text = if (currentProfileName.isNotBlank()) "${currentProfileName}'s Library" else "My Library",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = palette.primary
+                    color = palette.textPrimary
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -1245,7 +1245,7 @@ fun ProfileScreen(
                                     text = "Color Theme",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = palette.primary
+                                    color = palette.textPrimary
                                 )
                                 Text(
                                     text = currentTheme.displayName,
@@ -1299,7 +1299,7 @@ fun ProfileScreen(
                                     text = "Dark Mode",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = palette.primary
+                                    color = palette.textPrimary
                                 )
                                 Text(
                                     text = if (darkMode) "On" else "Off",
@@ -1359,7 +1359,7 @@ fun ProfileScreen(
                                         text = "App Scale",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = palette.primary
+                                        color = palette.textPrimary
                                     )
                                     Text(
                                         text = "${(appScale * 100).roundToInt()}%",
@@ -1417,7 +1417,7 @@ fun ProfileScreen(
                                         text = "Typography",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = palette.primary
+                                        color = palette.textPrimary
                                     )
                                     Text(
                                         text = "Font size & family",
@@ -1443,7 +1443,7 @@ fun ProfileScreen(
                                     text = "Size",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
-                                    color = palette.primary,
+                                    color = palette.textPrimary,
                                     modifier = Modifier.width(40.dp)
                                 )
                                 MinimalSlider(
@@ -1480,7 +1480,7 @@ fun ProfileScreen(
                                     text = "Font",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
-                                    color = palette.primary,
+                                    color = palette.textPrimary,
                                     modifier = Modifier.width(40.dp)
                                 )
                                 MinimalSlider(
@@ -1674,7 +1674,7 @@ private fun ProfileChip(
                         else Brush.linearGradient(listOf(palette.shade5.copy(alpha = 0.5f), palette.shade6.copy(alpha = 0.4f)))
                     )
                     .then(
-                        if (isSelected) Modifier.border(3.dp, palette.primaryLight, CircleShape)
+                        if (isSelected) Modifier.border(3.dp, palette.accent, CircleShape)
                         else Modifier.border(2.dp, palette.shade4, CircleShape)
                     ),
                 contentAlignment = Alignment.Center
@@ -1699,7 +1699,7 @@ private fun ProfileChip(
             Text(
                 text = profile.name,
                 style = MaterialTheme.typography.labelSmall,
-                color = if (isSelected) palette.primary else palette.primary.copy(alpha = 0.5f)
+                color = if (isSelected) palette.accent else palette.textMuted
             )
         }
     }

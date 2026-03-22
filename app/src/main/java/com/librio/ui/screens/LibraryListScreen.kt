@@ -489,7 +489,7 @@ fun LibraryListScreen(
             containerColor = palette.shade10,
             shape = shape12,
             title = {
-                Text("Add Playlist", color = palette.primary)
+                Text("Add Playlist", color = palette.accent)
             },
             text = {
                 OutlinedTextField(
@@ -538,7 +538,7 @@ fun LibraryListScreen(
             onDismissRequest = { showDeletePlaylistDialog = null },
             containerColor = palette.shade10,
             shape = shape12,
-            title = { Text("Delete Playlist", color = palette.primary) },
+            title = { Text("Delete Playlist", color = palette.accent) },
             text = {
                 Text(
                     "Delete \"${playlist.name}\"? Items in this playlist will not be deleted.",
@@ -576,7 +576,7 @@ fun LibraryListScreen(
             },
             containerColor = palette.shade10,
             title = {
-                Text("Add Category", color = palette.primary)
+                Text("Add Category", color = palette.accent)
             },
             text = {
                 OutlinedTextField(
@@ -585,8 +585,8 @@ fun LibraryListScreen(
                     label = { Text("Category Name") },
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
-                        cursorColor = palette.primary
+                        focusedBorderColor = palette.accent,
+                        cursorColor = palette.accent
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -602,7 +602,7 @@ fun LibraryListScreen(
                     },
                     enabled = newCategoryName.isNotBlank()
                 ) {
-                    Text("Add", color = palette.primary)
+                    Text("Add", color = palette.accent)
                 }
             },
             dismissButton = {
@@ -621,8 +621,8 @@ fun LibraryListScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = null },
             containerColor = palette.shade10,
-            title = { Text("Remove Audiobook", color = palette.primary) },
-            text = { Text("Remove \"${audiobook.title}\" from your library?", color = palette.primary.copy(alpha = 0.7f)) },
+            title = { Text("Remove Audiobook", color = palette.accent) },
+            text = { Text("Remove \"${audiobook.title}\" from your library?", color = palette.textSecondary) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -646,8 +646,8 @@ fun LibraryListScreen(
         AlertDialog(
             onDismissRequest = { showDeleteBookDialog = null },
             containerColor = palette.shade10,
-            title = { Text("Remove Book", color = palette.primary) },
-            text = { Text("Remove \"${book.title}\" from your library?", color = palette.primary.copy(alpha = 0.7f)) },
+            title = { Text("Remove Book", color = palette.accent) },
+            text = { Text("Remove \"${book.title}\" from your library?", color = palette.textSecondary) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -1426,7 +1426,7 @@ private fun SeriesDivider(
                             Icon(
                                 AppIcons.Image,
                                 contentDescription = null,
-                                tint = palette.primary,
+                                tint = palette.accent,
                                 modifier = Modifier.size(20.dp)
                             )
                             Text("Set Cover Art", color = palette.textPrimary)
@@ -1447,7 +1447,7 @@ private fun SeriesDivider(
                         Icon(
                             AppIcons.Edit,
                             contentDescription = null,
-                            tint = palette.primary,
+                            tint = palette.accent,
                             modifier = Modifier.size(20.dp)
                         )
                         Text("Rename Playlist", color = palette.textPrimary)
@@ -2054,7 +2054,7 @@ private fun EditMetadataDialog(
         AlertDialog(
             onDismissRequest = { showDeleteSeriesConfirm = null },
             containerColor = palette.shade10,
-            title = { Text("Delete Series", color = palette.primary) },
+            title = { Text("Delete Series", color = palette.accent) },
             text = {
                 Text(
                     "Delete \"${seriesToDelete.name}\"? Items in this series will be moved to \"None\" but won't be deleted.",
@@ -2088,7 +2088,7 @@ private fun EditMetadataDialog(
                 newSeriesName = ""
             },
             containerColor = palette.shade10,
-            title = { Text("New Series", color = palette.primary) },
+            title = { Text("New Series", color = palette.accent) },
             text = {
                 OutlinedTextField(
                     value = newSeriesName,
@@ -2097,9 +2097,9 @@ private fun EditMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -2116,7 +2116,7 @@ private fun EditMetadataDialog(
                     },
                     enabled = newSeriesName.isNotBlank()
                 ) {
-                    Text("Create", color = palette.primary)
+                    Text("Create", color = palette.accent)
                 }
             },
             dismissButton = {
@@ -2135,8 +2135,8 @@ private fun EditMetadataDialog(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             containerColor = palette.shade10,
-            title = { Text("Remove Audiobook", color = palette.primary) },
-            text = { Text("Remove \"${audiobook.title}\" from your library?", color = palette.primary.copy(alpha = 0.7f)) },
+            title = { Text("Remove Audiobook", color = palette.accent) },
+            text = { Text("Remove \"${audiobook.title}\" from your library?", color = palette.textSecondary) },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete()
@@ -2164,7 +2164,7 @@ private fun EditMetadataDialog(
             ) {
                 Text(
                     "Edit Audiobook Info",
-                    color = palette.primary
+                    color = palette.textPrimary
                 )
                 IconButton(onClick = { showDeleteConfirm = true }) {
                     Icon(
@@ -2186,9 +2186,9 @@ private fun EditMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -2201,9 +2201,9 @@ private fun EditMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -2216,9 +2216,9 @@ private fun EditMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -2231,9 +2231,9 @@ private fun EditMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -2251,9 +2251,9 @@ private fun EditMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -2264,7 +2264,7 @@ private fun EditMetadataDialog(
                 Text(
                     "Series/Playlist",
                     style = MaterialTheme.typography.bodySmall,
-                    color = palette.primary.copy(alpha = 0.7f)
+                    color = palette.textSecondary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 ExposedDropdownMenuBox(
@@ -2282,7 +2282,7 @@ private fun EditMetadataDialog(
                             .fillMaxWidth()
                             .menuAnchor(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = palette.primary,
+                            focusedBorderColor = palette.accent,
                             unfocusedBorderColor = palette.shade4,
                             focusedTextColor = palette.textPrimary,
                             unfocusedTextColor = palette.textPrimary
@@ -2366,7 +2366,7 @@ private fun EditMetadataDialog(
                             checked = saveToFile,
                             onCheckedChange = { saveToFile = it },
                             colors = CheckboxDefaults.colors(
-                                checkedColor = palette.primary,
+                                checkedColor = palette.accent,
                                 uncheckedColor = palette.shade4
                             )
                         )
@@ -2395,7 +2395,7 @@ private fun EditMetadataDialog(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = palette.primary
+                        contentColor = palette.accent
                     ),
                     border = BorderStroke(1.dp, palette.shade4)
                 ) {
@@ -2426,12 +2426,12 @@ private fun EditMetadataDialog(
                 },
                 enabled = title.isNotBlank()
             ) {
-                Text("Save", color = palette.primary)
+                Text("Save", color = palette.accent)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = palette.primary.copy(alpha = 0.7f))
+                Text("Cancel", color = palette.textSecondary)
             }
         }
     )
@@ -2888,7 +2888,7 @@ private fun EditBookMetadataDialog(
         AlertDialog(
             onDismissRequest = { showDeleteSeriesConfirm = null },
             containerColor = palette.shade10,
-            title = { Text("Delete Series", color = palette.primary) },
+            title = { Text("Delete Series", color = palette.accent) },
             text = {
                 Text(
                     "Delete \"${seriesToDelete.name}\"? Items in this series will be moved to \"None\" but won't be deleted.",
@@ -2922,7 +2922,7 @@ private fun EditBookMetadataDialog(
                 newSeriesName = ""
             },
             containerColor = palette.shade10,
-            title = { Text("New Series", color = palette.primary) },
+            title = { Text("New Series", color = palette.accent) },
             text = {
                 OutlinedTextField(
                     value = newSeriesName,
@@ -2931,9 +2931,9 @@ private fun EditBookMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -2950,7 +2950,7 @@ private fun EditBookMetadataDialog(
                     },
                     enabled = newSeriesName.isNotBlank()
                 ) {
-                    Text("Create", color = palette.primary)
+                    Text("Create", color = palette.accent)
                 }
             },
             dismissButton = {
@@ -2969,8 +2969,8 @@ private fun EditBookMetadataDialog(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             containerColor = palette.shade10,
-            title = { Text("Remove Book", color = palette.primary) },
-            text = { Text("Remove \"${book.title}\" from your library?", color = palette.primary.copy(alpha = 0.7f)) },
+            title = { Text("Remove Book", color = palette.accent) },
+            text = { Text("Remove \"${book.title}\" from your library?", color = palette.textSecondary) },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete()
@@ -2998,7 +2998,7 @@ private fun EditBookMetadataDialog(
             ) {
                 Text(
                     "Edit Book Info",
-                    color = palette.primary
+                    color = palette.textPrimary
                 )
                 IconButton(onClick = { showDeleteConfirm = true }) {
                     Icon(
@@ -3020,9 +3020,9 @@ private fun EditBookMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -3035,9 +3035,9 @@ private fun EditBookMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -3050,9 +3050,9 @@ private fun EditBookMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -3063,7 +3063,7 @@ private fun EditBookMetadataDialog(
                 Text(
                     "Series/Playlist",
                     style = MaterialTheme.typography.bodySmall,
-                    color = palette.primary.copy(alpha = 0.7f)
+                    color = palette.textSecondary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 ExposedDropdownMenuBox(
@@ -3081,7 +3081,7 @@ private fun EditBookMetadataDialog(
                             .fillMaxWidth()
                             .menuAnchor(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = palette.primary,
+                            focusedBorderColor = palette.accent,
                             unfocusedBorderColor = palette.shade4,
                             focusedTextColor = palette.textPrimary,
                             unfocusedTextColor = palette.textPrimary
@@ -3163,7 +3163,7 @@ private fun EditBookMetadataDialog(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = palette.primary
+                        contentColor = palette.accent
                     ),
                     border = BorderStroke(1.dp, palette.shade4)
                 ) {
@@ -3190,7 +3190,7 @@ private fun EditBookMetadataDialog(
                             checked = saveToFile,
                             onCheckedChange = { saveToFile = it },
                             colors = CheckboxDefaults.colors(
-                                checkedColor = palette.primary,
+                                checkedColor = palette.accent,
                                 uncheckedColor = palette.shade4
                             )
                         )
@@ -3219,12 +3219,12 @@ private fun EditBookMetadataDialog(
                 },
                 enabled = title.isNotBlank()
             ) {
-                Text("Save", color = palette.primary)
+                Text("Save", color = palette.accent)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = palette.primary.copy(alpha = 0.7f))
+                Text("Cancel", color = palette.textSecondary)
             }
         }
     )
@@ -3669,7 +3669,7 @@ fun SortMenuDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(palette.primary.copy(alpha = 0.2f))
+                        .background(palette.accent.copy(alpha = 0.2f))
                 )
 
                 // Filter Options Section
@@ -3712,7 +3712,7 @@ fun SortMenuDialog(
                                 Icon(
                                     AppIcons.GridView,
                                     contentDescription = null,
-                                    tint = if (selectedPlaylist == null) palette.accent else palette.primary,
+                                    tint = if (selectedPlaylist == null) palette.accent else palette.textPrimary,
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Text(
@@ -3760,7 +3760,7 @@ fun SortMenuDialog(
                                     Icon(
                                         AppIcons.Playlist,
                                         contentDescription = null,
-                                        tint = if (isSelected) palette.accent else palette.primary,
+                                        tint = if (isSelected) palette.accent else palette.textPrimary,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
@@ -3847,7 +3847,7 @@ private fun EditMusicMetadataDialog(
         AlertDialog(
             onDismissRequest = { showDeleteSeriesConfirm = null },
             containerColor = palette.shade10,
-            title = { Text("Delete Playlist", color = palette.primary) },
+            title = { Text("Delete Playlist", color = palette.accent) },
             text = {
                 Text(
                     "Delete \"${seriesToDelete.name}\"? Tracks in this playlist will be moved to \"None\" but won't be deleted.",
@@ -3881,7 +3881,7 @@ private fun EditMusicMetadataDialog(
                 newSeriesName = ""
             },
             containerColor = palette.shade10,
-            title = { Text("New Playlist", color = palette.primary) },
+            title = { Text("New Playlist", color = palette.accent) },
             text = {
                 OutlinedTextField(
                     value = newSeriesName,
@@ -3890,9 +3890,9 @@ private fun EditMusicMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -3909,7 +3909,7 @@ private fun EditMusicMetadataDialog(
                     },
                     enabled = newSeriesName.isNotBlank()
                 ) {
-                    Text("Create", color = palette.primary)
+                    Text("Create", color = palette.accent)
                 }
             },
             dismissButton = {
@@ -3928,8 +3928,8 @@ private fun EditMusicMetadataDialog(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             containerColor = palette.shade10,
-            title = { Text("Remove Music", color = palette.primary) },
-            text = { Text("Remove \"${music.title}\" from your library?", color = palette.primary.copy(alpha = 0.7f)) },
+            title = { Text("Remove Music", color = palette.accent) },
+            text = { Text("Remove \"${music.title}\" from your library?", color = palette.textSecondary) },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete()
@@ -3957,7 +3957,7 @@ private fun EditMusicMetadataDialog(
             ) {
                 Text(
                     "Edit Music Info",
-                    color = palette.primary
+                    color = palette.textPrimary
                 )
                 IconButton(onClick = { showDeleteConfirm = true }) {
                     Icon(
@@ -3979,9 +3979,9 @@ private fun EditMusicMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -3994,9 +3994,9 @@ private fun EditMusicMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -4009,9 +4009,9 @@ private fun EditMusicMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -4029,9 +4029,9 @@ private fun EditMusicMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -4042,7 +4042,7 @@ private fun EditMusicMetadataDialog(
                 Text(
                     "Playlist",
                     style = MaterialTheme.typography.bodySmall,
-                    color = palette.primary.copy(alpha = 0.7f)
+                    color = palette.textSecondary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 ExposedDropdownMenuBox(
@@ -4060,7 +4060,7 @@ private fun EditMusicMetadataDialog(
                             .fillMaxWidth()
                             .menuAnchor(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = palette.primary,
+                            focusedBorderColor = palette.accent,
                             unfocusedBorderColor = palette.shade4,
                             focusedTextColor = palette.textPrimary,
                             unfocusedTextColor = palette.textPrimary
@@ -4142,7 +4142,7 @@ private fun EditMusicMetadataDialog(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = palette.primary
+                        contentColor = palette.accent
                     ),
                     border = BorderStroke(1.dp, palette.shade4)
                 ) {
@@ -4169,7 +4169,7 @@ private fun EditMusicMetadataDialog(
                             checked = saveToFile,
                             onCheckedChange = { saveToFile = it },
                             colors = CheckboxDefaults.colors(
-                                checkedColor = palette.primary,
+                                checkedColor = palette.accent,
                                 uncheckedColor = palette.shade4
                             )
                         )
@@ -4204,12 +4204,12 @@ private fun EditMusicMetadataDialog(
                 },
                 enabled = title.isNotBlank()
             ) {
-                Text("Save", color = palette.primary)
+                Text("Save", color = palette.accent)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = palette.primary.copy(alpha = 0.7f))
+                Text("Cancel", color = palette.textSecondary)
             }
         }
     )
@@ -4247,7 +4247,7 @@ private fun EditComicMetadataDialog(
         AlertDialog(
             onDismissRequest = { showDeleteSeriesConfirm = null },
             containerColor = palette.shade10,
-            title = { Text("Delete Collection", color = palette.primary) },
+            title = { Text("Delete Collection", color = palette.accent) },
             text = {
                 Text(
                     "Delete \"${seriesToDelete.name}\"? Comics in this collection will be moved to \"None\" but won't be deleted.",
@@ -4281,7 +4281,7 @@ private fun EditComicMetadataDialog(
                 newSeriesName = ""
             },
             containerColor = palette.shade10,
-            title = { Text("New Collection", color = palette.primary) },
+            title = { Text("New Collection", color = palette.accent) },
             text = {
                 OutlinedTextField(
                     value = newSeriesName,
@@ -4290,9 +4290,9 @@ private fun EditComicMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -4309,7 +4309,7 @@ private fun EditComicMetadataDialog(
                     },
                     enabled = newSeriesName.isNotBlank()
                 ) {
-                    Text("Create", color = palette.primary)
+                    Text("Create", color = palette.accent)
                 }
             },
             dismissButton = {
@@ -4328,8 +4328,8 @@ private fun EditComicMetadataDialog(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             containerColor = palette.shade10,
-            title = { Text("Remove Comic", color = palette.primary) },
-            text = { Text("Remove \"${comic.title}\" from your library?", color = palette.primary.copy(alpha = 0.7f)) },
+            title = { Text("Remove Comic", color = palette.accent) },
+            text = { Text("Remove \"${comic.title}\" from your library?", color = palette.textSecondary) },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete()
@@ -4357,7 +4357,7 @@ private fun EditComicMetadataDialog(
             ) {
                 Text(
                     "Edit Comic Info",
-                    color = palette.primary
+                    color = palette.textPrimary
                 )
                 IconButton(onClick = { showDeleteConfirm = true }) {
                     Icon(
@@ -4379,9 +4379,9 @@ private fun EditComicMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -4394,9 +4394,9 @@ private fun EditComicMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -4407,7 +4407,7 @@ private fun EditComicMetadataDialog(
                 Text(
                     "Collection/Divider",
                     style = MaterialTheme.typography.bodySmall,
-                    color = palette.primary.copy(alpha = 0.7f)
+                    color = palette.textSecondary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 ExposedDropdownMenuBox(
@@ -4425,7 +4425,7 @@ private fun EditComicMetadataDialog(
                             .fillMaxWidth()
                             .menuAnchor(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = palette.primary,
+                            focusedBorderColor = palette.accent,
                             unfocusedBorderColor = palette.shade4,
                             focusedTextColor = palette.textPrimary,
                             unfocusedTextColor = palette.textPrimary
@@ -4507,7 +4507,7 @@ private fun EditComicMetadataDialog(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = palette.primary
+                        contentColor = palette.accent
                     ),
                     border = BorderStroke(1.dp, palette.shade4)
                 ) {
@@ -4529,12 +4529,12 @@ private fun EditComicMetadataDialog(
                 },
                 enabled = title.isNotBlank()
             ) {
-                Text("Save", color = palette.primary)
+                Text("Save", color = palette.accent)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = palette.primary.copy(alpha = 0.7f))
+                Text("Cancel", color = palette.textSecondary)
             }
         }
     )
@@ -4571,7 +4571,7 @@ private fun EditMovieMetadataDialog(
         AlertDialog(
             onDismissRequest = { showDeleteSeriesConfirm = null },
             containerColor = palette.shade10,
-            title = { Text("Delete Playlist", color = palette.primary) },
+            title = { Text("Delete Playlist", color = palette.accent) },
             text = {
                 Text(
                     "Delete \"${seriesToDelete.name}\"? Movies in this playlist will be moved to \"None\" but won't be deleted.",
@@ -4605,7 +4605,7 @@ private fun EditMovieMetadataDialog(
                 newSeriesName = ""
             },
             containerColor = palette.shade10,
-            title = { Text("New Playlist", color = palette.primary) },
+            title = { Text("New Playlist", color = palette.accent) },
             text = {
                 OutlinedTextField(
                     value = newSeriesName,
@@ -4614,9 +4614,9 @@ private fun EditMovieMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -4633,7 +4633,7 @@ private fun EditMovieMetadataDialog(
                     },
                     enabled = newSeriesName.isNotBlank()
                 ) {
-                    Text("Create", color = palette.primary)
+                    Text("Create", color = palette.accent)
                 }
             },
             dismissButton = {
@@ -4652,8 +4652,8 @@ private fun EditMovieMetadataDialog(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             containerColor = palette.shade10,
-            title = { Text("Remove Movie", color = palette.primary) },
-            text = { Text("Remove \"${movie.title}\" from your library?", color = palette.primary.copy(alpha = 0.7f)) },
+            title = { Text("Remove Movie", color = palette.accent) },
+            text = { Text("Remove \"${movie.title}\" from your library?", color = palette.textSecondary) },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete()
@@ -4681,7 +4681,7 @@ private fun EditMovieMetadataDialog(
             ) {
                 Text(
                     "Edit Movie Info",
-                    color = palette.primary
+                    color = palette.textPrimary
                 )
                 IconButton(onClick = { showDeleteConfirm = true }) {
                     Icon(
@@ -4703,9 +4703,9 @@ private fun EditMovieMetadataDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = palette.primary,
+                        focusedBorderColor = palette.accent,
                         unfocusedBorderColor = palette.shade4,
-                        cursorColor = palette.primary,
+                        cursorColor = palette.accent,
                         focusedTextColor = palette.textPrimary,
                         unfocusedTextColor = palette.textPrimary
                     )
@@ -4716,7 +4716,7 @@ private fun EditMovieMetadataDialog(
                 Text(
                     "Playlist/Collection",
                     style = MaterialTheme.typography.bodySmall,
-                    color = palette.primary.copy(alpha = 0.7f)
+                    color = palette.textSecondary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 ExposedDropdownMenuBox(
@@ -4734,7 +4734,7 @@ private fun EditMovieMetadataDialog(
                             .fillMaxWidth()
                             .menuAnchor(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = palette.primary,
+                            focusedBorderColor = palette.accent,
                             unfocusedBorderColor = palette.shade4,
                             focusedTextColor = palette.textPrimary,
                             unfocusedTextColor = palette.textPrimary
@@ -4816,7 +4816,7 @@ private fun EditMovieMetadataDialog(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = palette.primary
+                        contentColor = palette.accent
                     ),
                     border = BorderStroke(1.dp, palette.shade4)
                 ) {
@@ -4838,12 +4838,12 @@ private fun EditMovieMetadataDialog(
                 },
                 enabled = title.isNotBlank()
             ) {
-                Text("Save", color = palette.primary)
+                Text("Save", color = palette.accent)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = palette.primary.copy(alpha = 0.7f))
+                Text("Cancel", color = palette.textSecondary)
             }
         }
     )
@@ -5433,7 +5433,7 @@ private fun AudiobookGridItem(
                 progress = audiobook.progress,
                 modifier = Modifier.fillMaxWidth(),
                 height = 3.dp,
-                activeColor = palette.primary,
+                activeColor = palette.accent,
                 trackColor = palette.shade5.copy(alpha = 0.3f)
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -5521,7 +5521,7 @@ private fun BookGridItem(
                 progress = book.progress,
                 modifier = Modifier.fillMaxWidth(),
                 height = 3.dp,
-                activeColor = palette.primary,
+                activeColor = palette.accent,
                 trackColor = palette.shade5.copy(alpha = 0.3f)
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -5609,7 +5609,7 @@ private fun MusicGridItem(
                 progress = music.progress,
                 modifier = Modifier.fillMaxWidth(),
                 height = 3.dp,
-                activeColor = palette.primary,
+                activeColor = palette.accent,
                 trackColor = palette.shade5.copy(alpha = 0.3f)
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -5697,7 +5697,7 @@ private fun ComicGridItem(
                 progress = comic.progress,
                 modifier = Modifier.fillMaxWidth(),
                 height = 3.dp,
-                activeColor = palette.primary,
+                activeColor = palette.accent,
                 trackColor = palette.shade5.copy(alpha = 0.3f)
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -5801,7 +5801,7 @@ private fun MovieGridItem(
                 progress = movie.progress,
                 modifier = Modifier.fillMaxWidth(),
                 height = 3.dp,
-                activeColor = palette.primary,
+                activeColor = palette.accent,
                 trackColor = palette.shade5.copy(alpha = 0.3f)
             )
             Spacer(modifier = Modifier.height(4.dp))

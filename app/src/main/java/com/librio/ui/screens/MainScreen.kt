@@ -973,13 +973,13 @@ fun HomeScreen(
                             text = "Your library is empty",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = palette.primary
+                            color = palette.textPrimary
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = "Add files to your profile folder:",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = palette.primary.copy(alpha = 0.7f),
+                            color = palette.textSecondary,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -987,14 +987,14 @@ fun HomeScreen(
                             text = "📁 Librio/Profiles/{YourProfile}/Audiobooks\n📁 Librio/Profiles/{YourProfile}/Books",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium,
-                            color = palette.primary,
+                            color = palette.textPrimary,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Files will be automatically detected",
                             style = MaterialTheme.typography.bodySmall,
-                            color = palette.primary.copy(alpha = 0.5f),
+                            color = palette.textMuted,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
@@ -1044,7 +1044,7 @@ private fun SectionHeader(title: String, palette: ThemePalette, showDivider: Boo
             text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = palette.primary,
+            color = palette.textPrimary,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
     }
@@ -1145,14 +1145,14 @@ private fun AudiobookCard(
                     text = audiobook.title,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = palette.primary,
+                    color = palette.textPrimary,
                     maxLines = 2,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
                 Text(
                     text = audiobook.author,
                     style = MaterialTheme.typography.labelSmall,
-                    color = palette.primary.copy(alpha = 0.5f),
+                    color = palette.textMuted,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
@@ -1257,14 +1257,14 @@ private fun BookCard(
                     text = book.title,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = palette.primary,
+                    color = palette.textPrimary,
                     maxLines = 2,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
                 Text(
                     text = book.author,
                     style = MaterialTheme.typography.labelSmall,
-                    color = palette.primary.copy(alpha = 0.5f),
+                    color = palette.textMuted,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
@@ -1314,7 +1314,7 @@ private fun RecentlyAddedItem(
             modifier = Modifier
                 .size(44.dp)
                 .clip(shape10)
-                .background(palette.primary.copy(alpha = 0.1f)),
+                .background(palette.accent.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -1323,7 +1323,7 @@ private fun RecentlyAddedItem(
                 else
                     AppIcons.Book,
                 contentDescription = null,
-                tint = palette.primary,
+                tint = palette.accent,
                 modifier = Modifier.size(22.dp)
             )
         }
@@ -1335,14 +1335,14 @@ private fun RecentlyAddedItem(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
-                color = palette.primary,
+                color = palette.textPrimary,
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.labelSmall,
-                color = palette.primary.copy(alpha = 0.5f),
+                color = palette.textMuted,
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
@@ -1352,7 +1352,7 @@ private fun RecentlyAddedItem(
         Text(
             text = type,
             style = MaterialTheme.typography.labelSmall,
-            color = palette.primary.copy(alpha = 0.5f)
+            color = palette.textMuted
         )
     }
 }

@@ -272,7 +272,7 @@ fun ComicReaderScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(
-                        color = palette.primary,
+                        color = palette.textPrimary,
                         strokeWidth = 5.dp
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -293,7 +293,7 @@ fun ComicReaderScreen(
                         AppIcons.Book,
                         contentDescription = null,
                         modifier = Modifier.size(64.dp),
-                        tint = palette.primary.copy(alpha = 0.5f)
+                        tint = palette.textMuted
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
@@ -387,7 +387,7 @@ fun ComicReaderScreen(
                                 .size(if (pagerState.currentPage == index) 10.dp else 6.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (pagerState.currentPage == index) palette.primary
+                                    if (pagerState.currentPage == index) palette.accent
                                     else palette.textMuted.copy(alpha = 0.3f)
                                 )
                         )

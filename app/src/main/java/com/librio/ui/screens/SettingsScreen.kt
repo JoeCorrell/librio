@@ -79,13 +79,13 @@ fun SettingsScreen(
             title = {
                 Text(
                     "Rescan Library",
-                    color = palette.primary
+                    color = palette.textPrimary
                 )
             },
             text = {
                 Text(
                     "This will refresh metadata for all media files in your library. Continue?",
-                    color = palette.primary.copy(alpha = 0.7f)
+                    color = palette.textSecondary
                 )
             },
             confirmButton = {
@@ -93,7 +93,7 @@ fun SettingsScreen(
                     onRescanLibrary()
                     showRescanConfirmDialog = false
                 }) {
-                    Text("Rescan", color = palette.primary)
+                    Text("Rescan", color = palette.accent)
                 }
             },
             dismissButton = {
@@ -120,7 +120,7 @@ fun SettingsScreen(
                     text = "Settings",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = palette.primary
+                    color = palette.textPrimary
                 )
                 if (currentProfileName.isNotBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
@@ -514,13 +514,13 @@ private fun SettingsActionRow(
             modifier = Modifier
                 .size(44.dp)
                 .clip(shape12)
-                .background(palette.primary.copy(alpha = 0.1f)),
+                .background(palette.accent.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = palette.primary,
+                tint = palette.accent,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -530,12 +530,12 @@ private fun SettingsActionRow(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
-                color = palette.primary
+                color = palette.textPrimary
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = palette.primary.copy(alpha = 0.5f)
+                color = palette.textMuted
             )
         }
         Icon(

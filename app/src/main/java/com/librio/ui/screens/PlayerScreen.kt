@@ -458,7 +458,7 @@ fun PlayerScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
-                            color = palette.primary,
+                            color = palette.textPrimary,
                             modifier = Modifier.size(48.dp),
                             strokeWidth = 5.dp
                         )
@@ -865,7 +865,7 @@ private fun EmptyState(
             modifier = Modifier
                 .size(iconBoxSize)
                 .background(
-                    color = palette.primary.copy(alpha = 0.1f),
+                    color = palette.accent.copy(alpha = 0.1f),
                     shape = shapeLarge
                 ),
             contentAlignment = Alignment.Center
@@ -874,7 +874,7 @@ private fun EmptyState(
                 imageVector = AppIcons.Audiobook,
                 contentDescription = null,
                 modifier = Modifier.size(iconSize),
-                tint = palette.primary
+                tint = palette.accent
             )
         }
 
@@ -884,7 +884,7 @@ private fun EmptyState(
             text = "Welcome to Librio",
             style = if (dimens.isCompactHeight) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = palette.primary,
+            color = palette.textPrimary,
             textAlign = TextAlign.Center
         )
 
@@ -893,7 +893,7 @@ private fun EmptyState(
         Text(
             text = "Open an audiobook to start listening",
             style = MaterialTheme.typography.bodyLarge,
-            color = palette.primary.copy(alpha = 0.7f),
+            color = palette.textSecondary,
             textAlign = TextAlign.Center
         )
 
@@ -902,7 +902,7 @@ private fun EmptyState(
         Text(
             text = "Supports M4B, MP3, M4A, AAC, OGG, FLAC and more",
             style = MaterialTheme.typography.bodySmall,
-            color = palette.primary.copy(alpha = 0.5f),
+            color = palette.textMuted,
             textAlign = TextAlign.Center
         )
 
@@ -911,7 +911,7 @@ private fun EmptyState(
         Button(
             onClick = onOpenFile,
             colors = ButtonDefaults.buttonColors(
-                containerColor = palette.primary,
+                containerColor = palette.accent,
                 contentColor = palette.onPrimary
             ),
             shape = shapeRegular,

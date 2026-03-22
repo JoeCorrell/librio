@@ -861,14 +861,21 @@ class LibraryViewModel : ViewModel() {
                         val comicsWithCovers = comicsDeferred.awaitAll()
                         val moviesWithCovers = moviesDeferred.awaitAll()
 
-                        // Update all at once to avoid race conditions
+                        // Merge cover art into current state to preserve any progress
+                        // recovered from buffer (which may have updated state after cover art loading started)
                         withContext(Dispatchers.Main) {
-                            _libraryState.value = _libraryState.value.copy(
-                                audiobooks = audiobooksWithCovers,
-                                books = booksWithCovers,
-                                music = musicWithCovers,
-                                comics = comicsWithCovers,
-                                movies = moviesWithCovers
+                            val currentState = _libraryState.value
+                            val coverArtMap = audiobooksWithCovers.associate { it.id to it.coverArt }
+                            val bookCoverMap = booksWithCovers.associate { it.id to it.coverArt }
+                            val musicCoverMap = musicWithCovers.associate { it.id to it.coverArt }
+                            val comicCoverMap = comicsWithCovers.associate { it.id to it.coverArt }
+                            val movieCoverMap = moviesWithCovers.associate { it.id to it.coverArt }
+                            _libraryState.value = currentState.copy(
+                                audiobooks = currentState.audiobooks.map { it.copy(coverArt = coverArtMap[it.id] ?: it.coverArt) },
+                                books = currentState.books.map { it.copy(coverArt = bookCoverMap[it.id] ?: it.coverArt) },
+                                music = currentState.music.map { it.copy(coverArt = musicCoverMap[it.id] ?: it.coverArt) },
+                                comics = currentState.comics.map { it.copy(coverArt = comicCoverMap[it.id] ?: it.coverArt) },
+                                movies = currentState.movies.map { it.copy(coverArt = movieCoverMap[it.id] ?: it.coverArt) }
                             )
                         }
                     }
@@ -3236,7 +3243,7 @@ class LibraryViewModel : ViewModel() {
         )
     }
 
-    fun updateMusicProgress(musicId: String, position: Long) {
+    fun updateMusicProgress(musicId: String, position: Long, duration: Long = 0L) {
         val currentState = _libraryState.value
         // Get the music item for progress.json saving
         val musicItem = currentState.music.find { it.id == musicId }
@@ -3245,6 +3252,7 @@ class LibraryViewModel : ViewModel() {
             if (music.id == musicId) {
                 music.copy(
                     lastPosition = position,
+                    duration = if (duration > 0) duration else music.duration,
                     lastPlayed = System.currentTimeMillis()
                 )
             } else music
@@ -3256,6 +3264,7 @@ class LibraryViewModel : ViewModel() {
             if (selected.id == musicId) {
                 _selectedMusic.value = selected.copy(
                     lastPosition = position,
+                    duration = if (duration > 0) duration else selected.duration,
                     lastPlayed = System.currentTimeMillis()
                 )
             }
@@ -3371,7 +3380,7 @@ class LibraryViewModel : ViewModel() {
         saveMusic()
     }
 
-    fun updateMovieProgress(movieId: String, position: Long) {
+    fun updateMovieProgress(movieId: String, position: Long, duration: Long = 0L) {
         val currentState = _libraryState.value
         // Get the movie item for progress.json saving
         val movieItem = currentState.movies.find { it.id == movieId }
@@ -3380,6 +3389,7 @@ class LibraryViewModel : ViewModel() {
             if (movie.id == movieId) {
                 movie.copy(
                     lastPosition = position,
+                    duration = if (duration > 0) duration else movie.duration,
                     lastPlayed = System.currentTimeMillis()
                 )
             } else movie
@@ -3391,6 +3401,7 @@ class LibraryViewModel : ViewModel() {
             if (selected.id == movieId) {
                 _selectedMovie.value = selected.copy(
                     lastPosition = position,
+                    duration = if (duration > 0) duration else selected.duration,
                     lastPlayed = System.currentTimeMillis()
                 )
             }

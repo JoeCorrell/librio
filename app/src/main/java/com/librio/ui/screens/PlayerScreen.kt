@@ -554,6 +554,21 @@ private fun PlayerContent(
     player: AudiobookPlayer? = null,
 ) {
     val palette = currentPalette()
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+
+    // Responsive sizing
+    val maxCoverSize = when {
+        screenWidth < 400.dp -> 220.dp
+        screenWidth < 600.dp -> 280.dp
+        screenWidth < 840.dp -> 320.dp
+        else -> 360.dp
+    }
+    val horizontalPadding = when {
+        screenWidth < 400.dp -> 24.dp
+        screenWidth < 600.dp -> 32.dp
+        else -> 48.dp
+    }
 
     // Animation for cover art appearance
     var coverVisible by remember { mutableStateOf(false) }
@@ -580,13 +595,13 @@ private fun PlayerContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 24.dp, vertical = 8.dp),
+            .padding(horizontal = horizontalPadding, vertical = 8.dp),
     ) {
-        // Cover art — 220dp with shadow, matching music player
+        // Cover art — responsive size with shadow
         val fileExtension = audiobook.fileName.substringAfterLast('.', "").ifEmpty { "AUDIO" }
         Box(
             modifier = Modifier
-                .size(220.dp)
+                .size(maxCoverSize)
                 .align(Alignment.CenterHorizontally)
                 .shadow(16.dp, RoundedCornerShape(24.dp), ambientColor = palette.textPrimary.copy(alpha = 0.25f))
                 .clip(RoundedCornerShape(24.dp))
@@ -706,16 +721,18 @@ private fun PlayerContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                AppIcons.Replay10, "Rewind $skipBackSeconds seconds",
-                tint = palette.textSecondary,
-                modifier = Modifier.size(22.dp).clickable { onSeekBackward() }
-            )
-            Icon(
-                AppIcons.SkipPrevious, "Previous chapter",
-                tint = palette.textSecondary,
-                modifier = Modifier.size(24.dp).clickable { onPreviousChapter() }
-            )
+            Box(
+                modifier = Modifier.size(40.dp).clip(CircleShape).clickable { onSeekBackward() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(AppIcons.Replay10, "Rewind $skipBackSeconds seconds", tint = palette.textSecondary, modifier = Modifier.size(22.dp))
+            }
+            Box(
+                modifier = Modifier.size(40.dp).clip(CircleShape).clickable { onPreviousChapter() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(AppIcons.SkipPrevious, "Previous chapter", tint = palette.textSecondary, modifier = Modifier.size(24.dp))
+            }
 
             // Play/Pause — 54dp accent circle with shadow
             Box(
@@ -739,16 +756,18 @@ private fun PlayerContent(
                 }
             }
 
-            Icon(
-                AppIcons.SkipNext, "Next chapter",
-                tint = palette.textSecondary,
-                modifier = Modifier.size(24.dp).clickable { onNextChapter() }
-            )
-            Icon(
-                AppIcons.Forward10, "Forward $skipForwardSeconds seconds",
-                tint = palette.textSecondary,
-                modifier = Modifier.size(22.dp).clickable { onSeekForward() }
-            )
+            Box(
+                modifier = Modifier.size(40.dp).clip(CircleShape).clickable { onNextChapter() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(AppIcons.SkipNext, "Next chapter", tint = palette.textSecondary, modifier = Modifier.size(24.dp))
+            }
+            Box(
+                modifier = Modifier.size(40.dp).clip(CircleShape).clickable { onSeekForward() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(AppIcons.Forward10, "Forward $skipForwardSeconds seconds", tint = palette.textSecondary, modifier = Modifier.size(22.dp))
+            }
         }
 
         Spacer(Modifier.height(8.dp))
@@ -759,10 +778,10 @@ private fun PlayerContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f, fill = false)
-                    .heightIn(max = 330.dp) // ~8 rows with padding
-                    .clip(RoundedCornerShape(14.dp))
+                    .heightIn(max = 330.dp)
+                    .clip(cornerRadius(14.dp))
                     .background(palette.surfaceCard)
-                    .border(1.dp, palette.divider, RoundedCornerShape(14.dp)),
+                    .border(1.dp, palette.divider, cornerRadius(14.dp)),
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 7.dp),

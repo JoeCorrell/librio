@@ -1819,7 +1819,8 @@ class MainActivity : ComponentActivity() {
                                         navController.popBackStack()
                                     },
                                     onPositionChange = { position ->
-                                        libraryViewModel.updateMusicProgress(music.id, position)
+                                        val dur = if (musicExoPlayer.duration > 0) musicExoPlayer.duration else 0L
+                                        libraryViewModel.updateMusicProgress(music.id, position, dur)
                                         musicCurrentPosition = position
                                         settingsViewModel.setLastMusicState(music.id, position, musicExoPlayer.isPlaying)
                                     },
@@ -1909,8 +1910,8 @@ class MainActivity : ComponentActivity() {
                                         libraryViewModel.saveLibrary()
                                         navController.popBackStack()
                                     },
-                                    onPositionChange = { position ->
-                                        libraryViewModel.updateMovieProgress(movie.id, position)
+                                    onPositionChange = { position, duration ->
+                                        libraryViewModel.updateMovieProgress(movie.id, position, duration)
                                     },
                                     onNavigateToLibrary = {
                                         navController.navigate(Screen.Main.createRoute("library")) {
@@ -2050,9 +2051,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Flush all pending progress updates to ensure no data loss
-        CoroutineScope(Dispatchers.Main).launch {
-            libraryViewModelRef?.flushPendingProgress()
+        // Flush all pending progress updates synchronously to ensure no data loss
+        // Must complete before onPause returns, otherwise the process may be killed
+        kotlinx.coroutines.runBlocking {
+            kotlinx.coroutines.withTimeout(3000) {
+                libraryViewModelRef?.flushPendingProgress()
+            }
         }
     }
 }

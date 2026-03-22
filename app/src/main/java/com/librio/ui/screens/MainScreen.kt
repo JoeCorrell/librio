@@ -1093,7 +1093,7 @@ private fun AudiobookCard(
                     .background(palette.coverArtGradient()),
                 contentAlignment = Alignment.Center
             ) {
-                val usePlaceholder = showPlaceholderIcons || audiobook.coverArt == null
+                val usePlaceholder = audiobook.coverArt == null
                 if (usePlaceholder) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
@@ -1204,7 +1204,7 @@ private fun BookCard(
                     .background(palette.coverArtGradient()),
                 contentAlignment = Alignment.Center
             ) {
-                val usePlaceholder = showPlaceholderIcons || book.coverArt == null
+                val usePlaceholder = book.coverArt == null
                 if (usePlaceholder) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(

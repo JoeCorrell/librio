@@ -552,7 +552,7 @@ private fun AudiobookCard(
                     .background(palette.thumbnailGradient()),
                 contentAlignment = Alignment.Center
             ) {
-                val usePlaceholder = showPlaceholderIcons || audiobook.coverArt == null
+                val usePlaceholder = audiobook.coverArt == null
                 if (usePlaceholder) {
                     Icon(
                         imageVector = AppIcons.Audiobook,
@@ -675,7 +675,7 @@ private fun AudiobookGridItem(
                     .background(palette.thumbnailGradient()),
                 contentAlignment = Alignment.Center
             ) {
-                val usePlaceholder = showPlaceholderIcons || audiobook.coverArt == null
+                val usePlaceholder = audiobook.coverArt == null
                 if (usePlaceholder) {
                     Icon(
                         imageVector = AppIcons.Audiobook,

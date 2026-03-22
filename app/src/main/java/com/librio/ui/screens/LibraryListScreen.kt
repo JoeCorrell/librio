@@ -898,10 +898,14 @@ fun LibraryListScreen(
                                                     bitmap = ab.coverArt,
                                                     contentDescription = ab.title,
                                                     modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-                                                    showPlaceholderAlways = showPlaceholderIcons,
+                                                    showPlaceholderAlways = false,
                                                     fileExtension = ab.uri.lastPathSegment?.substringAfterLast(".", "") ?: "",
                                                     contentType = CoverArtContentType.AUDIOBOOK
                                                 )
+                                                if (ab.progress > 0f) {
+                                                    Spacer(Modifier.height(4.dp))
+                                                    LibrioProgressBar(progress = ab.progress, modifier = Modifier.fillMaxWidth(), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f))
+                                                }
                                                 Spacer(Modifier.height(6.dp))
                                                 Text(ab.title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                                 Text(ab.author, fontSize = 9.sp, color = palette.textMuted, maxLines = 1)
@@ -923,8 +927,8 @@ fun LibraryListScreen(
                                     val isExpanded = collapsedSeries.contains(playlist.id)
                                     Column(
                                         modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth()
-                                            .clip(RoundedCornerShape(14.dp)).background(palette.surfaceCard)
-                                            .border(1.dp, if (isExpanded) palette.accent else palette.divider, RoundedCornerShape(14.dp))
+                                            .clip(cornerRadius(14.dp)).background(palette.surfaceCard)
+                                            .border(1.dp, if (isExpanded) palette.accent else palette.divider, cornerRadius(14.dp))
                                     ) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth().clickable { onPlaylistClick(playlist) }
@@ -932,7 +936,7 @@ fun LibraryListScreen(
                                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
                                         ) {
                                             Box(
-                                                modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))),
+                                                modifier = Modifier.size(36.dp).clip(cornerRadius(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))),
                                                 contentAlignment = Alignment.Center,
                                             ) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
                                             Column(modifier = Modifier.weight(1f)) {
@@ -940,7 +944,7 @@ fun LibraryListScreen(
                                                 Text("${playlistItems.size} items", fontSize = 10.sp, color = palette.textMuted)
                                             }
                                             Box(
-                                                modifier = Modifier.size(30.dp).clip(RoundedCornerShape(8.dp))
+                                                modifier = Modifier.size(30.dp).clip(cornerRadius(8.dp))
                                                     .clickable { val newCollapsed = if (isExpanded) collapsedSeries - playlist.id else collapsedSeries + playlist.id; onCollapsedSeriesChange(newCollapsed) },
                                                 contentAlignment = Alignment.Center,
                                             ) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
@@ -954,8 +958,11 @@ fun LibraryListScreen(
                                                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
                                             ) {
                                                 CoverArt(bitmap = first.coverArt, contentDescription = first.title, modifier = Modifier.size(24.dp),
-                                                    showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.AUDIOBOOK)
-                                                Text(first.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                                    showPlaceholderAlways = false, fileExtension = "", contentType = CoverArtContentType.AUDIOBOOK)
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(first.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                                    if (first.progress > 0f) { LibrioProgressBar(progress = first.progress, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f)) }
+                                                }
                                             }
                                         }
                                         // Expanded: show all tracks
@@ -967,8 +974,11 @@ fun LibraryListScreen(
                                                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
                                                 ) {
                                                     CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp),
-                                                        showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.AUDIOBOOK)
-                                                    Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                                        showPlaceholderAlways = false, fileExtension = "", contentType = CoverArtContentType.AUDIOBOOK)
+                                                    Column(modifier = Modifier.weight(1f)) {
+                                                        Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                                        if (item.progress > 0f) { LibrioProgressBar(progress = item.progress, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f)) }
+                                                    }
                                                 }
                                             }
                                         }
@@ -1028,7 +1038,11 @@ fun LibraryListScreen(
                                     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                         recentBooks.forEach { book ->
                                             Column(modifier = Modifier.weight(1f).clickable { onSelectBook(book) }) {
-                                                CoverArt(bitmap = book.coverArt, contentDescription = book.title, modifier = Modifier.fillMaxWidth().aspectRatio(1f), showPlaceholderAlways = showPlaceholderIcons, fileExtension = book.uri.lastPathSegment?.substringAfterLast(".", "") ?: "", contentType = CoverArtContentType.EBOOK)
+                                                CoverArt(bitmap = book.coverArt, contentDescription = book.title, modifier = Modifier.fillMaxWidth().aspectRatio(1f), showPlaceholderAlways = false, fileExtension = book.uri.lastPathSegment?.substringAfterLast(".", "") ?: "", contentType = CoverArtContentType.EBOOK)
+                                                if (book.progress > 0f) {
+                                                    Spacer(Modifier.height(4.dp))
+                                                    LibrioProgressBar(progress = book.progress, modifier = Modifier.fillMaxWidth(), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f))
+                                                }
                                                 Spacer(Modifier.height(6.dp))
                                                 Text(book.title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                                 Text(book.author, fontSize = 9.sp, color = palette.textMuted, maxLines = 1)
@@ -1043,14 +1057,14 @@ fun LibraryListScreen(
                                 items(bookPlaylists, key = { it.id }) { playlist ->
                                     val plItems = remember(books, playlist.id) { books.filter { it.seriesId == playlist.id } }
                                     val isExpanded = collapsedSeries.contains(playlist.id)
-                                    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(palette.surfaceCard).border(1.dp, if (isExpanded) palette.accent else palette.divider, RoundedCornerShape(14.dp))) {
+                                    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth().clip(cornerRadius(14.dp)).background(palette.surfaceCard).border(1.dp, if (isExpanded) palette.accent else palette.divider, cornerRadius(14.dp))) {
                                         Row(modifier = Modifier.fillMaxWidth().clickable { onPlaylistClick(playlist) }.padding(start = 12.dp, top = 10.dp, bottom = if (!isExpanded && plItems.isNotEmpty()) 4.dp else 10.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                            Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))), contentAlignment = Alignment.Center) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
+                                            Box(modifier = Modifier.size(36.dp).clip(cornerRadius(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))), contentAlignment = Alignment.Center) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
                                             Column(modifier = Modifier.weight(1f)) { Text(playlist.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary); Text("${plItems.size} items", fontSize = 10.sp, color = palette.textMuted) }
-                                            Box(modifier = Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).clickable { val nc = if (isExpanded) collapsedSeries - playlist.id else collapsedSeries + playlist.id; onCollapsedSeriesChange(nc) }, contentAlignment = Alignment.Center) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
+                                            Box(modifier = Modifier.size(30.dp).clip(cornerRadius(8.dp)).clickable { val nc = if (isExpanded) collapsedSeries - playlist.id else collapsedSeries + playlist.id; onCollapsedSeriesChange(nc) }, contentAlignment = Alignment.Center) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
                                         }
-                                        if (!isExpanded && plItems.isNotEmpty()) { val f = plItems.first(); HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = palette.divider); Row(modifier = Modifier.fillMaxWidth().clickable { onSelectBook(f) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = f.coverArt, contentDescription = f.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.EBOOK); Text(f.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } }
-                                        if (isExpanded && plItems.isNotEmpty()) { HorizontalDivider(color = palette.divider); plItems.forEach { item -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelectBook(item) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.EBOOK); Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } } }
+                                        if (!isExpanded && plItems.isNotEmpty()) { val f = plItems.first(); HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = palette.divider); Row(modifier = Modifier.fillMaxWidth().clickable { onSelectBook(f) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = f.coverArt, contentDescription = f.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = false, fileExtension = "", contentType = CoverArtContentType.EBOOK); Column(modifier = Modifier.weight(1f)) { Text(f.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis); if (f.progress > 0f) { LibrioProgressBar(progress = f.progress, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f)) } } } }
+                                        if (isExpanded && plItems.isNotEmpty()) { HorizontalDivider(color = palette.divider); plItems.forEach { item -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelectBook(item) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = false, fileExtension = "", contentType = CoverArtContentType.EBOOK); Column(modifier = Modifier.weight(1f)) { Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis); if (item.progress > 0f) { LibrioProgressBar(progress = item.progress, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f)) } } } } }
                                     }
                                 }
                             }
@@ -1095,7 +1109,11 @@ fun LibraryListScreen(
                                     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                         recentMusic.forEach { track ->
                                             Column(modifier = Modifier.weight(1f).clickable { onSelectMusic(track) }) {
-                                                CoverArt(bitmap = track.coverArt, contentDescription = track.title, modifier = Modifier.fillMaxWidth().aspectRatio(1f), showPlaceholderAlways = showPlaceholderIcons, fileExtension = track.fileType, contentType = CoverArtContentType.MUSIC)
+                                                CoverArt(bitmap = track.coverArt, contentDescription = track.title, modifier = Modifier.fillMaxWidth().aspectRatio(1f), showPlaceholderAlways = false, fileExtension = track.fileType, contentType = CoverArtContentType.MUSIC)
+                                                if (track.progress > 0f) {
+                                                    Spacer(Modifier.height(4.dp))
+                                                    LibrioProgressBar(progress = track.progress, modifier = Modifier.fillMaxWidth(), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f))
+                                                }
                                                 Spacer(Modifier.height(6.dp))
                                                 Text(track.title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                                 Text(track.artist, fontSize = 9.sp, color = palette.textMuted, maxLines = 1)
@@ -1110,14 +1128,14 @@ fun LibraryListScreen(
                                 items(musicPlaylists, key = { it.id }) { playlist ->
                                     val plItems = remember(musicItems, playlist.id) { musicItems.filter { it.seriesId == playlist.id } }
                                     val isExpanded = collapsedSeries.contains(playlist.id)
-                                    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(palette.surfaceCard).border(1.dp, if (isExpanded) palette.accent else palette.divider, RoundedCornerShape(14.dp))) {
+                                    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth().clip(cornerRadius(14.dp)).background(palette.surfaceCard).border(1.dp, if (isExpanded) palette.accent else palette.divider, cornerRadius(14.dp))) {
                                         Row(modifier = Modifier.fillMaxWidth().clickable { onPlaylistClick(playlist) }.padding(start = 12.dp, top = 10.dp, bottom = if (!isExpanded && plItems.isNotEmpty()) 4.dp else 10.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                            Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))), contentAlignment = Alignment.Center) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
+                                            Box(modifier = Modifier.size(36.dp).clip(cornerRadius(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))), contentAlignment = Alignment.Center) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
                                             Column(modifier = Modifier.weight(1f)) { Text(playlist.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary); Text("${plItems.size} tracks", fontSize = 10.sp, color = palette.textMuted) }
-                                            Box(modifier = Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).clickable { val nc = if (isExpanded) collapsedSeries - playlist.id else collapsedSeries + playlist.id; onCollapsedSeriesChange(nc) }, contentAlignment = Alignment.Center) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
+                                            Box(modifier = Modifier.size(30.dp).clip(cornerRadius(8.dp)).clickable { val nc = if (isExpanded) collapsedSeries - playlist.id else collapsedSeries + playlist.id; onCollapsedSeriesChange(nc) }, contentAlignment = Alignment.Center) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
                                         }
-                                        if (!isExpanded && plItems.isNotEmpty()) { val f = plItems.first(); HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = palette.divider); Row(modifier = Modifier.fillMaxWidth().clickable { onSelectMusic(f) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = f.coverArt, contentDescription = f.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.MUSIC); Text(f.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } }
-                                        if (isExpanded && plItems.isNotEmpty()) { HorizontalDivider(color = palette.divider); plItems.forEach { item -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelectMusic(item) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.MUSIC); Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } } }
+                                        if (!isExpanded && plItems.isNotEmpty()) { val f = plItems.first(); HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = palette.divider); Row(modifier = Modifier.fillMaxWidth().clickable { onSelectMusic(f) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = f.coverArt, contentDescription = f.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = false, fileExtension = "", contentType = CoverArtContentType.MUSIC); Column(modifier = Modifier.weight(1f)) { Text(f.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis); if (f.progress > 0f) { LibrioProgressBar(progress = f.progress, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f)) } } } }
+                                        if (isExpanded && plItems.isNotEmpty()) { HorizontalDivider(color = palette.divider); plItems.forEach { item -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelectMusic(item) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = false, fileExtension = "", contentType = CoverArtContentType.MUSIC); Column(modifier = Modifier.weight(1f)) { Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis); if (item.progress > 0f) { LibrioProgressBar(progress = item.progress, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f)) } } } } }
                                     }
                                 }
                             }
@@ -1161,7 +1179,11 @@ fun LibraryListScreen(
                                     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                         recentComics.forEach { comic ->
                                             Column(modifier = Modifier.weight(1f).clickable { onSelectComic(comic) }) {
-                                                CoverArt(bitmap = comic.coverArt, contentDescription = comic.title, modifier = Modifier.fillMaxWidth().aspectRatio(1f), showPlaceholderAlways = showPlaceholderIcons, fileExtension = comic.fileType, contentType = CoverArtContentType.COMICS)
+                                                CoverArt(bitmap = comic.coverArt, contentDescription = comic.title, modifier = Modifier.fillMaxWidth().aspectRatio(1f), showPlaceholderAlways = false, fileExtension = comic.fileType, contentType = CoverArtContentType.COMICS)
+                                                if (comic.progress > 0f) {
+                                                    Spacer(Modifier.height(4.dp))
+                                                    LibrioProgressBar(progress = comic.progress, modifier = Modifier.fillMaxWidth(), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f))
+                                                }
                                                 Spacer(Modifier.height(6.dp))
                                                 Text(comic.title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                                 Text(comic.author, fontSize = 9.sp, color = palette.textMuted, maxLines = 1)
@@ -1176,14 +1198,14 @@ fun LibraryListScreen(
                                 items(comicPlaylists, key = { it.id }) { playlist ->
                                     val plItems = remember(comics, playlist.id) { comics.filter { it.seriesId == playlist.id } }
                                     val isExpanded = collapsedSeries.contains(playlist.id)
-                                    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(palette.surfaceCard).border(1.dp, if (isExpanded) palette.accent else palette.divider, RoundedCornerShape(14.dp))) {
+                                    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth().clip(cornerRadius(14.dp)).background(palette.surfaceCard).border(1.dp, if (isExpanded) palette.accent else palette.divider, cornerRadius(14.dp))) {
                                         Row(modifier = Modifier.fillMaxWidth().clickable { onPlaylistClick(playlist) }.padding(start = 12.dp, top = 10.dp, bottom = if (!isExpanded && plItems.isNotEmpty()) 4.dp else 10.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                            Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))), contentAlignment = Alignment.Center) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
+                                            Box(modifier = Modifier.size(36.dp).clip(cornerRadius(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))), contentAlignment = Alignment.Center) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
                                             Column(modifier = Modifier.weight(1f)) { Text(playlist.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary); Text("${plItems.size} items", fontSize = 10.sp, color = palette.textMuted) }
-                                            Box(modifier = Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).clickable { val nc = if (isExpanded) collapsedSeries - playlist.id else collapsedSeries + playlist.id; onCollapsedSeriesChange(nc) }, contentAlignment = Alignment.Center) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
+                                            Box(modifier = Modifier.size(30.dp).clip(cornerRadius(8.dp)).clickable { val nc = if (isExpanded) collapsedSeries - playlist.id else collapsedSeries + playlist.id; onCollapsedSeriesChange(nc) }, contentAlignment = Alignment.Center) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
                                         }
-                                        if (!isExpanded && plItems.isNotEmpty()) { val f = plItems.first(); HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = palette.divider); Row(modifier = Modifier.fillMaxWidth().clickable { onSelectComic(f) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = f.coverArt, contentDescription = f.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.COMICS); Text(f.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } }
-                                        if (isExpanded && plItems.isNotEmpty()) { HorizontalDivider(color = palette.divider); plItems.forEach { item -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelectComic(item) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.COMICS); Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } } }
+                                        if (!isExpanded && plItems.isNotEmpty()) { val f = plItems.first(); HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = palette.divider); Row(modifier = Modifier.fillMaxWidth().clickable { onSelectComic(f) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = f.coverArt, contentDescription = f.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = false, fileExtension = "", contentType = CoverArtContentType.COMICS); Column(modifier = Modifier.weight(1f)) { Text(f.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis); if (f.progress > 0f) { LibrioProgressBar(progress = f.progress, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f)) } } } }
+                                        if (isExpanded && plItems.isNotEmpty()) { HorizontalDivider(color = palette.divider); plItems.forEach { item -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelectComic(item) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = false, fileExtension = "", contentType = CoverArtContentType.COMICS); Column(modifier = Modifier.weight(1f)) { Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis); if (item.progress > 0f) { LibrioProgressBar(progress = item.progress, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f)) } } } } }
                                     }
                                 }
                             }
@@ -1227,7 +1249,11 @@ fun LibraryListScreen(
                                     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                         recentMovies.forEach { movie ->
                                             Column(modifier = Modifier.weight(1f).clickable { onSelectMovie(movie) }) {
-                                                CoverArt(bitmap = movie.coverArt, contentDescription = movie.title, modifier = Modifier.fillMaxWidth().aspectRatio(1f), showPlaceholderAlways = showPlaceholderIcons, fileExtension = movie.fileType, contentType = CoverArtContentType.MOVIE)
+                                                CoverArt(bitmap = movie.coverArt, contentDescription = movie.title, modifier = Modifier.fillMaxWidth().aspectRatio(1f), showPlaceholderAlways = false, fileExtension = movie.fileType, contentType = CoverArtContentType.MOVIE)
+                                                if (movie.progress > 0f) {
+                                                    Spacer(Modifier.height(4.dp))
+                                                    LibrioProgressBar(progress = movie.progress, modifier = Modifier.fillMaxWidth(), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f))
+                                                }
                                                 Spacer(Modifier.height(6.dp))
                                                 Text(movie.title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                             }
@@ -1241,14 +1267,14 @@ fun LibraryListScreen(
                                 items(moviePlaylists, key = { it.id }) { playlist ->
                                     val plItems = remember(movies, playlist.id) { movies.filter { it.seriesId == playlist.id } }
                                     val isExpanded = collapsedSeries.contains(playlist.id)
-                                    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(palette.surfaceCard).border(1.dp, if (isExpanded) palette.accent else palette.divider, RoundedCornerShape(14.dp))) {
+                                    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 3.dp).fillMaxWidth().clip(cornerRadius(14.dp)).background(palette.surfaceCard).border(1.dp, if (isExpanded) palette.accent else palette.divider, cornerRadius(14.dp))) {
                                         Row(modifier = Modifier.fillMaxWidth().clickable { onPlaylistClick(playlist) }.padding(start = 12.dp, top = 10.dp, bottom = if (!isExpanded && plItems.isNotEmpty()) 4.dp else 10.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                            Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))), contentAlignment = Alignment.Center) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
+                                            Box(modifier = Modifier.size(36.dp).clip(cornerRadius(10.dp)).background(Brush.linearGradient(listOf(palette.accent, palette.accent.copy(alpha = 0.7f)))), contentAlignment = Alignment.Center) { Icon(AppIcons.Playlist, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
                                             Column(modifier = Modifier.weight(1f)) { Text(playlist.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary); Text("${plItems.size} items", fontSize = 10.sp, color = palette.textMuted) }
-                                            Box(modifier = Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).clickable { val nc = if (isExpanded) collapsedSeries - playlist.id else collapsedSeries + playlist.id; onCollapsedSeriesChange(nc) }, contentAlignment = Alignment.Center) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
+                                            Box(modifier = Modifier.size(30.dp).clip(cornerRadius(8.dp)).clickable { val nc = if (isExpanded) collapsedSeries - playlist.id else collapsedSeries + playlist.id; onCollapsedSeriesChange(nc) }, contentAlignment = Alignment.Center) { Icon(if (isExpanded) AppIcons.ExpandLess else AppIcons.ExpandMore, null, tint = palette.textMuted, modifier = Modifier.size(18.dp)) }
                                         }
-                                        if (!isExpanded && plItems.isNotEmpty()) { val f = plItems.first(); HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = palette.divider); Row(modifier = Modifier.fillMaxWidth().clickable { onSelectMovie(f) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = f.coverArt, contentDescription = f.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.MOVIE); Text(f.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } }
-                                        if (isExpanded && plItems.isNotEmpty()) { HorizontalDivider(color = palette.divider); plItems.forEach { item -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelectMovie(item) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = showPlaceholderIcons, fileExtension = "", contentType = CoverArtContentType.MOVIE); Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)) } } }
+                                        if (!isExpanded && plItems.isNotEmpty()) { val f = plItems.first(); HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp), color = palette.divider); Row(modifier = Modifier.fillMaxWidth().clickable { onSelectMovie(f) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = f.coverArt, contentDescription = f.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = false, fileExtension = "", contentType = CoverArtContentType.MOVIE); Column(modifier = Modifier.weight(1f)) { Text(f.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis); if (f.progress > 0f) { LibrioProgressBar(progress = f.progress, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f)) } } } }
+                                        if (isExpanded && plItems.isNotEmpty()) { HorizontalDivider(color = palette.divider); plItems.forEach { item -> Row(modifier = Modifier.fillMaxWidth().clickable { onSelectMovie(item) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { CoverArt(bitmap = item.coverArt, contentDescription = item.title, modifier = Modifier.size(24.dp), showPlaceholderAlways = false, fileExtension = "", contentType = CoverArtContentType.MOVIE); Column(modifier = Modifier.weight(1f)) { Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis); if (item.progress > 0f) { LibrioProgressBar(progress = item.progress, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), height = 3.dp, activeColor = palette.accent, trackColor = palette.accent.copy(alpha = 0.2f)) } } } } }
                                     }
                                 }
                             }
@@ -1885,7 +1911,7 @@ fun AudiobookListItem(
                     .background(palette.thumbnailGradient()),
                 contentAlignment = Alignment.Center
             ) {
-                val usePlaceholder = showPlaceholderIcons || audiobook.coverArt == null
+                val usePlaceholder = audiobook.coverArt == null
                 if (usePlaceholder) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -2542,7 +2568,7 @@ fun BookListItem(
                     .background(palette.thumbnailGradient()),
                 contentAlignment = Alignment.Center
             ) {
-                val usePlaceholder = showPlaceholderIcons || book.coverArt == null
+                val usePlaceholder = book.coverArt == null
                 if (usePlaceholder) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -2709,7 +2735,7 @@ fun MusicListItem(
                     .background(palette.thumbnailGradient()),
                 contentAlignment = Alignment.Center
             ) {
-                val usePlaceholder = showPlaceholderIcons || music.coverArt == null
+                val usePlaceholder = music.coverArt == null
                 if (usePlaceholder) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -3283,7 +3309,7 @@ fun ComicListItem(
                     .background(palette.thumbnailGradient()),
                 contentAlignment = Alignment.Center
             ) {
-                val usePlaceholder = showPlaceholderIcons || comic.coverArt == null
+                val usePlaceholder = comic.coverArt == null
                 if (usePlaceholder) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,

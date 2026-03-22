@@ -71,7 +71,7 @@ import kotlinx.coroutines.delay
 fun MoviePlayerScreen(
     movie: LibraryMovie,
     onBack: () -> Unit,
-    onPositionChange: (Long) -> Unit,
+    onPositionChange: (Long, Long) -> Unit,
     onNavigateToLibrary: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     showBackButton: Boolean = true,
@@ -306,7 +306,7 @@ fun MoviePlayerScreen(
         exoPlayer.addListener(listener)
 
         onDispose {
-            onPositionChange(exoPlayer.currentPosition)
+            onPositionChange(exoPlayer.currentPosition, if (exoPlayer.duration > 0) exoPlayer.duration else 0L)
             exoPlayer.removeListener(listener)
             mediaSession?.release()
             mediaSession = null

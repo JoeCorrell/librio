@@ -84,20 +84,23 @@ class PlaybackService : Service() {
 
         // ForwardingPlayer intercepts skip commands from headphones/Bluetooth and handles them
         val forwardingPlayer = object : ForwardingPlayer(actualPlayer) {
-            override fun seekToNext() {
-                handleNextAction(wrappedPlayer)
+            override fun seekToNext() { handleNextAction(wrappedPlayer) }
+            override fun seekToPrevious() { handlePreviousAction(wrappedPlayer) }
+            override fun seekToNextMediaItem() { handleNextAction(wrappedPlayer) }
+            override fun seekToPreviousMediaItem() { handlePreviousAction(wrappedPlayer) }
+            // Advertise skip commands so Bluetooth/media buttons know they're available
+            override fun isCommandAvailable(command: Int): Boolean {
+                return when (command) {
+                    COMMAND_SEEK_TO_NEXT, COMMAND_SEEK_TO_NEXT_MEDIA_ITEM,
+                    COMMAND_SEEK_TO_PREVIOUS, COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM -> true
+                    else -> super.isCommandAvailable(command)
+                }
             }
-
-            override fun seekToPrevious() {
-                handlePreviousAction(wrappedPlayer)
-            }
-
-            override fun seekToNextMediaItem() {
-                handleNextAction(wrappedPlayer)
-            }
-
-            override fun seekToPreviousMediaItem() {
-                handlePreviousAction(wrappedPlayer)
+            override fun getAvailableCommands(): Player.Commands {
+                return super.getAvailableCommands().buildUpon()
+                    .add(COMMAND_SEEK_TO_NEXT).add(COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                    .add(COMMAND_SEEK_TO_PREVIOUS).add(COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                    .build()
             }
         }
 

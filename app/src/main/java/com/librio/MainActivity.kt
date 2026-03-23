@@ -1738,12 +1738,12 @@ class MainActivity : ComponentActivity() {
                                 keepScreenOn = keepScreenOn,
                                 headerTitle = profileHeaderTitle,
                                 onToggleFavorite = { uriStr ->
-                                    val ab = libraryViewModel.libraryState.value.audiobooks.find { it.uri.toString() == uriStr }
+                                    val ab = libraryState.audiobooks.find { it.uri.toString() == uriStr }
                                     if (ab != null) libraryViewModel.toggleFavorite(ContentType.AUDIOBOOK, ab.id)
                                 },
                                 currentAudiobookIsFavorite = run {
                                     val currentUri = player.currentAudiobook.value?.uri?.toString()
-                                    if (currentUri != null) libraryViewModel.libraryState.value.audiobooks.find { it.uri.toString() == currentUri }?.isFavorite ?: false else false
+                                    if (currentUri != null) libraryState.audiobooks.find { it.uri.toString() == currentUri }?.isFavorite ?: false else false
                                 },
                                 modifier = Modifier.fillMaxSize()
                             )
@@ -1817,7 +1817,9 @@ class MainActivity : ComponentActivity() {
 
                         // Music player screen
                         composable(Screen.MusicPlayer.route) {
-                            selectedMusic?.let { music ->
+                            selectedMusic?.let { originalMusic ->
+                                // Use live state so isFavorite updates reactively
+                                val music = libraryState.music.find { it.id == originalMusic.id } ?: originalMusic
                                 // Calculate current index in playlist
                                 val activePlaylist = if (currentMusicPlaylist.isNotEmpty()) currentMusicPlaylist else filteredMusic
                                 if (currentMusicPlaylist.isEmpty() && activePlaylist.isNotEmpty()) {

@@ -1035,20 +1035,26 @@ class MainActivity : ComponentActivity() {
                                             popUpTo(Screen.Splash.route) { inclusive = true }
                                         }
                                     } else {
-                                        // Restore last screen if available
-                                        val restoreRoute = when (lastScreen) {
-                                            Screen.Player.route -> Screen.Player.route
-                                            Screen.MusicPlayer.route -> Screen.MusicPlayer.route
-                                            Screen.MoviePlayer.route -> Screen.MoviePlayer.route
-                                            Screen.EbookReader.route -> Screen.EbookReader.route
-                                            Screen.ComicReader.route -> Screen.ComicReader.route
-                                            else -> null
-                                        }
+                                        // Always navigate to library first
                                         navController.navigate(Screen.Main.createRoute("library")) {
                                             popUpTo(Screen.Splash.route) { inclusive = true }
                                         }
-                                        if (restoreRoute != null) {
-                                            navController.navigate(restoreRoute)
+                                        // Restore last player screen if available, wrapped in try-catch
+                                        // to prevent corrupted routes from causing a white screen
+                                        try {
+                                            val restoreRoute = when (lastScreen) {
+                                                Screen.Player.route -> Screen.Player.route
+                                                Screen.MusicPlayer.route -> Screen.MusicPlayer.route
+                                                Screen.MoviePlayer.route -> Screen.MoviePlayer.route
+                                                Screen.EbookReader.route -> Screen.EbookReader.route
+                                                Screen.ComicReader.route -> Screen.ComicReader.route
+                                                else -> null
+                                            }
+                                            if (restoreRoute != null) {
+                                                navController.navigate(restoreRoute)
+                                            }
+                                        } catch (_: Exception) {
+                                            // Navigation failed — stay on library
                                         }
                                     }
                                 }
@@ -1731,6 +1737,14 @@ class MainActivity : ComponentActivity() {
                                 showPlaceholderIcons = showPlaceholderIcons,
                                 keepScreenOn = keepScreenOn,
                                 headerTitle = profileHeaderTitle,
+                                onToggleFavorite = { uriStr ->
+                                    val ab = libraryViewModel.libraryState.value.audiobooks.find { it.uri.toString() == uriStr }
+                                    if (ab != null) libraryViewModel.toggleFavorite(ContentType.AUDIOBOOK, ab.id)
+                                },
+                                currentAudiobookIsFavorite = run {
+                                    val currentUri = player.currentAudiobook.value?.uri?.toString()
+                                    if (currentUri != null) libraryViewModel.libraryState.value.audiobooks.find { it.uri.toString() == currentUri }?.isFavorite ?: false else false
+                                },
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
@@ -1896,7 +1910,8 @@ class MainActivity : ComponentActivity() {
                                     showSearchBar = showSearchBar,
                                     showPlaceholderIcons = showPlaceholderIcons,
                                     headerTitle = profileHeaderTitle,
-                                    externalExoPlayer = musicExoPlayer
+                                    externalExoPlayer = musicExoPlayer,
+                                    onToggleFavorite = { id -> libraryViewModel.toggleFavorite(ContentType.MUSIC, id) }
                                 )
                             }
                         }
@@ -2051,12 +2066,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Flush all pending progress updates synchronously to ensure no data loss
-        // Must complete before onPause returns, otherwise the process may be killed
-        kotlinx.coroutines.runBlocking {
-            kotlinx.coroutines.withTimeout(3000) {
-                libraryViewModelRef?.flushPendingProgress()
+        // Flush pending progress updates - wrapped in try-catch to prevent
+        // TimeoutCancellationException from crashing the activity and corrupting state
+        try {
+            kotlinx.coroutines.runBlocking {
+                kotlinx.coroutines.withTimeout(3000) {
+                    libraryViewModelRef?.flushPendingProgress()
+                }
             }
+        } catch (_: Exception) {
+            // Timeout or other error — don't crash onPause
         }
     }
 }

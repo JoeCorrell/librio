@@ -164,6 +164,8 @@ fun PlayerScreen(
     showPlaceholderIcons: Boolean = true,
     keepScreenOn: Boolean = false,
     headerTitle: String = "Librio",
+    onToggleFavorite: (String) -> Unit = {}, // Toggle favorite by audiobook ID
+    currentAudiobookIsFavorite: Boolean = false,
 ) {
     val palette = currentPalette()
     val headerContentHeight = 40.dp
@@ -432,6 +434,8 @@ fun PlayerScreen(
                             lastSeekPositionLocal = 0L
                         },
                         player = player,
+                        onToggleFavorite = onToggleFavorite,
+                        currentAudiobookIsFavorite = currentAudiobookIsFavorite,
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
@@ -552,6 +556,8 @@ private fun PlayerContent(
     onUndoSeek: () -> Unit = {},
     modifier: Modifier = Modifier,
     player: AudiobookPlayer? = null,
+    onToggleFavorite: (String) -> Unit = {},
+    currentAudiobookIsFavorite: Boolean = false,
 ) {
     val palette = currentPalette()
     val configuration = LocalConfiguration.current
@@ -661,21 +667,39 @@ private fun PlayerContent(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            // Chapter badge
-            if (audiobook.chapters.size > 1) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                // Favorite button
                 Box(
                     modifier = Modifier
                         .size(30.dp)
                         .clip(RoundedCornerShape(9.dp))
-                        .background(palette.accent.copy(alpha = 0.15f)),
+                        .background(if (currentAudiobookIsFavorite) palette.accent.copy(alpha = 0.25f) else palette.accent.copy(alpha = 0.15f))
+                        .clickable { onToggleFavorite(audiobook.uri.toString()) },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        "${playbackState.currentChapterIndex + 1}",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = palette.accent,
+                    Icon(
+                        if (currentAudiobookIsFavorite) AppIcons.HeartFilled else AppIcons.Heart,
+                        if (currentAudiobookIsFavorite) "Remove from favorites" else "Add to favorites",
+                        tint = palette.accent,
+                        modifier = Modifier.size(14.dp),
                     )
+                }
+                // Chapter badge
+                if (audiobook.chapters.size > 1) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(RoundedCornerShape(9.dp))
+                            .background(palette.accent.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            "${playbackState.currentChapterIndex + 1}",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = palette.accent,
+                        )
+                    }
                 }
             }
         }

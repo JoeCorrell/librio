@@ -495,6 +495,9 @@ class LibraryViewModel : ViewModel() {
                 repository?.saveMusic(state.music)
                 repository?.saveComics(state.comics)
                 repository?.saveMovies(state.movies)
+                // Full library saved successfully — clear the progress buffer
+                // since all progress is now in library.json
+                progressSaveManager?.clearBuffer()
             } catch (_: Exception) {}
         }
     }
@@ -1169,47 +1172,37 @@ class LibraryViewModel : ViewModel() {
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 val zipInputStream = java.util.zip.ZipInputStream(inputStream)
                 val imageExtensions = setOf("jpg", "jpeg", "png", "gif", "webp", "bmp")
-                val imageEntries = mutableListOf<String>()
-                var coverEntry: String? = null
+                var coverBytes: ByteArray? = null
+                var firstImageBytes: ByteArray? = null
+                var firstImageName: String? = null
                 var entry = zipInputStream.nextEntry
 
-                // First pass: collect image entries and look for cover-named ones
+                // Single pass: read cover image bytes directly, cache first image as fallback
                 while (entry != null) {
                     val name = entry.name.lowercase()
                     val ext = name.substringAfterLast(".", "")
                     if (!entry.isDirectory && ext in imageExtensions) {
-                        imageEntries.add(entry.name)
-                        // Common EPUB cover image naming patterns
-                        if (coverEntry == null && (name.contains("cover") || name.contains("title"))) {
-                            coverEntry = entry.name
+                        val bytes = zipInputStream.readBytes()
+                        if (name.contains("cover") || name.contains("title")) {
+                            coverBytes = bytes
+                            break // Found cover, done
+                        }
+                        if (firstImageBytes == null || (firstImageName != null && name < firstImageName)) {
+                            firstImageBytes = bytes
+                            firstImageName = name
                         }
                     }
                     entry = zipInputStream.nextEntry
                 }
 
-                // Use cover-named entry, or fall back to first image
-                val targetEntry = coverEntry ?: imageEntries.sortedBy { it.lowercase() }.firstOrNull()
-                if (targetEntry != null) {
-                    // Re-open the stream to read the actual image
-                    context.contentResolver.openInputStream(uri)?.use { stream2 ->
-                        val zip2 = java.util.zip.ZipInputStream(stream2)
-                        var e2 = zip2.nextEntry
-                        while (e2 != null) {
-                            if (e2.name == targetEntry) {
-                                val bytes = zip2.readBytes()
-                                val opts = android.graphics.BitmapFactory.Options().apply {
-                                    inJustDecodeBounds = true
-                                }
-                                android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
-                                val scale = maxOf(1, maxOf(opts.outWidth, opts.outHeight) / targetSize)
-                                opts.inJustDecodeBounds = false
-                                opts.inSampleSize = scale
-                                return@use android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
-                            }
-                            e2 = zip2.nextEntry
-                        }
-                        null
-                    }
+                val imageBytes = coverBytes ?: firstImageBytes
+                if (imageBytes != null) {
+                    val opts = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size, opts)
+                    val scale = maxOf(1, maxOf(opts.outWidth, opts.outHeight) / targetSize)
+                    opts.inJustDecodeBounds = false
+                    opts.inSampleSize = scale
+                    android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size, opts)
                 } else null
             }
         } catch (_: Exception) {
@@ -1612,6 +1605,39 @@ class LibraryViewModel : ViewModel() {
             // Also schedule a debounced save of the full library JSON
             scheduleDebouncedLibrarySave()
         }
+    }
+
+    /** Toggle favorite status for any content type by ID */
+    fun toggleFavorite(contentType: ContentType, id: String) {
+        val state = _libraryState.value
+        when (contentType) {
+            ContentType.AUDIOBOOK -> {
+                val list = state.audiobooks.toMutableList()
+                val i = list.indexOfFirst { it.id == id }
+                if (i >= 0) { list[i] = list[i].copy(isFavorite = !list[i].isFavorite); _libraryState.value = state.copy(audiobooks = list) }
+            }
+            ContentType.EBOOK -> {
+                val list = state.books.toMutableList()
+                val i = list.indexOfFirst { it.id == id }
+                if (i >= 0) { list[i] = list[i].copy(isFavorite = !list[i].isFavorite); _libraryState.value = state.copy(books = list) }
+            }
+            ContentType.MUSIC -> {
+                val list = state.music.toMutableList()
+                val i = list.indexOfFirst { it.id == id }
+                if (i >= 0) { list[i] = list[i].copy(isFavorite = !list[i].isFavorite); _libraryState.value = state.copy(music = list) }
+            }
+            ContentType.COMICS -> {
+                val list = state.comics.toMutableList()
+                val i = list.indexOfFirst { it.id == id }
+                if (i >= 0) { list[i] = list[i].copy(isFavorite = !list[i].isFavorite); _libraryState.value = state.copy(comics = list) }
+            }
+            ContentType.MOVIE -> {
+                val list = state.movies.toMutableList()
+                val i = list.indexOfFirst { it.id == id }
+                if (i >= 0) { list[i] = list[i].copy(isFavorite = !list[i].isFavorite); _libraryState.value = state.copy(movies = list) }
+            }
+        }
+        scheduleDebouncedLibrarySave()
     }
 
     fun removeAudiobook(audiobook: LibraryAudiobook, deleteFile: Boolean = true) {

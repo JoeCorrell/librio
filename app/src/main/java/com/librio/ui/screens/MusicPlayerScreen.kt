@@ -128,6 +128,7 @@ fun MusicPlayerScreen(
     showPlaceholderIcons: Boolean = true,
     headerTitle: String = "Librio",
     externalExoPlayer: ExoPlayer? = null, // Shared player from MainActivity
+    onToggleFavorite: (String) -> Unit = {}, // Toggle favorite by music ID
     modifier: Modifier = Modifier
 ) {
     val palette = currentPalette()
@@ -585,16 +586,18 @@ fun MusicPlayerScreen(
                             color = palette.textMuted,
                         )
                     }
-                    // Like button placeholder (visual only — matches Librio FX)
+                    // Favorite button
                     Box(
                         modifier = Modifier
                             .size(30.dp)
                             .clip(RoundedCornerShape(9.dp))
-                            .background(palette.accent.copy(alpha = 0.15f)),
+                            .background(if (music.isFavorite) palette.accent.copy(alpha = 0.25f) else palette.accent.copy(alpha = 0.15f))
+                            .clickable { onToggleFavorite(music.id) },
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            AppIcons.Heart, "Like",
+                            if (music.isFavorite) AppIcons.HeartFilled else AppIcons.Heart,
+                            if (music.isFavorite) "Remove from favorites" else "Add to favorites",
                             tint = palette.accent,
                             modifier = Modifier.size(14.dp),
                         )

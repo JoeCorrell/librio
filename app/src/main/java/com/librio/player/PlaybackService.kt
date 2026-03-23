@@ -128,7 +128,9 @@ class PlaybackService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.action?.let { action ->
-            val player = mediaSession?.player ?: run {
+            // Use the underlying ExoPlayer directly (not ForwardingPlayer)
+            // to avoid double-execution from ForwardingPlayer overrides
+            val player = SharedMusicPlayer.getPlayer() ?: run {
                 try {
                     SharedMusicPlayer.acquire(applicationContext)
                 } catch (_: Exception) {

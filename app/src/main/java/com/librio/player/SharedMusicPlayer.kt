@@ -34,6 +34,10 @@ object SharedMusicPlayer {
         }
     }
 
+    /** Get the underlying player without incrementing ref count (for internal use) */
+    @Synchronized
+    fun getPlayer(): ExoPlayer? = player
+
     @Synchronized
     fun acquire(context: Context): ExoPlayer {
         val currentPlayer = player

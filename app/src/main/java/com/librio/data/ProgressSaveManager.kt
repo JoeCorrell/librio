@@ -212,6 +212,11 @@ class ProgressSaveManager(
         }
     }
 
+    /** Clear the buffer file after a successful full library save */
+    fun clearBuffer() {
+        try { getBufferFile().delete() } catch (_: Exception) {}
+    }
+
     /**
      * Save all pending updates to buffer file (synchronous, crash-safe).
      * This ensures no data loss even if app crashes immediately after.
@@ -239,7 +244,7 @@ class ProgressSaveManager(
         val bufferFile = getBufferFile()
         try {
             // Simple append-only log format for crash resistance
-            bufferFile.bufferedWriter().use { writer ->
+            java.io.FileWriter(bufferFile, true).buffered().use { writer ->
                 updates.forEach { update ->
                     when (update) {
                         is ProgressUpdate.AudiobookProgress -> {

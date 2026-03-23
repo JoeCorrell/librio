@@ -56,7 +56,8 @@ data class LibraryBook(
     val categoryId: String? = null,
     val seriesId: String? = null, // Series this book belongs to
     val seriesOrder: Int = 0, // Order within the series
-    val fileType: String = "pdf" // pdf, epub, txt
+    val fileType: String = "pdf", // pdf, epub, txt
+    val isFavorite: Boolean = false
 ) {
     val progress: Float
         get() = if (totalPages > 0) (currentPage.toFloat() / totalPages).coerceIn(0f, 1f) else 0f
@@ -86,7 +87,8 @@ data class LibraryAudiobook(
     val categoryId: String? = null,
     val seriesId: String? = null, // Series this audiobook belongs to
     val seriesOrder: Int = 0, // Order within the series
-    val fileType: String = "mp3" // mp3, m4a, m4b, ogg, flac, etc.
+    val fileType: String = "mp3", // mp3, m4a, m4b, ogg, flac, etc.
+    val isFavorite: Boolean = false
 ) {
     val progress: Float
         get() = if (duration > 0) (lastPosition.toFloat() / duration).coerceIn(0f, 1f) else 0f
@@ -134,7 +136,8 @@ data class LibraryMusic(
     val seriesOrder: Int = 0, // Order within the series
     val fileType: String = "mp3",
     val timesListened: Int = 0,
-    val contentType: ContentType = ContentType.MUSIC
+    val contentType: ContentType = ContentType.MUSIC,
+    val isFavorite: Boolean = false
 ) {
     val progress: Float
         get() = if (duration > 0) (lastPosition.toFloat() / duration).coerceIn(0f, 1f) else 0f
@@ -172,7 +175,8 @@ data class LibraryComic(
     val categoryId: String? = null,
     val seriesId: String? = null, // Series this comic belongs to
     val seriesOrder: Int = 0, // Order within the series
-    val fileType: String = "cbz" // cbz, cbr, cb7, pdf
+    val fileType: String = "cbz", // cbz, cbr, cb7, pdf
+    val isFavorite: Boolean = false
 ) {
     val progress: Float
         get() = if (totalPages > 0) (currentPage.toFloat() / totalPages).coerceIn(0f, 1f) else 0f
@@ -199,7 +203,8 @@ data class LibraryMovie(
     val thumbnailUri: Uri? = null,
     val coverArt: Bitmap? = null,
     val coverArtUri: String? = null, // Custom cover art URI
-    val fileType: String = "mp4" // mp4, mkv, avi, webm
+    val fileType: String = "mp4", // mp4, mkv, avi, webm
+    val isFavorite: Boolean = false
 ) {
     val progress: Float
         get() = if (duration > 0) (lastPosition.toFloat() / duration).coerceIn(0f, 1f) else 0f

@@ -986,19 +986,21 @@ fun LibraryListScreen(
                                 }
                             }
 
-                            // All items
-                            item {
-                                Text("All Audiobooks", fontSize = 14.sp, fontWeight = FontWeight.Bold,
-                                    color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp))
-                            }
-                            itemsIndexed(filteredAudiobooks, key = { _, item -> item.id }) { index, audiobook ->
-                                AnimatedAudiobookListItem(
-                                    audiobook = audiobook, index = index,
-                                    onClick = { onSelectAudiobook(audiobook) },
-                                    onLongClick = { showEditDialog = audiobook },
-                                    showPlayingIndicator = audiobook.lastPlayed > 0 && !audiobook.isCompleted,
-                                    showPlaceholderIcons = showPlaceholderIcons
-                                )
+                            // All items (only show if there are unassigned items)
+                            if (filteredAudiobooks.isNotEmpty()) {
+                                item {
+                                    Text("All Audiobooks", fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                                        color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp))
+                                }
+                                itemsIndexed(filteredAudiobooks, key = { _, item -> item.id }) { index, audiobook ->
+                                    AnimatedAudiobookListItem(
+                                        audiobook = audiobook, index = index,
+                                        onClick = { onSelectAudiobook(audiobook) },
+                                        onLongClick = { showEditDialog = audiobook },
+                                        showPlayingIndicator = audiobook.lastPlayed > 0 && !audiobook.isCompleted,
+                                        showPlaceholderIcons = showPlaceholderIcons
+                                    )
+                                }
                             }
                         }
                     }
@@ -1068,8 +1070,10 @@ fun LibraryListScreen(
                                     }
                                 }
                             }
-                            item { Text("All Books", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
-                            itemsIndexed(filteredBooks, key = { _, item -> item.id }) { index, book -> AnimatedBookListItem(book = book, index = index, onClick = { onSelectBook(book) }, onLongClick = { showEditBookDialog = book }, showPlaceholderIcons = showPlaceholderIcons) }
+                            if (filteredBooks.isNotEmpty()) {
+                                item { Text("All Books", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
+                                itemsIndexed(filteredBooks, key = { _, item -> item.id }) { index, book -> AnimatedBookListItem(book = book, index = index, onClick = { onSelectBook(book) }, onLongClick = { showEditBookDialog = book }, showPlaceholderIcons = showPlaceholderIcons) }
+                            }
                         }
                     }
                 }
@@ -1139,8 +1143,10 @@ fun LibraryListScreen(
                                     }
                                 }
                             }
-                            item { Text("All Tracks", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
-                            itemsIndexed(filteredMusic, key = { _, item -> item.id }) { _, musicItem -> MusicListItem(music = musicItem, onClick = { onSelectMusic(musicItem) }, onLongClick = { showEditMusicDialog = musicItem }, showPlaceholderIcons = showPlaceholderIcons, modifier = Modifier.animateItem()) }
+                            if (filteredMusic.isNotEmpty()) {
+                                item { Text("All Tracks", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
+                                itemsIndexed(filteredMusic, key = { _, item -> item.id }) { _, musicItem -> MusicListItem(music = musicItem, onClick = { onSelectMusic(musicItem) }, onLongClick = { showEditMusicDialog = musicItem }, showPlaceholderIcons = showPlaceholderIcons, modifier = Modifier.animateItem()) }
+                            }
                         }
                     }
                 }
@@ -1209,8 +1215,10 @@ fun LibraryListScreen(
                                     }
                                 }
                             }
-                            item { Text("All Comics", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
-                            itemsIndexed(filteredComics, key = { _, item -> item.id }) { _, comicItem -> ComicListItem(comic = comicItem, onClick = { onSelectComic(comicItem) }, onLongClick = { showEditComicDialog = comicItem }, showPlaceholderIcons = showPlaceholderIcons, modifier = Modifier.animateItem()) }
+                            if (filteredComics.isNotEmpty()) {
+                                item { Text("All Comics", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
+                                itemsIndexed(filteredComics, key = { _, item -> item.id }) { _, comicItem -> ComicListItem(comic = comicItem, onClick = { onSelectComic(comicItem) }, onLongClick = { showEditComicDialog = comicItem }, showPlaceholderIcons = showPlaceholderIcons, modifier = Modifier.animateItem()) }
+                            }
                         }
                     }
                 }
@@ -1278,8 +1286,10 @@ fun LibraryListScreen(
                                     }
                                 }
                             }
-                            item { Text("All Movies", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
-                            itemsIndexed(filteredMovies, key = { _, item -> item.id }) { _, movieItem -> MovieListItem(movie = movieItem, onClick = { onSelectMovie(movieItem) }, onLongClick = { showEditMovieDialog = movieItem }, showPlaceholderIcons = showPlaceholderIcons, modifier = Modifier.animateItem()) }
+                            if (filteredMovies.isNotEmpty()) {
+                                item { Text("All Movies", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = palette.textPrimary, modifier = Modifier.padding(start = 18.dp, top = 14.dp, bottom = 8.dp)) }
+                                itemsIndexed(filteredMovies, key = { _, item -> item.id }) { _, movieItem -> MovieListItem(movie = movieItem, onClick = { onSelectMovie(movieItem) }, onLongClick = { showEditMovieDialog = movieItem }, showPlaceholderIcons = showPlaceholderIcons, modifier = Modifier.animateItem()) }
+                            }
                         }
                     }
                 }

@@ -95,7 +95,13 @@ class LibraryFileManager {
                 put("lastPlayedId", lastPlayedId ?: "")
                 put("playbackSpeed", playbackSpeed.toDouble())
             }
-            libraryFile.writeText(json.toString(2))
+            // Atomic write: write to temp file then rename to prevent corruption
+            val tempFile = java.io.File(libraryFile.parent, "${libraryFile.name}.tmp")
+            tempFile.writeText(json.toString(2))
+            if (!tempFile.renameTo(libraryFile)) {
+                        tempFile.copyTo(libraryFile, overwrite = true)
+                        tempFile.delete()
+                    }
             true
         } catch (e: Exception) {
             e.printStackTrace()
@@ -107,26 +113,32 @@ class LibraryFileManager {
      * Load all library data from library.json
      */
     suspend fun loadLibrary(profileName: String): LibraryData? = withContext(Dispatchers.IO) {
-        try {
-            val libraryFile = getLibraryFile(profileName)
-            if (!libraryFile.exists()) return@withContext null
-
-            val json = JSONObject(libraryFile.readText())
-            LibraryData(
-                audiobooks = jsonToAudiobooks(json.optJSONArray("audiobooks")),
-                books = jsonToBooks(json.optJSONArray("books")),
-                music = jsonToMusic(json.optJSONArray("music")),
-                comics = jsonToComics(json.optJSONArray("comics")),
-                movies = jsonToMovies(json.optJSONArray("movies")),
-                series = jsonToSeries(json.optJSONArray("series")),
-                categories = jsonToCategories(json.optJSONArray("categories")),
-                lastPlayedId = json.optString("lastPlayedId").takeIf { it.isNotEmpty() },
-                playbackSpeed = json.optDouble("playbackSpeed", 1.0).toFloat()
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
+        val libraryFile = getLibraryFile(profileName)
+        // Try main file first, then fall back to temp file (from interrupted atomic write)
+        val filesToTry = listOfNotNull(
+            libraryFile.takeIf { it.exists() },
+            java.io.File(libraryFile.parent, "${libraryFile.name}.tmp").takeIf { it.exists() }
+        )
+        for (file in filesToTry) {
+            try {
+                val json = JSONObject(file.readText())
+                return@withContext LibraryData(
+                    audiobooks = jsonToAudiobooks(json.optJSONArray("audiobooks")),
+                    books = jsonToBooks(json.optJSONArray("books")),
+                    music = jsonToMusic(json.optJSONArray("music")),
+                    comics = jsonToComics(json.optJSONArray("comics")),
+                    movies = jsonToMovies(json.optJSONArray("movies")),
+                    series = jsonToSeries(json.optJSONArray("series")),
+                    categories = jsonToCategories(json.optJSONArray("categories")),
+                    lastPlayedId = json.optString("lastPlayedId").takeIf { it.isNotEmpty() },
+                    playbackSpeed = json.optDouble("playbackSpeed", 1.0).toFloat()
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Try next file
+            }
         }
+        null
     }
 
     // ==================== Individual Save Methods ====================
@@ -332,7 +344,12 @@ class LibraryFileManager {
             try {
                 val libraryFile = getLibraryFile(profileName)
                 val json = if (libraryFile.exists()) {
-                    JSONObject(libraryFile.readText())
+                    try {
+                        JSONObject(libraryFile.readText())
+                    } catch (_: Exception) {
+                        // Corrupted JSON file — start fresh
+                        JSONObject().apply { put("version", LIBRARY_VERSION) }
+                    }
                 } else {
                     JSONObject().apply {
                         put("version", LIBRARY_VERSION)
@@ -340,7 +357,10 @@ class LibraryFileManager {
                 }
                 json.put(fieldName, value)
                 json.put("lastModified", System.currentTimeMillis())
-                libraryFile.writeText(json.toString(2))
+                // Atomic write: write to temp file then rename to prevent corruption
+                val tempFile = java.io.File(libraryFile.parent, "${libraryFile.name}.tmp")
+                tempFile.writeText(json.toString(2))
+                tempFile.renameTo(libraryFile)
                 true
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -353,7 +373,11 @@ class LibraryFileManager {
             try {
                 val libraryFile = getLibraryFile(profileName)
                 val json = if (libraryFile.exists()) {
-                    JSONObject(libraryFile.readText())
+                    try {
+                        JSONObject(libraryFile.readText())
+                    } catch (_: Exception) {
+                        JSONObject().apply { put("version", LIBRARY_VERSION) }
+                    }
                 } else {
                     JSONObject().apply {
                         put("version", LIBRARY_VERSION)
@@ -361,7 +385,12 @@ class LibraryFileManager {
                 }
                 json.put(fieldName, value)
                 json.put("lastModified", System.currentTimeMillis())
-                libraryFile.writeText(json.toString(2))
+                val tempFile = java.io.File(libraryFile.parent, "${libraryFile.name}.tmp")
+                tempFile.writeText(json.toString(2))
+                if (!tempFile.renameTo(libraryFile)) {
+                    tempFile.copyTo(libraryFile, overwrite = true)
+                    tempFile.delete()
+                }
                 true
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -374,7 +403,11 @@ class LibraryFileManager {
             try {
                 val libraryFile = getLibraryFile(profileName)
                 val json = if (libraryFile.exists()) {
-                    JSONObject(libraryFile.readText())
+                    try {
+                        JSONObject(libraryFile.readText())
+                    } catch (_: Exception) {
+                        JSONObject().apply { put("version", LIBRARY_VERSION) }
+                    }
                 } else {
                     JSONObject().apply {
                         put("version", LIBRARY_VERSION)
@@ -382,7 +415,12 @@ class LibraryFileManager {
                 }
                 json.put(fieldName, value)
                 json.put("lastModified", System.currentTimeMillis())
-                libraryFile.writeText(json.toString(2))
+                val tempFile = java.io.File(libraryFile.parent, "${libraryFile.name}.tmp")
+                tempFile.writeText(json.toString(2))
+                if (!tempFile.renameTo(libraryFile)) {
+                    tempFile.copyTo(libraryFile, overwrite = true)
+                    tempFile.delete()
+                }
                 true
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -409,6 +447,7 @@ class LibraryFileManager {
                 put("lastPlayed", audiobook.lastPlayed)
                 put("dateAdded", audiobook.dateAdded)
                 put("isCompleted", audiobook.isCompleted)
+                put("isFavorite", audiobook.isFavorite)
                 put("categoryId", audiobook.categoryId ?: "")
                 put("seriesId", audiobook.seriesId ?: "")
                 put("seriesOrder", audiobook.seriesOrder)
@@ -439,6 +478,7 @@ class LibraryFileManager {
                     lastPlayed = jsonObject.optLong("lastPlayed", 0L),
                     dateAdded = jsonObject.optLong("dateAdded", System.currentTimeMillis()),
                     isCompleted = jsonObject.optBoolean("isCompleted", false),
+                    isFavorite = jsonObject.optBoolean("isFavorite", false),
                     categoryId = jsonObject.optString("categoryId").takeIf { it.isNotEmpty() },
                     seriesId = jsonObject.optString("seriesId").takeIf { it.isNotEmpty() },
                     seriesOrder = jsonObject.optInt("seriesOrder", 0),
@@ -468,6 +508,7 @@ class LibraryFileManager {
                 put("lastRead", book.lastRead)
                 put("dateAdded", book.dateAdded)
                 put("isCompleted", book.isCompleted)
+                put("isFavorite", book.isFavorite)
                 put("categoryId", book.categoryId ?: "")
                 put("seriesId", book.seriesId ?: "")
                 put("seriesOrder", book.seriesOrder)
@@ -496,6 +537,7 @@ class LibraryFileManager {
                     lastRead = jsonObject.optLong("lastRead", 0L),
                     dateAdded = jsonObject.optLong("dateAdded", System.currentTimeMillis()),
                     isCompleted = jsonObject.optBoolean("isCompleted", false),
+                    isFavorite = jsonObject.optBoolean("isFavorite", false),
                     categoryId = jsonObject.optString("categoryId").takeIf { it.isNotEmpty() },
                     seriesId = jsonObject.optString("seriesId").takeIf { it.isNotEmpty() },
                     seriesOrder = jsonObject.optInt("seriesOrder", 0),
@@ -530,6 +572,7 @@ class LibraryFileManager {
                 put("lastPlayed", track.lastPlayed)
                 put("dateAdded", track.dateAdded)
                 put("isCompleted", track.isCompleted)
+                put("isFavorite", track.isFavorite)
                 put("categoryId", track.categoryId ?: "")
                 put("seriesId", track.seriesId ?: "")
                 put("seriesOrder", track.seriesOrder)
@@ -566,6 +609,7 @@ class LibraryFileManager {
                     lastPlayed = jsonObject.optLong("lastPlayed", 0L),
                     dateAdded = jsonObject.optLong("dateAdded", System.currentTimeMillis()),
                     isCompleted = jsonObject.optBoolean("isCompleted", false),
+                    isFavorite = jsonObject.optBoolean("isFavorite", false),
                     categoryId = jsonObject.optString("categoryId").takeIf { it.isNotEmpty() },
                     seriesId = jsonObject.optString("seriesId").takeIf { it.isNotEmpty() },
                     seriesOrder = jsonObject.optInt("seriesOrder", 0),
@@ -598,6 +642,7 @@ class LibraryFileManager {
                 put("lastRead", comic.lastRead)
                 put("dateAdded", comic.dateAdded)
                 put("isCompleted", comic.isCompleted)
+                put("isFavorite", comic.isFavorite)
                 put("categoryId", comic.categoryId ?: "")
                 put("seriesId", comic.seriesId ?: "")
                 put("seriesOrder", comic.seriesOrder)
@@ -626,6 +671,7 @@ class LibraryFileManager {
                     lastRead = jsonObject.optLong("lastRead", 0L),
                     dateAdded = jsonObject.optLong("dateAdded", System.currentTimeMillis()),
                     isCompleted = jsonObject.optBoolean("isCompleted", false),
+                    isFavorite = jsonObject.optBoolean("isFavorite", false),
                     categoryId = jsonObject.optString("categoryId").takeIf { it.isNotEmpty() },
                     seriesId = jsonObject.optString("seriesId").takeIf { it.isNotEmpty() },
                     seriesOrder = jsonObject.optInt("seriesOrder", 0),
@@ -651,6 +697,7 @@ class LibraryFileManager {
                 put("lastPlayed", movie.lastPlayed)
                 put("dateAdded", movie.dateAdded)
                 put("isCompleted", movie.isCompleted)
+                put("isFavorite", movie.isFavorite)
                 put("categoryId", movie.categoryId ?: "")
                 put("seriesId", movie.seriesId ?: "")
                 put("seriesOrder", movie.seriesOrder)
@@ -678,6 +725,7 @@ class LibraryFileManager {
                     lastPlayed = jsonObject.optLong("lastPlayed", 0L),
                     dateAdded = jsonObject.optLong("dateAdded", System.currentTimeMillis()),
                     isCompleted = jsonObject.optBoolean("isCompleted", false),
+                    isFavorite = jsonObject.optBoolean("isFavorite", false),
                     categoryId = jsonObject.optString("categoryId").takeIf { it.isNotEmpty() },
                     seriesId = jsonObject.optString("seriesId").takeIf { it.isNotEmpty() },
                     seriesOrder = jsonObject.optInt("seriesOrder", 0),

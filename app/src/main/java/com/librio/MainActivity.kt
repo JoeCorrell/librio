@@ -1778,6 +1778,10 @@ class MainActivity : ComponentActivity() {
 
                         // E-book reader screen
                         composable(Screen.EbookReader.route) {
+                            if (selectedBook == null) {
+                                LaunchedEffect(Unit) { navController.popBackStack() }
+                                return@composable
+                            }
                             selectedBook?.let { book ->
                                 EbookReaderScreen(
                                     book = book,
@@ -1844,6 +1848,11 @@ class MainActivity : ComponentActivity() {
 
                         // Music player screen
                         composable(Screen.MusicPlayer.route) {
+                            if (selectedMusic == null) {
+                                // No music selected — pop back to library instead of showing white screen
+                                LaunchedEffect(Unit) { navController.popBackStack() }
+                                return@composable
+                            }
                             selectedMusic?.let { originalMusic ->
                                 // Use live state so isFavorite updates reactively
                                 val music = libraryState.music.find { it.id == originalMusic.id } ?: originalMusic
@@ -1947,6 +1956,10 @@ class MainActivity : ComponentActivity() {
 
                         // Movie player screen
                         composable(Screen.MoviePlayer.route) {
+                            if (selectedMovie == null) {
+                                LaunchedEffect(Unit) { navController.popBackStack() }
+                                return@composable
+                            }
                             selectedMovie?.let { movie ->
                                 MoviePlayerScreen(
                                     movie = movie,
@@ -1999,6 +2012,10 @@ class MainActivity : ComponentActivity() {
 
                         // Comic reader screen - uses dedicated ComicReaderScreen with 2-page support
                         composable(Screen.ComicReader.route) {
+                            if (selectedComic == null) {
+                                LaunchedEffect(Unit) { navController.popBackStack() }
+                                return@composable
+                            }
                             selectedComic?.let { comic ->
                                 ComicReaderScreen(
                                     comic = comic,

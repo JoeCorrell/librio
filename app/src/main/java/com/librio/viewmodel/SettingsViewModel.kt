@@ -430,6 +430,11 @@ class SettingsViewModel : ViewModel() {
         repository?.saveAllSettingsToFiles()
     }
 
+    /** Synchronous version — blocks until all files are written. Use from onPause/onStop. */
+    fun saveAllSettingsToFilesSync() {
+        repository?.saveAllSettingsToFilesSync()
+    }
+
     /**
      * Reload settings from JSON files
      * Call this when resuming the app to pick up external changes to JSON files

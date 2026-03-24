@@ -78,8 +78,26 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Install a crash logger that writes stack traces to librio_crash.txt */
+    private fun installCrashLogger() {
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                val crashFile = java.io.File(getExternalFilesDir(null), "librio_crash.txt")
+                crashFile.appendText(buildString {
+                    appendLine("=== CRASH ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())} ===")
+                    appendLine("Thread: ${thread.name}")
+                    appendLine(throwable.stackTraceToString())
+                    appendLine()
+                })
+            } catch (_: Exception) { /* best-effort */ }
+            defaultHandler?.uncaughtException(thread, throwable)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        installCrashLogger()
         enableEdgeToEdge()
         requestPermissions()
 
@@ -398,31 +416,22 @@ class MainActivity : ComponentActivity() {
             }
 
             // Save library and settings, manage playback when lifecycle changes
+            // Wrap every save in try-catch so a single failure doesn't block the rest
+            fun safeSaveAll() {
+                try { persistAudiobookStateOnBackground() } catch (_: Exception) {}
+                try { libraryViewModel.saveLibrary() } catch (_: Exception) {}
+                try { settingsViewModel.saveAllSettingsToFilesSync() } catch (_: Exception) {}
+            }
             DisposableEffect(lifecycleOwner) {
                 val observer = LifecycleEventObserver { _, event ->
                     when (event) {
                         Lifecycle.Event.ON_RESUME -> {
-                            // Reload settings from JSON files when resuming
-                            // This allows external edits to JSON files to take effect
-                            settingsViewModel.reloadSettingsFromFiles()
+                            try { settingsViewModel.reloadSettingsFromFiles() } catch (_: Exception) {}
                         }
-                        Lifecycle.Event.ON_PAUSE -> {
-                            persistAudiobookStateOnBackground()
-                            libraryViewModel.saveLibrary()
-                            settingsViewModel.saveAllSettingsToFiles()
-                        }
-                        Lifecycle.Event.ON_STOP -> {
-                            persistAudiobookStateOnBackground()
-                            libraryViewModel.saveLibrary()
-                            settingsViewModel.saveAllSettingsToFiles()
-                        }
+                        Lifecycle.Event.ON_PAUSE -> safeSaveAll()
+                        Lifecycle.Event.ON_STOP -> safeSaveAll()
                         Lifecycle.Event.ON_DESTROY -> {
-                            // Save all state before destroying (don't pause players to preserve playing state)
-                            persistAudiobookStateOnBackground()
-                            libraryViewModel.saveLibrary()
-                            settingsViewModel.saveAllSettingsToFiles()
-                            // Don't pause players here - pausing triggers onIsPlayingChanged which overwrites saved state
-                            // The system will clean up resources automatically
+                            safeSaveAll()
                             try {
                                 stopService(Intent(this@MainActivity, PlaybackService::class.java))
                             } catch (_: Exception) {
@@ -887,31 +896,24 @@ class MainActivity : ComponentActivity() {
             }
 
             // Build NowPlaying object - prioritize by lastActiveType, then playing state
-            val nowPlaying: NowPlaying? = when {
-                // Priority 1: Use lastActiveType to determine which player to show
-                lastActiveType == "AUDIOBOOK" && lastPlayedAudiobook != null -> {
-                    buildAudiobookNowPlaying(lastPlayedAudiobook!!)
+            // Snapshot to local vals to avoid race between null-check and usage
+            val snapshotAudiobook = lastPlayedAudiobook
+            val snapshotMusic = lastPlayedMusic
+            val nowPlaying: NowPlaying? = try {
+                when {
+                    lastActiveType == "AUDIOBOOK" && snapshotAudiobook != null -> buildAudiobookNowPlaying(snapshotAudiobook)
+                    lastActiveType == "MUSIC" && snapshotMusic != null -> buildMusicNowPlaying(snapshotMusic)
+                    (isAudiobookPlaying || playbackState.isPlaying) && snapshotAudiobook != null -> buildAudiobookNowPlaying(snapshotAudiobook)
+                    isMusicPlaying && snapshotMusic != null -> buildMusicNowPlaying(snapshotMusic)
+                    snapshotMusic != null -> buildMusicNowPlaying(snapshotMusic)
+                    snapshotAudiobook != null -> buildAudiobookNowPlaying(snapshotAudiobook)
+                    else -> null
                 }
-                lastActiveType == "MUSIC" && lastPlayedMusic != null -> {
-                    buildMusicNowPlaying(lastPlayedMusic!!)
-                }
-                // Priority 2: If audiobook is actively playing (service running)
-                (isAudiobookPlaying || playbackState.isPlaying) && lastPlayedAudiobook != null -> {
-                    buildAudiobookNowPlaying(lastPlayedAudiobook!!)
-                }
-                // Priority 3: If music is actively playing
-                isMusicPlaying && lastPlayedMusic != null -> {
-                    buildMusicNowPlaying(lastPlayedMusic!!)
-                }
-                // Priority 4: Show paused music if available
-                lastPlayedMusic != null -> {
-                    buildMusicNowPlaying(lastPlayedMusic!!)
-                }
-                // Priority 5: Show paused audiobook if available
-                lastPlayedAudiobook != null -> {
-                    buildAudiobookNowPlaying(lastPlayedAudiobook!!)
-                }
-                else -> null
+            } catch (e: Exception) {
+                // Prevent MiniPlayer crash from taking down the entire Compose tree
+                val crashFile = java.io.File(context.getExternalFilesDir(null), "librio_crash.txt")
+                try { crashFile.appendText("NowPlaying build failed: ${e.stackTraceToString()}\n") } catch (_: Exception) {}
+                null
             }
 
             // Get the current sort option based on content type

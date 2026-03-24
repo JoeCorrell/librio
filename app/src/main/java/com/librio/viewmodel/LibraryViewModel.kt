@@ -1325,15 +1325,19 @@ class LibraryViewModel : ViewModel() {
      * Save all library data to persistent storage (synchronous to ensure data is persisted)
      */
     fun saveLibrary() {
-        kotlinx.coroutines.runBlocking {
-            repository?.saveLibrary(_libraryState.value.audiobooks)
-            repository?.saveBooks(_libraryState.value.books)
-            repository?.saveMusic(_libraryState.value.music)
-            repository?.saveComics(_libraryState.value.comics)
-            repository?.saveMovies(_libraryState.value.movies)
-            repository?.saveCategories(_libraryState.value.categories)
-            repository?.saveSeries(_libraryState.value.series)
-        }
+        try {
+            kotlinx.coroutines.runBlocking {
+                kotlinx.coroutines.withTimeout(5000L) {
+                    repository?.saveLibrary(_libraryState.value.audiobooks)
+                    repository?.saveBooks(_libraryState.value.books)
+                    repository?.saveMusic(_libraryState.value.music)
+                    repository?.saveComics(_libraryState.value.comics)
+                    repository?.saveMovies(_libraryState.value.movies)
+                    repository?.saveCategories(_libraryState.value.categories)
+                    repository?.saveSeries(_libraryState.value.series)
+                }
+            }
+        } catch (_: Exception) { /* best-effort — never crash in lifecycle callback */ }
     }
 
     /**

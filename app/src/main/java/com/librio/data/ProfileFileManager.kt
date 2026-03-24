@@ -240,7 +240,13 @@ class ProfileFileManager {
                 put("selectedMovieCategoryId", settings.selectedMovieCategoryId ?: "")
                 put("lastModified", System.currentTimeMillis())
             }
-            file.writeText(json.toString(2))
+            // Atomic write: temp file + rename to prevent corruption on process kill
+            val tempFile = java.io.File(file.parent, "${file.name}.tmp")
+            tempFile.writeText(json.toString(2))
+            if (!tempFile.renameTo(file)) {
+                file.writeText(tempFile.readText())
+                tempFile.delete()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -334,7 +340,13 @@ class ProfileFileManager {
                 put("musicRepeatMode", settings.musicRepeatMode)
                 put("lastModified", System.currentTimeMillis())
             }
-            file.writeText(json.toString(2))
+            // Atomic write: temp file + rename to prevent corruption on process kill
+            val tempFile = java.io.File(file.parent, "${file.name}.tmp")
+            tempFile.writeText(json.toString(2))
+            if (!tempFile.renameTo(file)) {
+                file.writeText(tempFile.readText())
+                tempFile.delete()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -404,7 +416,13 @@ class ProfileFileManager {
                 put("keepScreenOn", settings.keepScreenOn)
                 put("lastModified", System.currentTimeMillis())
             }
-            file.writeText(json.toString(2))
+            // Atomic write: temp file + rename to prevent corruption on process kill
+            val tempFile = java.io.File(file.parent, "${file.name}.tmp")
+            tempFile.writeText(json.toString(2))
+            if (!tempFile.renameTo(file)) {
+                file.writeText(tempFile.readText())
+                tempFile.delete()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -464,7 +482,13 @@ class ProfileFileManager {
                 put("keepScreenOn", settings.keepScreenOn)
                 put("lastModified", System.currentTimeMillis())
             }
-            file.writeText(json.toString(2))
+            // Atomic write: temp file + rename to prevent corruption on process kill
+            val tempFile = java.io.File(file.parent, "${file.name}.tmp")
+            tempFile.writeText(json.toString(2))
+            if (!tempFile.renameTo(file)) {
+                file.writeText(tempFile.readText())
+                tempFile.delete()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -544,7 +568,13 @@ class ProfileFileManager {
                 put("subtitleBackground", settings.subtitleBackground)
                 put("lastModified", System.currentTimeMillis())
             }
-            file.writeText(json.toString(2))
+            // Atomic write: temp file + rename to prevent corruption on process kill
+            val tempFile = java.io.File(file.parent, "${file.name}.tmp")
+            tempFile.writeText(json.toString(2))
+            if (!tempFile.renameTo(file)) {
+                file.writeText(tempFile.readText())
+                tempFile.delete()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

@@ -1453,6 +1453,86 @@ class SettingsRepository(private val context: Context) {
         saveMovieSettingsToFile()
     }
 
+    private fun buildProfileSettings(activeProfile: com.librio.ui.screens.UserProfile) = ProfileSettings(
+        version = 1, id = activeProfile.id, name = activeProfile.name, profilePicture = activeProfile.profilePicture,
+        theme = _appTheme.value.name, darkMode = _darkMode.value, accentTheme = _accentTheme.value.name,
+        backgroundTheme = _backgroundTheme.value.name, customPrimaryColor = _customPrimaryColor.value,
+        customAccentColor = _customAccentColor.value, customBackgroundColor = _customBackgroundColor.value,
+        appScale = _appScale.value, uiFontScale = _uiFontScale.value, uiFontFamily = _uiFontFamily.value,
+        libraryOwnerName = _libraryOwnerName.value, defaultLibraryView = _defaultLibraryView.value,
+        defaultSortOrder = _defaultSortOrder.value, showPlaceholderIcons = _showPlaceholderIcons.value,
+        showFileSize = _showFileSize.value, showDuration = _showDuration.value, showBackButton = _showBackButton.value,
+        showSearchBar = _showSearchBar.value, animationSpeed = _animationSpeed.value,
+        hapticFeedback = _hapticFeedback.value, confirmBeforeDelete = _confirmBeforeDelete.value,
+        useSquareCorners = _useSquareCorners.value, collapsedSeries = _collapsedSeries.value.toList(),
+        collapsedPlaylists = emptyList(), selectedContentType = _selectedContentType.value,
+        selectedAudiobookCategoryId = null, selectedBookCategoryId = null, selectedMusicCategoryId = null,
+        selectedComicCategoryId = null, selectedMovieCategoryId = null
+    )
+
+    private fun buildAudioSettings() = AudioSettings(
+        version = 1, playbackSpeed = _playbackSpeed.value, skipForwardDuration = _skipForwardDuration.value,
+        skipBackDuration = _skipBackDuration.value, sleepTimerMinutes = _sleepTimerMinutes.value,
+        autoBookmark = _autoBookmark.value, keepScreenOn = _keepScreenOn.value, autoPlayNext = _autoPlayNext.value,
+        resumePlayback = _resumePlayback.value, rememberLastPosition = _rememberLastPosition.value,
+        autoRewindSeconds = _autoRewindSeconds.value, volumeBoostEnabled = _volumeBoostEnabled.value,
+        volumeBoostLevel = _volumeBoostLevel.value, normalizeAudio = _normalizeAudio.value,
+        bassBoostLevel = _bassBoostLevel.value.toFloat(), equalizerPreset = _equalizerPreset.value,
+        headsetControls = _headsetControls.value, pauseOnDisconnect = _pauseOnDisconnect.value,
+        showPlaybackNotification = _showPlaybackNotification.value, showUndoSeekButton = _showUndoSeekButton.value,
+        lastSeekPosition = _lastSeekPosition.value, fadeOnPauseResume = _fadeOnPauseResume.value,
+        gaplessPlayback = _gaplessPlayback.value, trimSilence = _trimSilence.value,
+        lastMusicId = _lastMusicId.value, lastMusicPosition = _lastMusicPosition.value,
+        lastMusicPlaying = _lastMusicPlaying.value, lastAudiobookId = _lastAudiobookId.value,
+        lastAudiobookPosition = _lastAudiobookPosition.value, lastAudiobookPlaying = _lastAudiobookPlaying.value,
+        lastActiveType = _lastActiveType.value, musicShuffleEnabled = _musicShuffleEnabled.value,
+        musicRepeatMode = _musicRepeatMode.value
+    )
+
+    private fun buildReaderSettings() = ReaderSettings(
+        version = 1, fontSize = _readerFontSize.value, lineSpacing = _readerLineSpacing.value,
+        readerTheme = _readerTheme.value, fontFamily = _readerFont.value, textAlignment = _readerTextAlign.value,
+        margins = _readerMargins.value, paragraphSpacing = _readerParagraphSpacing.value,
+        brightness = _readerBrightness.value, boldText = _readerBoldText.value,
+        wordSpacing = _readerWordSpacing.value, pageFitMode = _readerPageFitMode.value,
+        pageGap = _readerPageGap.value, forceTwoPage = _readerForceTwoPage.value,
+        forceSinglePage = _readerForceSinglePage.value, keepScreenOn = _readerKeepScreenOn.value
+    )
+
+    private fun buildComicSettings() = ComicSettings(
+        version = 1, forceTwoPage = _comicForceTwoPage.value, forceSinglePage = _comicForceSinglePage.value,
+        readingDirection = _comicReadingDirection.value, pageFitMode = _comicPageFitMode.value,
+        pageGap = _comicPageGap.value, backgroundColor = _comicBackgroundColor.value,
+        showPageIndicators = _comicShowPageIndicators.value, enableDoubleTapZoom = _comicEnableDoubleTapZoom.value,
+        showControlsOnTap = _comicShowControlsOnTap.value, keepScreenOn = _comicKeepScreenOn.value
+    )
+
+    private fun buildMovieSettings() = MovieSettings(
+        version = 1, playbackSpeed = _moviePlaybackSpeed.value, keepScreenOn = _movieKeepScreenOn.value,
+        resizeMode = _movieResizeMode.value, brightness = _movieBrightness.value,
+        autoFullscreenLandscape = _movieAutoFullscreenLandscape.value,
+        showControlsOnTap = _movieShowControlsOnTap.value, controlsTimeout = _movieControlsTimeout.value,
+        doubleTapSeekDuration = _movieDoubleTapSeekDuration.value,
+        swipeGesturesEnabled = _movieSwipeGesturesEnabled.value,
+        rememberPosition = _movieRememberPosition.value, subtitlesEnabled = _movieSubtitlesEnabled.value
+    )
+
+    /** Synchronous version — blocks until all files are written. Safe for onPause/onStop. */
+    fun saveAllSettingsToFilesSync() {
+        try {
+            kotlinx.coroutines.runBlocking(Dispatchers.IO) {
+                kotlinx.coroutines.withTimeout(3000L) {
+                    val activeProfile = _profiles.value.find { it.isActive } ?: return@withTimeout
+                    profileFileManager.saveProfileSettings(currentProfileName, buildProfileSettings(activeProfile))
+                    profileFileManager.saveAudioSettings(currentProfileName, buildAudioSettings())
+                    profileFileManager.saveReaderSettings(currentProfileName, buildReaderSettings())
+                    profileFileManager.saveComicSettings(currentProfileName, buildComicSettings())
+                    profileFileManager.saveMovieSettings(currentProfileName, buildMovieSettings())
+                }
+            }
+        } catch (_: Exception) { /* best-effort — don't crash onPause */ }
+    }
+
     /**
      * Get the profile file manager for external access (e.g., migration)
      */

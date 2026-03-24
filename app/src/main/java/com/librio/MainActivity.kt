@@ -78,6 +78,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Simple file logger for startup diagnostics */
+    private fun logToFile(msg: String) {
+        try {
+            val file = java.io.File(getExternalFilesDir(null), "librio_startup.txt")
+            val ts = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.US).format(java.util.Date())
+            file.appendText("[$ts] $msg\n")
+        } catch (_: Exception) {}
+    }
+
     /** Install a crash logger that writes stack traces to librio_crash.txt */
     private fun installCrashLogger() {
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
@@ -97,10 +106,28 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Truncate startup log on each fresh launch
+        try { java.io.File(getExternalFilesDir(null), "librio_startup.txt").writeText("=== App Launch ${java.util.Date()} ===\n") } catch (_: Exception) {}
+        logToFile("onCreate start")
         installCrashLogger()
+
+        // Safe-mode: if app failed to start last time, clear SharedPreferences to recover
+        val safePrefs = getSharedPreferences("librio_safe_mode", android.content.Context.MODE_PRIVATE)
+        val startAttempts = safePrefs.getInt("start_attempts", 0)
+        logToFile("startAttempts=$startAttempts")
+        if (startAttempts >= 2) {
+            logToFile("SAFE MODE: clearing SharedPreferences after $startAttempts failed starts")
+            // Clear the main settings prefs to reset corrupted state
+            getSharedPreferences("librio_settings", android.content.Context.MODE_PRIVATE).edit().clear().apply()
+            safePrefs.edit().putInt("start_attempts", 0).apply()
+        } else {
+            safePrefs.edit().putInt("start_attempts", startAttempts + 1).apply()
+        }
+
         enableEdgeToEdge()
         requestPermissions()
 
+        logToFile("setContent start")
         setContent {
             val context = LocalContext.current
             val lifecycleOwner = LocalLifecycleOwner.current
@@ -108,7 +135,7 @@ class MainActivity : ComponentActivity() {
             val libraryViewModel: LibraryViewModel = viewModel()
             val settingsViewModel: SettingsViewModel = viewModel()
             // Initialize settings immediately so theme/custom colors are available before first frame
-            settingsViewModel.initialize(context)
+            try { settingsViewModel.initialize(context) } catch (e: Exception) { logToFile("settingsVM.init FAILED: ${e.message}") }
             val player = remember { AudiobookPlayer(context) }
             var introComplete by remember { mutableStateOf(false) }
 
@@ -526,7 +553,7 @@ class MainActivity : ComponentActivity() {
             // Restore last played music from persisted state (only when music was last active)
             LaunchedEffect(libraryState.music, lastMusicId, introComplete, lastActiveType) {
                 if (!introComplete) return@LaunchedEffect
-                // Use lastActiveType for priority if available, otherwise fall back to playing state
+                try {
                 val shouldRestoreMusic = lastMusicId != null && (
                     lastActiveType == "MUSIC" ||
                     (lastActiveType == null && (lastMusicPlaying || (!lastAudiobookPlaying && lastAudiobookId == null)))
@@ -535,9 +562,9 @@ class MainActivity : ComponentActivity() {
                 if (lastPlayedMusic == null && lastMusicId != null) {
                     val music = libraryState.music.find { it.id == lastMusicId }
                     music?.let {
+                        logToFile("restoring music: ${it.title}, id=${it.id}")
                         lastPlayedMusic = it
                         lastPlayedAudiobook = null
-                        // Restore playlist context: use series if track belongs to one, otherwise filter by content type
                         currentMusicPlaylist = if (it.seriesId != null) {
                             libraryState.music.filter { m -> m.seriesId == it.seriesId }
                         } else {
@@ -548,47 +575,56 @@ class MainActivity : ComponentActivity() {
                         val activeType = "MUSIC"
                         settingsViewModel.setLastActiveType(activeType)
                         PlaybackService.currentActiveType = activeType
-                        musicExoPlayer.setMediaItem(buildMusicMediaItem(it))
-                        musicExoPlayer.prepare()
-                        musicExoPlayer.seekTo(lastMusicPosition)
-                        musicExoPlayer.playWhenReady = lastMusicPlaying
+                        try {
+                            musicExoPlayer.setMediaItem(buildMusicMediaItem(it))
+                            musicExoPlayer.prepare()
+                            musicExoPlayer.seekTo(lastMusicPosition)
+                            musicExoPlayer.playWhenReady = lastMusicPlaying
+                        } catch (e: Exception) {
+                            logToFile("ExoPlayer restore FAILED: ${e.message}")
+                            isMusicPlaying = false
+                        }
                         if (lastMusicPlaying) {
                             startPlaybackService()
                         } else {
-                            musicExoPlayer.pause()
+                            try { musicExoPlayer.pause() } catch (_: Exception) {}
                         }
                     }
                 }
+                } catch (e: Exception) { logToFile("music restore FAILED: ${e.stackTraceToString()}") }
             }
 
             // Restore last played audiobook from persisted state (only when audiobook was last active)
             LaunchedEffect(libraryState.audiobooks, lastAudiobookId, introComplete, lastActiveType) {
                 if (!introComplete) return@LaunchedEffect
-                // Use lastActiveType for priority if available, otherwise fall back to playing state
-                val shouldRestoreBook = lastAudiobookId != null && (
-                    lastActiveType == "AUDIOBOOK" ||
-                    (lastActiveType == null && !lastMusicPlaying)
-                )
-                if (!shouldRestoreBook) return@LaunchedEffect
-                if (lastPlayedAudiobook == null && lastAudiobookId != null) {
-                    val audiobook = libraryState.audiobooks.find { it.id == lastAudiobookId }
-                    audiobook?.let { book ->
-                        lastPlayedAudiobook = book.copy(lastPosition = lastAudiobookPosition)
-                        lastPlayedMusic = null
-                        isAudiobookPlaying = lastAudiobookPlaying
-                        settingsViewModel.setLastActiveType("AUDIOBOOK")
-                        PlaybackService.currentActiveType = "AUDIOBOOK"
-                        CoroutineScope(Dispatchers.Main).launch {
-                            player.loadAudiobook(book.uri, book.title, book.author)
-                            player.seekTo(lastAudiobookPosition)
-                            if (lastAudiobookPlaying) {
-                                player.play()
-                            } else {
-                                player.pause()
+                try {
+                    val shouldRestoreBook = lastAudiobookId != null && (
+                        lastActiveType == "AUDIOBOOK" ||
+                        (lastActiveType == null && !lastMusicPlaying)
+                    )
+                    if (!shouldRestoreBook) return@LaunchedEffect
+                    if (lastPlayedAudiobook == null && lastAudiobookId != null) {
+                        val audiobook = libraryState.audiobooks.find { it.id == lastAudiobookId }
+                        audiobook?.let { book ->
+                            logToFile("restoring audiobook: ${book.title}, id=${book.id}")
+                            lastPlayedAudiobook = book.copy(lastPosition = lastAudiobookPosition)
+                            lastPlayedMusic = null
+                            isAudiobookPlaying = lastAudiobookPlaying
+                            settingsViewModel.setLastActiveType("AUDIOBOOK")
+                            PlaybackService.currentActiveType = "AUDIOBOOK"
+                            try {
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    player.loadAudiobook(book.uri, book.title, book.author)
+                                    player.seekTo(lastAudiobookPosition)
+                                    if (lastAudiobookPlaying) player.play() else player.pause()
+                                }
+                            } catch (e: Exception) {
+                                logToFile("audiobook player restore FAILED: ${e.message}")
+                                isAudiobookPlaying = false
                             }
                         }
                     }
-                }
+                } catch (e: Exception) { logToFile("audiobook restore FAILED: ${e.stackTraceToString()}") }
             }
 
             LaunchedEffect(libraryState.audiobooks, introComplete) {
@@ -1030,34 +1066,23 @@ class MainActivity : ComponentActivity() {
                         composable(Screen.Splash.route) {
                             SplashScreen(
                                 onSplashComplete = {
+                                    logToFile("splash complete, introComplete=true")
                                     introComplete = true
+                                    // Mark successful startup — reset safe mode counter
+                                    try { context.getSharedPreferences("librio_safe_mode", android.content.Context.MODE_PRIVATE).edit().putInt("start_attempts", 0).apply() } catch (_: Exception) {}
                                     // Check if onboarding is needed
                                     if (showOnboarding) {
+                                        logToFile("navigating to onboarding")
                                         navController.navigate(Screen.Onboarding.route) {
                                             popUpTo(Screen.Splash.route) { inclusive = true }
                                         }
                                     } else {
                                         // Always navigate to library first
+                                        logToFile("navigating to library, lastScreen=$lastScreen, lastActiveType=$lastActiveType, lastMusicId=$lastMusicId, lastAudiobookId=$lastAudiobookId")
                                         navController.navigate(Screen.Main.createRoute("library")) {
                                             popUpTo(Screen.Splash.route) { inclusive = true }
                                         }
-                                        // Restore last player screen if available, wrapped in try-catch
-                                        // to prevent corrupted routes from causing a white screen
-                                        try {
-                                            val restoreRoute = when (lastScreen) {
-                                                Screen.Player.route -> Screen.Player.route
-                                                Screen.MusicPlayer.route -> Screen.MusicPlayer.route
-                                                Screen.MoviePlayer.route -> Screen.MoviePlayer.route
-                                                Screen.EbookReader.route -> Screen.EbookReader.route
-                                                Screen.ComicReader.route -> Screen.ComicReader.route
-                                                else -> null
-                                            }
-                                            if (restoreRoute != null) {
-                                                navController.navigate(restoreRoute)
-                                            }
-                                        } catch (_: Exception) {
-                                            // Navigation failed — stay on library
-                                        }
+                                        logToFile("library nav done, skipping player restore to prevent white screen")
                                     }
                                 }
                             )
